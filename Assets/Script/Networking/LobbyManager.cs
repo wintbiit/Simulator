@@ -53,7 +53,7 @@ namespace Script.Networking
             [Command(ignoreAuthority = true)]
             private void CmdStartGame()
             {
-                _roomManager.StartGame();
+                _roomManager.StartGame(_roles);
             }
 
             [Command(ignoreAuthority = true)]
@@ -181,7 +181,7 @@ namespace Script.Networking
                 roleSelect.displayName = role.GetChild(2).GetComponent<TMP_Text>();
                 roleSelect.button.onClick.AddListener(() =>
                 {
-                    if (_roomManager && _roomManager.IsServer && !_roomManager.IsHost) return;
+                    if (_roomManager && _roomManager.IsServer && !_roomManager.IsHost ) return;
                     if (_vivoxManager.Ready)
                         CmdSelectRole(_localPlayer.index, new Role(camp, type));
                     else

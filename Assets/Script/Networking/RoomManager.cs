@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using Mirror;
+using Script.JudgeSystem.Role;
+using Script.Networking.Game;
 using UnityEngine;
 
 namespace Script.Networking
@@ -14,7 +16,10 @@ namespace Script.Networking
 
             // Server side
             private LobbyManager _lobbyManager;
+            public Dictionary<int, Role> Roles { private set; get; }
             private readonly Dictionary<int, NetworkConnection> _connections = new Dictionary<int, NetworkConnection>();
+
+            private GameManager _gameManager;
 
             #region Server
 
@@ -33,9 +38,17 @@ namespace Script.Networking
 
             public override void OnRoomServerSceneChanged(string sceneName)
             {
-                if (sceneName != "Assets/Scenes/Lobby.unity") return;
-                _lobbyManager = GameObject.Find("Main Camera").GetComponent<LobbyManager>();
-                _lobbyManager.RoomManagerRegister(this);
+                switch (sceneName)
+                {
+                    case "Assets/Scenes/Lobby.unity":
+                        _lobbyManager = GameObject.Find("Main Camera").GetComponent<LobbyManager>();
+                        _lobbyManager.RoomManagerRegister(this);
+                        break;
+                    case "Assets/Scenes/Game.unity":
+                        _gameManager = GameObject.Find("Main Camera").GetComponent<GameManager>();
+                        _gameManager.RoomManagerRegister(this);
+                        break;
+                }
             }
 
             public override void OnRoomServerConnect(NetworkConnection conn)
@@ -50,7 +63,11 @@ namespace Script.Networking
             }
 
             [Server]
-            public void StartGame() => ServerChangeScene(GameplayScene);
+            public void StartGame(IDictionary<int, Role> roles)
+            {
+                Roles = new Dictionary<int, Role>(roles);
+                ServerChangeScene(GameplayScene);
+            }
 
             public void Disconnect(int connectionId)
             {
