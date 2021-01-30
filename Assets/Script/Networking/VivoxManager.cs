@@ -25,6 +25,7 @@ namespace Script.Networking
         private IChannelSession _channelSession;
 
         public bool Ready { private set; get; }
+        public bool Fail { private set; get; }
 
         private void Awake()
         {
@@ -67,7 +68,7 @@ namespace Script.Networking
                     }
                     catch (Exception)
                     {
-                        // ignored
+                        Fail = true;
                     }
                 }
             );
@@ -122,7 +123,7 @@ namespace Script.Networking
                     }
                     catch (Exception)
                     {
-                        // ignored
+                        Fail = true;
                     }
                 });
         }

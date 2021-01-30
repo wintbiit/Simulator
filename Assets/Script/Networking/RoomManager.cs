@@ -14,9 +14,11 @@ namespace Script.Networking
             public bool IsHost { private set; get; }
             public bool IsServer { private set; get; }
 
+            public GameObject infan;
+
             // Server side
             private LobbyManager _lobbyManager;
-            public Dictionary<int, Role> Roles { private set; get; }
+            private Dictionary<int, Role> _roles;
             private readonly Dictionary<int, NetworkConnection> _connections = new Dictionary<int, NetworkConnection>();
 
             private GameManager _gameManager;
@@ -65,8 +67,23 @@ namespace Script.Networking
             [Server]
             public void StartGame(IDictionary<int, Role> roles)
             {
-                Roles = new Dictionary<int, Role>(roles);
+                _roles = new Dictionary<int, Role>(roles);
                 ServerChangeScene(GameplayScene);
+                Debug.Log(GameplayScene);
+            }
+
+            public override GameObject OnRoomServerCreateGamePlayer(NetworkConnection conn, GameObject roomPlayer)
+            {
+                var player = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
+                var gamePlayer = player.GetComponent<GamePlayer>();
+                var roomPlayerComponent = roomPlayer.GetComponent<RoomPlayer>();
+                gamePlayer.index = roomPlayerComponent.index;
+                gamePlayer.displayName = roomPlayerComponent.displayName;
+                gamePlayer.Role = _roles[roomPlayerComponent.index];
+                
+                NetworkServer.Spawn(Instantiate(infan, GetStartPosition()), conn);
+                
+                return player;
             }
 
             public void Disconnect(int connectionId)

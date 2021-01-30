@@ -7,7 +7,7 @@ namespace Script.Networking
     {
         public class RoomPlayer : NetworkRoomPlayer
         {
-            public string displayName;
+            [SyncVar] public string displayName;
             [SyncVar] public int connectionId;
 
             private LobbyManager _lobbyManager;

@@ -34,6 +34,7 @@ namespace Script.Networking
 
             // Client side
             public TMP_Text readyHint;
+            public GameObject audioFailHint;
 
             private readonly RoleSelect _judgeSelect = new RoleSelect();
             private readonly List<RoleSelect> _redCampSelects = new List<RoleSelect>();
@@ -169,6 +170,7 @@ namespace Script.Networking
 
             private void Start()
             {
+                audioFailHint.SetActive(false);
                 BindSelect(GameObject.Find("JudgeSelect").transform, _judgeSelect, CampT.Judge, TypeT.Unknown);
                 BindSelects(GameObject.Find("Red"), _redCampSelects, CampT.Red);
                 BindSelects(GameObject.Find("Blue"), _blueCampSelects, CampT.Blue);
@@ -181,8 +183,8 @@ namespace Script.Networking
                 roleSelect.displayName = role.GetChild(2).GetComponent<TMP_Text>();
                 roleSelect.button.onClick.AddListener(() =>
                 {
-                    if (_roomManager && _roomManager.IsServer && !_roomManager.IsHost ) return;
-                    if (_vivoxManager.Ready)
+                    if (_roomManager && _roomManager.IsServer && !_roomManager.IsHost) return;
+                    if (_vivoxManager.Ready || _vivoxManager.Fail)
                         CmdSelectRole(_localPlayer.index, new Role(camp, type));
                     else
                         Debug.Log("音频设备未就绪。");
@@ -226,6 +228,9 @@ namespace Script.Networking
                     _isHost = _roomManager.IsHost && _roles.Count == 1;
                     if (_roomManager.IsServer && !_roomManager.IsHost) return;
                 }
+                
+                if (_vivoxManager.Fail)
+                    audioFailHint.SetActive(true);
 
                 if (Input.GetKey(KeyCode.R))
                 {
@@ -271,12 +276,11 @@ namespace Script.Networking
                         _localPlayer.readyToBegin ? "取消准备" : "准备";
                     if (_roles[_localPlayer.index].Camp == CampT.Judge)
                         readyHint.text = _allReady ? "开始游戏" : "等待准备";
-                    if (_isHost && _roles[_localPlayer.index].Camp != CampT.Unknown)
-                    {
+                    if (_roles[_localPlayer.index].Camp == CampT.Unknown)
+                        readyHint.text = "选择角色";
+                    else if (_isHost)
                         readyHint.text = "开始游戏";
-                    }
-
-                    if (!_vivoxManager.Ready)
+                    if (!_vivoxManager.Ready && !_vivoxManager.Fail)
                         readyHint.text = "等待音频设备就绪";
                 }
 
