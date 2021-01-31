@@ -24,7 +24,7 @@ namespace Script.Networking
         {
             // Server side
             private readonly SyncDictionary<int, int> _connections = new SyncDictionary<int, int>();
-            private readonly SyncDictionary<int, Role> _roles = new SyncDictionary<int, Role>();
+            private readonly SyncDictionary<int, RoleTag> _roles = new SyncDictionary<int, RoleTag>();
             private readonly SyncDictionary<int, string> _displayNames = new SyncDictionary<int, string>();
             private readonly SyncDictionary<int, bool> _readyStatus = new SyncDictionary<int, bool>();
 
@@ -68,7 +68,7 @@ namespace Script.Networking
                 else
                 {
                     _connections.Add(connectionId, index);
-                    _roles.Add(index, new Role());
+                    _roles.Add(index, new RoleTag());
                     _readyStatus.Add(index, false);
                     _displayNames.Add(index, displayName);
                     RpcPlayerRegistered(index);
@@ -106,11 +106,11 @@ namespace Script.Networking
             }
 
             [Command(ignoreAuthority = true)]
-            private void CmdSelectRole(int index, Role target)
+            private void CmdSelectRole(int index, RoleTag target)
             {
                 if (_roles[index].Equals(target))
                 {
-                    _roles[index] = new Role();
+                    _roles[index] = new RoleTag();
                     return;
                 }
 
@@ -185,7 +185,7 @@ namespace Script.Networking
                 {
                     if (_roomManager && _roomManager.IsServer && !_roomManager.IsHost) return;
                     if (_vivoxManager.Ready || _vivoxManager.Fail)
-                        CmdSelectRole(_localPlayer.index, new Role(camp, type));
+                        CmdSelectRole(_localPlayer.index, new RoleTag(camp, type));
                     else
                         Debug.Log("音频设备未就绪。");
                 });

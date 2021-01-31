@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using Mirror;
+﻿using Mirror;
+using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
-using UnityEngine;
 
 namespace Script.Networking
 {
@@ -13,11 +10,25 @@ namespace Script.Networking
         {
             [SyncVar] public int index;
             [SyncVar] public string displayName;
-            [SyncVar] public Role Role;
+            [SyncVar] public RoleTag Role;
 
-            private void Start()
+            private static int _slowUpdate;
+
+            private void FixedUpdate()
             {
-                Debug.Log("Game player " + index.ToString() + displayName.ToString());
+                if (_slowUpdate % 10 == 0)
+                {
+                    if (isLocalPlayer)
+                        foreach (var robot in FindObjectsOfType<RobotBase>())
+                            if (robot.id == index)
+                            {
+                                robot.isLocalRobot = true;
+                                break;
+                            }
+
+                    _slowUpdate = 0;
+                }
+                else _slowUpdate++;
             }
         }
     }

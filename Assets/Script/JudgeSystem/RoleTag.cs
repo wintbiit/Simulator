@@ -24,18 +24,18 @@ namespace Script.JudgeSystem
             Drone = 6
         }
 
-        public class Role
+        public class RoleTag
         {
             public readonly CampT Camp;
             public readonly TypeT Type;
 
-            public Role()
+            public RoleTag()
             {
                 Camp = CampT.Unknown;
                 Type = TypeT.Unknown;
             }
 
-            public Role(CampT camp, TypeT type)
+            public RoleTag(CampT camp, TypeT type)
             {
                 Camp = camp;
                 Type = type;
@@ -53,7 +53,7 @@ namespace Script.JudgeSystem
                 return Camp == CampT.Red;
             }
 
-            public bool Equals(Role obj)
+            public bool Equals(RoleTag obj)
             {
                 return obj.Camp == Camp && obj.Type == Type;
             }

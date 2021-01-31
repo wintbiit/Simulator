@@ -2474,7 +2474,16 @@ MonoBehaviour:
   _allPlayersReady: 0
   roomSlots: []
   clientIndex: 0
-  infan: {fileID: 2752303330134738270, guid: 5579f5f3b96755d4589cb85c43f4e90c, type: 3}
+  heroPrefab: {fileID: 2752303330134738270, guid: 5579f5f3b96755d4589cb85c43f4e90c,
+    type: 3}
+  engineerPrefab: {fileID: 2752303330134738270, guid: 5579f5f3b96755d4589cb85c43f4e90c,
+    type: 3}
+  infantryPrefab: {fileID: 2752303330134738270, guid: 5579f5f3b96755d4589cb85c43f4e90c,
+    type: 3}
+  dronePrefab: {fileID: 2752303330134738270, guid: 5579f5f3b96755d4589cb85c43f4e90c,
+    type: 3}
+  guardPrefab: {fileID: 2752303330134738270, guid: 5579f5f3b96755d4589cb85c43f4e90c,
+    type: 3}
 --- !u!4 &1514517855
 Transform:
   m_ObjectHideFlags: 0

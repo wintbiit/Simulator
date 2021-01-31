@@ -49,6 +49,7 @@ namespace Script.Networking
         public IEnumerator Login(string username)
         {
             yield return null;
+            // Ready = true;
             var accountId = new AccountId(
                 TokenIssuer,
                 username,
@@ -107,7 +108,8 @@ namespace Script.Networking
             var channelId = new ChannelId(
                 TokenIssuer,
                 channel,
-                TokenDomain);
+                TokenDomain,
+                ChannelType.Echo);
             _channelSession = _loginSession.GetChannelSession(channelId);
             _channelSession.PropertyChanged += SourceOnChannelPropertyChanged;
             _channelSession.BeginConnect(

@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Mirror;
+using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
@@ -14,11 +16,15 @@ namespace Script.Networking
             public bool IsHost { private set; get; }
             public bool IsServer { private set; get; }
 
-            public GameObject infan;
+            public GameObject heroPrefab;
+            public GameObject engineerPrefab;
+            public GameObject infantryPrefab;
+            public GameObject dronePrefab;
+            public GameObject guardPrefab;
 
             // Server side
             private LobbyManager _lobbyManager;
-            private Dictionary<int, Role> _roles;
+            private Dictionary<int, RoleTag> _roles;
             private readonly Dictionary<int, NetworkConnection> _connections = new Dictionary<int, NetworkConnection>();
 
             private GameManager _gameManager;
@@ -65,11 +71,10 @@ namespace Script.Networking
             }
 
             [Server]
-            public void StartGame(IDictionary<int, Role> roles)
+            public void StartGame(IDictionary<int, RoleTag> roles)
             {
-                _roles = new Dictionary<int, Role>(roles);
+                _roles = new Dictionary<int, RoleTag>(roles);
                 ServerChangeScene(GameplayScene);
-                Debug.Log(GameplayScene);
             }
 
             public override GameObject OnRoomServerCreateGamePlayer(NetworkConnection conn, GameObject roomPlayer)
@@ -80,9 +85,60 @@ namespace Script.Networking
                 gamePlayer.index = roomPlayerComponent.index;
                 gamePlayer.displayName = roomPlayerComponent.displayName;
                 gamePlayer.Role = _roles[roomPlayerComponent.index];
-                
-                NetworkServer.Spawn(Instantiate(infan, GetStartPosition()), conn);
-                
+
+                GameObject robotInstance = null;
+                Transform target;
+                var role = _roles[roomPlayerComponent.index];
+                switch (role.Type)
+                {
+                    case TypeT.Unknown:
+                        if (role.Camp != CampT.Judge)
+                            throw new ArgumentOutOfRangeException();
+                        break;
+                    case TypeT.Hero:
+                        target = role.Camp == CampT.Blue
+                            ? _gameManager.blueStart.hero
+                            : _gameManager.redStart.hero;
+                        robotInstance = Instantiate(heroPrefab, target.position, target.rotation);
+                        break;
+                    case TypeT.Engineer:
+                        target = role.Camp == CampT.Blue
+                            ? _gameManager.blueStart.engineer
+                            : _gameManager.redStart.engineer;
+                        robotInstance = Instantiate(engineerPrefab, target.position, target.rotation);
+                        break;
+                    case TypeT.InfantryA:
+                        target = role.Camp == CampT.Blue
+                            ? _gameManager.blueStart.infantryA
+                            : _gameManager.redStart.infantryA;
+                        robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
+                        break;
+                    case TypeT.InfantryB:
+                        target = role.Camp == CampT.Blue
+                            ? _gameManager.blueStart.infantryB
+                            : _gameManager.redStart.infantryB;
+                        robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
+                        break;
+                    case TypeT.InfantryC:
+                        target = role.Camp == CampT.Blue
+                            ? _gameManager.blueStart.infantryC
+                            : _gameManager.redStart.infantryC;
+                        robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
+                        break;
+                    case TypeT.Ptz:
+                        break;
+                    case TypeT.Drone:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                if (!robotInstance) return player;
+                var robotComponent = robotInstance.GetComponent<RobotBase>();
+                robotComponent.Role = role;
+                robotComponent.id = roomPlayerComponent.index;
+                NetworkServer.Spawn(robotInstance, conn);
+
                 return player;
             }
 
