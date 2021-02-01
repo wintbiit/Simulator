@@ -35,7 +35,7 @@ namespace Script.Networking
             {
                 var player = Instantiate(roomPlayerPrefab.gameObject, Vector3.zero, Quaternion.identity);
                 var roomPlayer = player.GetComponent<RoomPlayer>();
-                roomPlayer.index = clientIndex;
+                roomPlayer.id = clientIndex;
                 roomPlayer.connectionId = conn.connectionId;
                 return player;
             }
@@ -82,13 +82,13 @@ namespace Script.Networking
                 var player = Instantiate(playerPrefab, Vector3.zero, Quaternion.identity);
                 var gamePlayer = player.GetComponent<GamePlayer>();
                 var roomPlayerComponent = roomPlayer.GetComponent<RoomPlayer>();
-                gamePlayer.index = roomPlayerComponent.index;
+                gamePlayer.index = roomPlayerComponent.id;
                 gamePlayer.displayName = roomPlayerComponent.displayName;
-                gamePlayer.Role = _roles[roomPlayerComponent.index];
+                gamePlayer.Role = _roles[roomPlayerComponent.id];
 
                 GameObject robotInstance = null;
                 Transform target;
-                var role = _roles[roomPlayerComponent.index];
+                var role = _roles[roomPlayerComponent.id];
                 switch (role.Type)
                 {
                     case TypeT.Unknown:
@@ -136,7 +136,7 @@ namespace Script.Networking
                 if (!robotInstance) return player;
                 var robotComponent = robotInstance.GetComponent<RobotBase>();
                 robotComponent.Role = role;
-                robotComponent.id = roomPlayerComponent.index;
+                robotComponent.id = roomPlayerComponent.id;
                 NetworkServer.Spawn(robotInstance, conn);
 
                 return player;

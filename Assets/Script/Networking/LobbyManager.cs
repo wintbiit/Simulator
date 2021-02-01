@@ -60,6 +60,7 @@ namespace Script.Networking
             [Command(ignoreAuthority = true)]
             private void CmdPlayerRegister(int connectionId, int index, string displayName)
             {
+                Debug.Log("CmdPlayerRegister: " + index);
                 if (_displayNames.Any(existName => existName.Value == displayName))
                 {
                     RpcPlayerNameCollides(index);
@@ -143,26 +144,29 @@ namespace Script.Networking
             [ClientRpc]
             private void RpcPlayerNameCollides(int index)
             {
-                if (_localPlayer.index == index)
+                if (_localPlayer.id == index)
                     Debug.Log("用户名冲突！请更换用户名。");
             }
 
             [Client]
             public void PlayerRegister(RoomPlayer roomPlayer)
             {
+                Debug.Log("PlayerRegister: " + roomPlayer.id);
                 _localPlayer = roomPlayer;
                 if (!_vivoxManager)
                     _vivoxManager = FindObjectOfType<VivoxManager>();
                 CmdPlayerRegister(
                     _localPlayer.connectionId,
-                    _localPlayer.index,
+                    _localPlayer.id,
                     _localPlayer.displayName);
             }
 
             [ClientRpc]
             private void RpcPlayerRegistered(int index)
             {
-                if (_localPlayer.index == index)
+                Debug.Log("RpcPlayerRegistered: " + index);
+                Debug.Log(_localPlayer.id);
+                if (_localPlayer.id == index)
                     StartCoroutine(
                         _vivoxManager.Login(
                             _localPlayer.displayName));
@@ -185,7 +189,7 @@ namespace Script.Networking
                 {
                     if (_roomManager && _roomManager.IsServer && !_roomManager.IsHost) return;
                     if (_vivoxManager.Ready || _vivoxManager.Fail)
-                        CmdSelectRole(_localPlayer.index, new RoleTag(camp, type));
+                        CmdSelectRole(_localPlayer.id, new RoleTag(camp, type));
                     else
                         Debug.Log("音频设备未就绪。");
                 });
@@ -209,7 +213,7 @@ namespace Script.Networking
             [ClientRpc]
             private void RpcChangeReadyState(int index, bool state)
             {
-                if (_localPlayer.index != index) return;
+                if (_localPlayer.id != index) return;
                 _localPlayer.CmdChangeReadyState(state);
             }
 
@@ -237,14 +241,14 @@ namespace Script.Networking
                     if (!_rPressed)
                     {
                         _rPressed = true;
-                        if (_roles[_localPlayer.index].Camp != CampT.Unknown)
+                        if (_roles[_localPlayer.id].Camp != CampT.Unknown)
                         {
                             if (_isHost) CmdStartGame();
-                            if (_roles[_localPlayer.index].Camp != CampT.Judge)
+                            if (_roles[_localPlayer.id].Camp != CampT.Judge)
                             {
-                                var currentState = _readyStatus[_localPlayer.index];
+                                var currentState = _readyStatus[_localPlayer.id];
                                 _localPlayer.CmdChangeReadyState(!currentState);
-                                CmdChangeReadyState(_localPlayer.index, !currentState);
+                                CmdChangeReadyState(_localPlayer.id, !currentState);
                             }
                             else if (_allReady)
                                 CmdStartGame();
@@ -270,13 +274,13 @@ namespace Script.Networking
                     _escPressed = false;
                 }
 
-                if (_roles.ContainsKey(_localPlayer.index))
+                if (_roles.ContainsKey(_localPlayer.id))
                 {
                     readyHint.text =
                         _localPlayer.readyToBegin ? "取消准备" : "准备";
-                    if (_roles[_localPlayer.index].Camp == CampT.Judge)
+                    if (_roles[_localPlayer.id].Camp == CampT.Judge)
                         readyHint.text = _allReady ? "开始游戏" : "等待准备";
-                    if (_roles[_localPlayer.index].Camp == CampT.Unknown)
+                    if (_roles[_localPlayer.id].Camp == CampT.Unknown)
                         readyHint.text = "选择角色";
                     else if (_isHost)
                         readyHint.text = "开始游戏";

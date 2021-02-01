@@ -14,6 +14,8 @@ namespace Script.Networking
             private RoomManager _roomManager;
             private bool _registered;
 
+            [SyncVar] public int id;
+
             public override void OnClientEnterRoom()
             {
                 if (!isLocalPlayer || _registered) return;
