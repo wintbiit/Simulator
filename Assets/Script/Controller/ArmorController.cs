@@ -6,6 +6,11 @@ namespace Script.Controller
 {
     namespace Armor
     {
+        /*
+         * 装甲板颜色种类
+         * 红色与蓝色
+         * Down暂时没有使用
+         */
         public enum ColorT
         {
             Down = 0,
@@ -13,6 +18,11 @@ namespace Script.Controller
             Blue = 2
         }
 
+        /*
+         * 实例化于每一个装甲板预制件上
+         * + 设置灯光颜色
+         * + 设置数字标记
+         */
         public class ArmorController : MonoBehaviour
         {
             public MeshRenderer[] lights;

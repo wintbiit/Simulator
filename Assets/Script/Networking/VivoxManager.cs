@@ -6,20 +6,32 @@ using VivoxUnity;
 
 namespace Script.Networking
 {
+    /*
+     * 音频服务管理器脚本
+     * 使用 VIVOX 提供语音、文本（暂无计划）通讯服务
+     * 这里很多调用直接参考了 VIVOX 官方例程，没有太多可配置的参数
+     * VIVOX 官方文档需要注册并完成认证才能查看
+     * + 用户登录
+     * + 切换频道
+     * + 用户登出
+     */
     public class VivoxManager : MonoBehaviour
     {
         // Secrets
+        // 硬编码了一些认证数据，目前后台配置为 Sandbox 模式，可以随意测试
+        // VIVOX 为独立项目提供（目前体量下用不完的）免费配额
         private const string TokenIssuer = "yanghu8187-ro49-dev";
         private const string TokenDomain = "mt1s.vivox.com";
         private const string TokenKey = "back250";
         private readonly TimeSpan _tokenExpiration = new TimeSpan(0, 1, 30);
         private readonly Uri _serverUri = new Uri("https://mt1s.www.vivox.com/api2");
 
+        // 不同频道的名称
         private const string LobbyChannel = "lobbychannel";
         private const string RedChannel = "redchannel";
         private const string BlueChannel = "bluechannel";
 
-        // Client side
+        // 客户端侧成员
         private readonly Client _client = new Client();
         private ILoginSession _loginSession;
         private IChannelSession _channelSession;
@@ -46,10 +58,13 @@ namespace Script.Networking
             _client.Uninitialize();
         }
 
+        /*
+         * 此类接口调用会阻塞较长时间
+         * 以下方法都实现为 Coroutine，方便异步调用
+         */
         public IEnumerator Login(string username)
         {
             yield return null;
-            // Ready = true;
             var accountId = new AccountId(
                 TokenIssuer,
                 username,

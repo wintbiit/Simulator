@@ -5,25 +5,26 @@ namespace Script.Networking
 {
     namespace Lobby
     {
+        /*
+         * 存在于准备大厅中的玩家实例
+         */
         public class RoomPlayer : NetworkRoomPlayer
         {
-            [SyncVar] public string displayName;
-            [SyncVar] public int connectionId;
-
-            private LobbyManager _lobbyManager;
-            private RoomManager _roomManager;
-            private bool _registered;
-
             [SyncVar] public int id;
+            [SyncVar] public int connectionId;
+            [SyncVar] public string displayName;
+
+            // 客户端侧成员
+            // 记录是否已登记过
+            private bool _registered;
 
             public override void OnClientEnterRoom()
             {
                 if (!isLocalPlayer || _registered) return;
                 _registered = true;
-                _lobbyManager = GameObject.Find("Main Camera").GetComponent<LobbyManager>();
-                _roomManager = GameObject.Find("RoomManager").GetComponent<RoomManager>();
-                displayName = _roomManager.SelfDisplayName;
-                _lobbyManager.PlayerRegister(this);
+                // 从本地 RoomManager 获取本地用户名
+                displayName = GameObject.Find("RoomManager").GetComponent<RoomManager>().LocalDisplayName;
+                GameObject.Find("Main Camera").GetComponent<LobbyManager>().PlayerRegister(this);
             }
 
             public override void OnGUI()

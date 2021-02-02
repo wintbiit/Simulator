@@ -7,22 +7,38 @@ namespace Script.Networking
 {
     namespace Index
     {
-        public class Index : MonoBehaviour
+        /*
+         * 登陆页面管理器脚本
+         * + 文本框输入
+         * + 提示文本更新
+         * + Tab键 切换文本框
+         * + Return键 根据输入情况选择本地游戏、连接服务器
+         * + F1键 以纯服务器模式启动
+         * + Esc键 退出程序
+         */
+        public class IndexManager : MonoBehaviour
         {
+            private RoomManager _roomManager;
+
+            // 用户名、服务器地址文本框
             public TMP_InputField displayNameInputField;
+
             public TMP_InputField serverAddressInputField;
-            public TMP_Text enterHintText;
 
-            private RoomManager _manager;
-
+            // 输入内容
             private string _displayName = "";
+
             private string _serverAddress = "";
+
+            // Return动作提示文字
+            public TMP_Text enterHintText;
 
             private void Start()
             {
-                _manager = GameObject.Find("RoomManager").GetComponent<RoomManager>();
+                _roomManager = GameObject.Find("RoomManager").GetComponent<RoomManager>();
                 displayNameInputField.onValueChanged.AddListener(OnDisplayNameChanged);
                 serverAddressInputField.onValueChanged.AddListener(OnServerAddressChanged);
+                // 先更新一次提示文字
                 CheckInfoComplete();
             }
 
@@ -59,6 +75,7 @@ namespace Script.Networking
             }
 
 
+            // 防止触发连按的标志变量
             private bool _tabPressed;
             private bool _returnPressed;
 
@@ -69,6 +86,7 @@ namespace Script.Networking
                     if (!_tabPressed)
                     {
                         _tabPressed = true;
+                        // Tab键切换输入框
                         if (!displayNameInputField.isFocused)
                             displayNameInputField.Select();
                         else
@@ -85,16 +103,19 @@ namespace Script.Networking
                     if (!_returnPressed)
                     {
                         _returnPressed = true;
-                        _manager.SelfDisplayName = _displayName;
+                        _roomManager.LocalDisplayName = _displayName;
                         switch (CheckInfoComplete())
                         {
                             case 0:
-                                _manager.networkAddress = _serverAddress;
-                                _manager.StartClient();
+                                // 填写了用户名和服务器地址
+                                _roomManager.networkAddress = _serverAddress;
+                                _roomManager.StartClient();
                                 break;
                             case 1:
+                                // 只填写用户名未填写服务器地址
+                                // WebPlayer平台无法作为服务器
                                 if (Application.platform != RuntimePlatform.WebGLPlayer)
-                                    _manager.StartHost();
+                                    _roomManager.StartHost();
                                 break;
                         }
                     }
@@ -107,7 +128,7 @@ namespace Script.Networking
                 if (Input.GetKey(KeyCode.F1))
                 {
                     if (Application.platform != RuntimePlatform.WebGLPlayer)
-                        _manager.StartServer();
+                        _roomManager.StartServer();
                 }
 
                 if (Input.GetKey(KeyCode.Escape))
@@ -118,6 +139,7 @@ namespace Script.Networking
 
             private void FixedUpdate()
             {
+                // 未进行本地游戏或连接服务器
                 if (!NetworkServer.active && !NetworkClient.isConnected)
                     KeyEvents();
             }

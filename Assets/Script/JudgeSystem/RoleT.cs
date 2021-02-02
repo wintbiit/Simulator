@@ -1,9 +1,13 @@
-﻿using System;
-
-namespace Script.JudgeSystem
+﻿namespace Script.JudgeSystem
 {
     namespace Role
     {
+        /*
+         * 阵营类型
+         * 未选择阵营为 Unknown
+         * 红方与蓝方阵营
+         * 裁判阵营
+         */
         public enum CampT
         {
             Unknown = -1,
@@ -12,6 +16,11 @@ namespace Script.JudgeSystem
             Judge = 2
         }
 
+        /*
+         * 职业类型
+         * 未选择职业或裁判阵营为 Unknown
+         * 英雄、工程、至多三个步兵、云台手、飞手
+         */
         public enum TypeT
         {
             Unknown = -1,
@@ -24,18 +33,19 @@ namespace Script.JudgeSystem
             Drone = 6
         }
 
-        public class RoleTag
+        // 角色类型包含了阵营与职业信息
+        public class RoleT
         {
             public readonly CampT Camp;
             public readonly TypeT Type;
 
-            public RoleTag()
+            public RoleT()
             {
                 Camp = CampT.Unknown;
                 Type = TypeT.Unknown;
             }
 
-            public RoleTag(CampT camp, TypeT type)
+            public RoleT(CampT camp, TypeT type)
             {
                 Camp = camp;
                 Type = type;
@@ -53,7 +63,7 @@ namespace Script.JudgeSystem
                 return Camp == CampT.Red;
             }
 
-            public bool Equals(RoleTag obj)
+            public bool Equals(RoleT obj)
             {
                 return obj.Camp == Camp && obj.Type == Type;
             }

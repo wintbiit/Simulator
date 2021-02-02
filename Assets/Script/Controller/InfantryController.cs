@@ -12,6 +12,9 @@ namespace Script.Controller
 {
     namespace Infantry
     {
+        /*
+         * 车辆轮组结构（仿照 WheelCollider 例程）
+         */
         [Serializable]
         public class AxleInfo
         {
@@ -20,6 +23,19 @@ namespace Script.Controller
             public bool motor;
         }
 
+        /*
+         * 步兵控制器
+         * 操作手感经过测试，可以作为地面车辆统一运动模型
+         * 此部分可提取地面车辆通用部分作为基类
+         * + 前后驱动
+         * + 水平驱动
+         * + 刹车
+         * + 方向旋转
+         * + 定向旋转
+         * + 小陀螺
+         * + 防翻车
+         * + 部分补给逻辑（需要替换）
+         */
         public class InfantryController : RobotBase
         {
             // 车辆最大驱动扭矩、最大转向速度
@@ -58,7 +74,7 @@ namespace Script.Controller
             public GameObject fpCam;
             private bool _fpActive = true;
 
-            // UI
+            // UI部分统一实现，测试UI弃用
             // [Header("UI")] public GameObject canvas;
             // public GameObject eventSystem;
             // public GameObject guide;

@@ -7,6 +7,7 @@ namespace Script.Networking
 {
     namespace Game
     {
+        // 用于存放队伍出生点的结构
         [Serializable]
         public class CampStart
         {
@@ -18,6 +19,15 @@ namespace Script.Networking
             public Transform drone;
         }
 
+        /*
+         * 比赛管理器
+         * + 保存队伍出生点
+         * （以下待实现）
+         * + 倒计时
+         * + 表驱动的赛场事件
+         * + 比赛状态记录
+         * + 比赛中可能需要的服务器调用等
+         */
         public class GameManager : NetworkBehaviour
         {
             private RoomManager _roomManager;
