@@ -1,4 +1,5 @@
 ﻿using Mirror;
+using Script.Controller.Bullet;
 using Script.JudgeSystem.Role;
 
 namespace Script.JudgeSystem
@@ -46,7 +47,7 @@ namespace Script.JudgeSystem
          * 
          * isLocalRobot: 用于确权
          */
-        public class RobotBase : NetworkBehaviour
+        public abstract class RobotBase : NetworkBehaviour, IVulnerable
         {
             [SyncVar] public int id;
             [SyncVar] public RoleT Role;
@@ -62,6 +63,8 @@ namespace Script.JudgeSystem
             [SyncVar] public GunT gunType;
 
             public bool isLocalRobot;
+
+            public abstract void Hit(int hitter, CaliberT caliber);
         }
     }
 }

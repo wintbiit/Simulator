@@ -113,6 +113,7 @@ namespace Script.Networking
              * GamePlayer 存储了用户的身份数据
              * Robot 通过确认本地用户的控制权来被操控
              */
+            private bool _facilitiesInitiated;
             public override GameObject OnRoomServerCreateGamePlayer(NetworkConnection conn, GameObject roomPlayer)
             {
                 // 创建 GamePlayer
@@ -179,6 +180,16 @@ namespace Script.Networking
                 robotComponent.id = roomPlayerComponent.id;
                 // 将生成的机器人对象同步生成到所有客户端中
                 NetworkServer.Spawn(robotInstance, conn);
+
+                // 自动化机器人、建筑等初始化
+                if (_facilitiesInitiated) return player;
+                _facilitiesInitiated = true;
+                var t = _gameManager.blueStart.guard;
+                var f = Instantiate(guardPrefab, t.position, t.rotation);
+                NetworkServer.Spawn(f);
+                var t1 = _gameManager.redStart.guard;
+                var f1 = Instantiate(guardPrefab, t1.position, t1.rotation);
+                NetworkServer.Spawn(f1);
 
                 return player;
             }

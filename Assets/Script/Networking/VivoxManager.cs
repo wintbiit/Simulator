@@ -65,6 +65,7 @@ namespace Script.Networking
         public IEnumerator Login(string username)
         {
             yield return null;
+            Ready = true;
             var accountId = new AccountId(
                 TokenIssuer,
                 username,

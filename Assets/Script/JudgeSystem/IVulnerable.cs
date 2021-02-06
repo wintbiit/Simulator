@@ -1,4 +1,6 @@
-﻿namespace Script.Controller
+﻿using Script.Controller.Bullet;
+
+namespace Script.JudgeSystem
 {
     /*
      * 可伤害对象的控制器应实现此接口（未详细设计）
@@ -6,6 +8,6 @@
      */
     public interface IVulnerable
     {
-        void Hurt(int hurt);
+        void Hit(int hitter, CaliberT caliber);
     }
 }

@@ -101,10 +101,17 @@ namespace Script.Controller
             [SyncVar] private bool _supplying;
             [SyncVar] private Quaternion _pitchRot;
 
+            public override void Hit(int hitter, CaliberT caliber)
+            {
+                Debug.Log(id.ToString() + hitter + caliber);
+            }
+
             private void ArmorSetup()
             {
                 foreach (var armor in armors)
                 {
+                    armor.UnitRegister(this);
+
                     if (Role.IsInfantry())
                     {
                         // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault

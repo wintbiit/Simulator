@@ -14,7 +14,8 @@ namespace Script.Controller
         public enum CaliberT
         {
             Small = 0,
-            Large = 1
+            Large = 1,
+            Dart = 2
         }
 
         /*
@@ -34,8 +35,8 @@ namespace Script.Controller
             private void OnCollisionEnter(Collision other)
             {
                 if (!isActive || !other.collider.CompareTag("Armor")) return;
-                Debug.Log("Hit");
-                other.gameObject.GetComponent<ArmorController>();
+                other.gameObject.GetComponent<ArmorController>().Hit(owner, caliber);
+                Destroy(this);
             }
         }
     }

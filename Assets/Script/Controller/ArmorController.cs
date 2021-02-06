@@ -1,4 +1,6 @@
 ﻿using System;
+using Script.Controller.Bullet;
+using Script.JudgeSystem;
 using TMPro;
 using UnityEngine;
 
@@ -30,6 +32,18 @@ namespace Script.Controller
             public Material blueLight;
 
             public TMP_Text label;
+
+            private IVulnerable _unit;
+
+            public void UnitRegister(IVulnerable unit)
+            {
+                _unit = unit;
+            }
+
+            public void Hit(int hitter, CaliberT caliber)
+            {
+                _unit?.Hit(hitter, caliber);
+            }
 
             public void ChangeColor(ColorT color)
             {

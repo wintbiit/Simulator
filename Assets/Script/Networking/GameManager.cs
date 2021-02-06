@@ -17,6 +17,7 @@ namespace Script.Networking
             public Transform infantryB;
             public Transform infantryC;
             public Transform drone;
+            public Transform guard;
         }
 
         /*
