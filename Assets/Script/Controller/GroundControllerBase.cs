@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Mirror;
 using Script.Controller.Armor;
 using Script.Controller.Bullet;
+using Script.JudgeSystem;
+using Script.JudgeSystem.GameEvent;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using UnityEngine;
@@ -35,7 +37,7 @@ namespace Script.Controller
      * + 鼠标锁定（需要替换）
      * + 摄像机切换（需要替换）
      */
-    public class GroundControllerBase : RobotBase
+    public class GroundControllerBase : RobotBase, IVulnerable
     {
         // 车辆最大驱动扭矩、最大转向速度
         [Header("Motor")] public List<AxleInfo> axleInfos;
@@ -73,17 +75,6 @@ namespace Script.Controller
         public GameObject fpCam;
         private bool _fpActive = true;
 
-        // UI部分统一实现，测试UI弃用
-        // [Header("UI")] public GameObject canvas;
-        // public GameObject eventSystem;
-        // public GameObject guide;
-        //
-        // public GameObject settings;
-        // public Slider sensitivity;
-        // public GameObject hud;
-        // public Text ammoLabel;
-        // public GameObject gradient;
-        // public GameObject crossHairs;
         private const float Sensitivity = 1.0f;
 
         // 防翻车回溯
@@ -97,13 +88,18 @@ namespace Script.Controller
         private int _fireCd;
         private int _angleSpin;
         [SyncVar] private bool _isSpin;
-        [SyncVar] private bool _supplying;
         [SyncVar] private Quaternion _pitchRot;
 
-        public override void Hit(int hitter, CaliberT caliber)
+        public void Hit(int hitter, CaliberT caliber)
         {
-            Debug.Log(id.ToString() + hitter + caliber);
+            CmdHit(hitter, caliber);
         }
+        
+        [Command(ignoreAuthority = true)]
+        private void CmdHit(int hitter, CaliberT caliber)
+        {
+            gameManager.Emit(new HitEvent(hitter, id, caliber));
+        } 
 
         private void ArmorSetup()
         {
@@ -127,6 +123,17 @@ namespace Script.Controller
                             break;
                     }
                 }
+                else
+                    // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+                    switch (Role.Type)
+                    {
+                        case TypeT.Hero:
+                            armor.ChangeLabel(4);
+                            break;
+                        default:
+                            armor.ChangeLabel(0);
+                            break;
+                    }
 
                 switch (Role.Camp)
                 {
@@ -218,29 +225,35 @@ namespace Script.Controller
         }
 
         [Command(ignoreAuthority = true)]
-        private void Fire()
-        {
-            var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward * speed;
-            b.GetComponent<BulletController>().owner = id;
-            Destroy(b, 4);
-            FireRpc();
-        }
-
-        [Command(ignoreAuthority = true)]
         private void SyncPitch(Quaternion rot)
         {
             SyncPitchRpc(rot);
         }
 
+        [Command(ignoreAuthority = true)]
+        private void CmdFire()
+        {
+            FireRpc();
+        }
+
         [ClientRpc]
         private void FireRpc()
         {
+            if (isLocalRobot) return;
             var b = Instantiate(bullet, gun.position, gun.rotation);
             b.GetComponent<Rigidbody>().velocity = gun.forward * speed;
-            if (isLocalRobot)
-                b.GetComponent<BulletController>().isActive = true;
             Destroy(b, 4);
+        }
+
+        private void Fire()
+        {
+            var b = Instantiate(bullet, gun.position, gun.rotation);
+            b.GetComponent<Rigidbody>().velocity = gun.forward * speed;
+            var bulletController = b.GetComponent<BulletController>();
+            bulletController.owner = id;
+            bulletController.isActive = true;
+            Destroy(b, 4);
+            CmdFire();
         }
 
         [ClientRpc]
@@ -379,15 +392,6 @@ namespace Script.Controller
                     }
                 }
 
-                // 补给
-                if (Input.GetKey(KeyCode.B))
-                {
-                    if (_supplying && _ammo < maxAmmo)
-                    {
-                        _ammo++;
-                    }
-                }
-
                 // 射速切换
                 if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.C))
                 {
@@ -431,12 +435,6 @@ namespace Script.Controller
                 {
                     _isNav = false;
                 }
-
-                // 更新显示
-                // ammoLabel.text = "Ammo: " + _ammo.ToString() + "/" + maxAmmo.ToString();
-                // var rotation = transform.rotation;
-                // gradient.transform.rotation = Quaternion.Euler(0, 0, rotation.eulerAngles.z * -1);
-                // crossHairs.transform.rotation = Quaternion.Euler(0, 0, rotation.eulerAngles.z / 2);
 
                 // 切换摄像机
                 if (Input.GetKeyDown(KeyCode.Z))
@@ -529,22 +527,6 @@ namespace Script.Controller
             else
             {
                 _lastAngle = this.transform.rotation.eulerAngles;
-            }
-        }
-
-        private void OnTriggerEnter(Collider other)
-        {
-            if (other.name == "BlueSupply" && isLocalRobot)
-            {
-                _supplying = true;
-            }
-        }
-
-        private void OnTriggerExit(Collider other)
-        {
-            if (other.name == "BlueSupply" && isLocalRobot)
-            {
-                _supplying = false;
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using System;
+using Mirror;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 
@@ -17,6 +18,12 @@ namespace Script.Networking
 
             // 此处应实现为在合适的时机进行一次权限确认，循环没有必要
             private static int _slowUpdate;
+
+            private void Start()
+            {
+                if (isServer)
+                    FindObjectOfType<GameManager>().PlayerRegister(this);
+            }
 
             private void FixedUpdate()
             {

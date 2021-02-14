@@ -528,6 +528,7 @@ MonoBehaviour:
   powerLimit: 0
   chassisType: 0
   gunType: 0
+  gameManager: {fileID: 0}
   isLocalRobot: 0
   axleInfos:
   - leftWheel: {fileID: 6138098554632721921}
@@ -1318,7 +1319,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1d454a1b97fc3dc4bb02a981ee413e33, type: 2}
+  - {fileID: 2100000, guid: b4b944b73279df74ca15bab2771f123e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3235,7 +3236,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1d454a1b97fc3dc4bb02a981ee413e33, type: 2}
+  - {fileID: 2100000, guid: b4b944b73279df74ca15bab2771f123e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

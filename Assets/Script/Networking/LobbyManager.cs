@@ -274,7 +274,8 @@ namespace Script.Networking
                 {
                     _allReady = _roomManager.allPlayersReady;
                     // 判断是否为单机跑图
-                    _isHost = _roomManager.IsHost && _roles.Count == 1;
+                    // _isHost = _roomManager.IsHost && _roles.Count == 1;
+                    _isHost = _roomManager.IsHost;
                     // 如果是纯服务器模式后面的UI处理就不需要了
                     if (_roomManager.IsServer && !_roomManager.IsHost) return;
                 }

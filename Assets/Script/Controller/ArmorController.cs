@@ -66,7 +66,7 @@ namespace Script.Controller
                 }
             }
 
-            public void ChangeLabel(int labelNumber) => label.text = (labelNumber % 10).ToString();
+            public void ChangeLabel(int labelNumber) => label.text = labelNumber != 0 ? (labelNumber % 10).ToString() : "";
         }
     }
 }

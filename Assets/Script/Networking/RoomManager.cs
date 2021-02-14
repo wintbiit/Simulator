@@ -114,6 +114,7 @@ namespace Script.Networking
              * Robot 通过确认本地用户的控制权来被操控
              */
             private bool _facilitiesInitiated;
+
             public override GameObject OnRoomServerCreateGamePlayer(NetworkConnection conn, GameObject roomPlayer)
             {
                 // 创建 GamePlayer
@@ -178,6 +179,16 @@ namespace Script.Networking
                 var robotComponent = robotInstance.GetComponent<RobotBase>();
                 robotComponent.Role = role;
                 robotComponent.id = roomPlayerComponent.id;
+                robotComponent.level = 1;
+                robotComponent.health = RobotPerformanceTable.Table[1][role.Type].HealthLimit;
+                robotComponent.experience = 0;
+                robotComponent.smallAmmo = RobotPerformanceTable.Table[1][role.Type].SmallAmmo;
+                robotComponent.largeAmmo = RobotPerformanceTable.Table[1][role.Type].LargeAmmo;
+                robotComponent.damageRate = 1.0f;
+                robotComponent.armorRate = 1.0f;
+
+                robotComponent.gameManager = _gameManager;
+                _gameManager.RobotRegister(robotComponent);
                 // 将生成的机器人对象同步生成到所有客户端中
                 NetworkServer.Spawn(robotInstance, conn);
 
@@ -199,6 +210,16 @@ namespace Script.Networking
             {
                 _lobbyManager.PlayerLeave(connectionId);
                 _connections[connectionId].Disconnect();
+            }
+
+            private void FixedUpdate()
+            {
+                if (!IsServer || _gameManager == null) return;
+                if (_connections.Count != 0) return;
+                if (IsHost)
+                    StopHost();
+                else
+                    StopServer();
             }
 
             #endregion
