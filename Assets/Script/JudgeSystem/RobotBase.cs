@@ -179,7 +179,7 @@ namespace Script.JudgeSystem
          * 所有 RobotController 的基类，包含了机器人的基本信息
          * 
          * id: 机器人唯一标识符
-         * Role: 角色
+         * role: 角色
          * level: 等级
          *
          * 根据比赛变化
@@ -198,7 +198,7 @@ namespace Script.JudgeSystem
         public abstract class RobotBase : NetworkBehaviour
         {
             [SyncVar] public int id;
-            [SyncVar] public RoleT Role;
+            [SyncVar] public RoleT role;
             [SyncVar] public int level;
 
             [SyncVar] public int health;
@@ -207,12 +207,16 @@ namespace Script.JudgeSystem
             [SyncVar] public float experience;
             [SyncVar] public float damageRate;
             [SyncVar] public float armorRate;
+            [SyncVar] public float velocityLimit;
 
             // [SyncVar] public ChassisT chassisType;
             // [SyncVar] public GunT gunType;
 
             public GameManager gameManager;
             public bool isLocalRobot;
+
+            [Client]
+            public virtual void ConfirmLocalRobot() => isLocalRobot = true;
         }
     }
 }

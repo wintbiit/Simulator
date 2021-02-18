@@ -2468,6 +2468,7 @@ MonoBehaviour:
   - {fileID: 440092709313680968, guid: 32fb68143fe37a0459a74785a7c831e1, type: 3}
   - {fileID: 3824758814212177295, guid: de2f21e233d50c4429b43e29c7e4e8d7, type: 3}
   - {fileID: 3461881804309712477, guid: c684689590a20b749949958433c0963e, type: 3}
+  - {fileID: 8434078990862459252, guid: 5c4d18c49894b314c82babf7470b329c, type: 3}
   showRoomGUI: 1
   minPlayers: 1
   roomPlayerPrefab: {fileID: 6607923051405549651, guid: e25bed0265c491741a4eb99ac76c4899,
@@ -2486,6 +2487,8 @@ MonoBehaviour:
   dronePrefab: {fileID: 2752303330134738270, guid: 5579f5f3b96755d4589cb85c43f4e90c,
     type: 3}
   guardPrefab: {fileID: 3461881804309712477, guid: c684689590a20b749949958433c0963e,
+    type: 3}
+  basePrefab: {fileID: 8434078990862459252, guid: 5c4d18c49894b314c82babf7470b329c,
     type: 3}
 --- !u!4 &1514517855
 Transform:

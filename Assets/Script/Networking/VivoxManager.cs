@@ -66,6 +66,7 @@ namespace Script.Networking
         {
             yield return null;
             Ready = true;
+            /*
             var accountId = new AccountId(
                 TokenIssuer,
                 username,
@@ -89,6 +90,7 @@ namespace Script.Networking
                     }
                 }
             );
+            */
         }
 
         public IEnumerator SwitchRed()

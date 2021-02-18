@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Mirror;
+using Script.JudgeSystem.Facility;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
@@ -27,6 +28,7 @@ namespace Script.Networking
             public GameObject infantryPrefab;
             public GameObject dronePrefab;
             public GameObject guardPrefab;
+            public GameObject basePrefab;
 
             // 客户端侧成员
             // 在客户端侧将本地用户名从登陆页面传递给本地大厅玩家
@@ -46,6 +48,14 @@ namespace Script.Networking
 
             // 从网络连接ID到网络连接对象的映射
             private readonly Dictionary<int, NetworkConnection> _connections = new Dictionary<int, NetworkConnection>();
+
+            public override void Awake()
+            {
+                if (FindObjectsOfType<RoomManager>().Length > 1)
+                    Destroy(this);
+                else
+                    base.Awake();
+            }
 
             // 在服务端侧执行的函数
 
@@ -124,7 +134,7 @@ namespace Script.Networking
                 // 传递用户标识
                 gamePlayer.index = roomPlayerComponent.id;
                 gamePlayer.displayName = roomPlayerComponent.displayName;
-                gamePlayer.Role = _roles[roomPlayerComponent.id];
+                gamePlayer.role = _roles[roomPlayerComponent.id];
 
                 // 创建 Robot
                 GameObject robotInstance = null;
@@ -177,7 +187,7 @@ namespace Script.Networking
 
                 if (!robotInstance) return player;
                 var robotComponent = robotInstance.GetComponent<RobotBase>();
-                robotComponent.Role = role;
+                robotComponent.role = role;
                 robotComponent.id = roomPlayerComponent.id;
                 robotComponent.level = 1;
                 robotComponent.health = RobotPerformanceTable.Table[1][role.Type].HealthLimit;
@@ -186,6 +196,7 @@ namespace Script.Networking
                 robotComponent.largeAmmo = RobotPerformanceTable.Table[1][role.Type].LargeAmmo;
                 robotComponent.damageRate = 1.0f;
                 robotComponent.armorRate = 1.0f;
+                robotComponent.velocityLimit = RobotPerformanceTable.Table[1][role.Type].VelocityLimit;
 
                 robotComponent.gameManager = _gameManager;
                 _gameManager.RobotRegister(robotComponent);
@@ -194,14 +205,53 @@ namespace Script.Networking
 
                 // 自动化机器人、建筑等初始化
                 if (_facilitiesInitiated) return player;
+                NetworkConnection facilityOwner = null;
+                if (IsHost) facilityOwner = conn;
+                else if (role.Camp == CampT.Judge) facilityOwner = conn;
+                if (facilityOwner == null) return player;
                 _facilitiesInitiated = true;
-                var t = _gameManager.blueStart.guard;
-                var f = Instantiate(guardPrefab, t.position, t.rotation);
-                NetworkServer.Spawn(f);
-                var t1 = _gameManager.redStart.guard;
-                var f1 = Instantiate(guardPrefab, t1.position, t1.rotation);
-                NetworkServer.Spawn(f1);
-
+                // 哨兵
+                {
+                    var t = _gameManager.blueStart.guard;
+                    var f = Instantiate(guardPrefab, t.position, t.rotation);
+                    var c = f.GetComponent<RobotBase>();
+                    c.id = 11;
+                    c.role = new RoleT(CampT.Blue, TypeT.Guard);
+                    
+                    NetworkServer.Spawn(f, facilityOwner);
+                    var t1 = _gameManager.redStart.guard;
+                    var f1 = Instantiate(guardPrefab, t1.position, t1.rotation);
+                    var c1 = f1.GetComponent<RobotBase>();
+                    c1.id = 12;
+                    c1.role = new RoleT(CampT.Red, TypeT.Guard);
+                    NetworkServer.Spawn(f1, facilityOwner);
+                }
+                // 基地
+                {
+                    var t = _gameManager.blueStart.campBase;
+                    var f = Instantiate(basePrefab, t.position, t.rotation);
+                    var c = f.GetComponent<FacilityBase>();
+                    c.id = 13;
+                    c.role = new RoleT(CampT.Blue, TypeT.Base);
+                    c.gameManager = _gameManager;
+                    c.health = 2000;
+                    c.healthLimit = 2000;
+                    c.armorRate = 1.0f;
+                    _gameManager.FacilityRegister(c);
+                    NetworkServer.Spawn(f, facilityOwner);
+                    
+                    var t1 = _gameManager.redStart.campBase;
+                    var f1 = Instantiate(basePrefab, t1.position, t1.rotation);
+                    var c1 = f1.GetComponent<FacilityBase>();
+                    c1.id = 14;
+                    c1.role = new RoleT(CampT.Red, TypeT.Base);
+                    c1.gameManager = _gameManager;
+                    c1.health = 2000;
+                    c1.healthLimit = 2000;
+                    c1.armorRate = 1.0f;
+                    _gameManager.FacilityRegister(c1);
+                    NetworkServer.Spawn(f1, facilityOwner);
+                }
                 return player;
             }
 
@@ -216,10 +266,24 @@ namespace Script.Networking
             {
                 if (!IsServer || _gameManager == null) return;
                 if (_connections.Count != 0) return;
+                ResetServer();
+            }
+
+            [Server]
+            public void ResetServer()
+            {
                 if (IsHost)
                     StopHost();
                 else
                     StopServer();
+                LocalDisplayName = "";
+                _lobbyManager = null;
+                _gameManager = null;
+                IsHost = false;
+                IsServer = false;
+                _roles.Clear();
+                _connections.Clear();
+                _facilitiesInitiated = false;
             }
 
             #endregion

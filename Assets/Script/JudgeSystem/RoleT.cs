@@ -1,4 +1,6 @@
-﻿namespace Script.JudgeSystem
+﻿using System;
+
+namespace Script.JudgeSystem
 {
     namespace Role
     {
@@ -8,6 +10,7 @@
          * 红方与蓝方阵营
          * 裁判阵营
          */
+        [Serializable]
         public enum CampT
         {
             Unknown = -1,
@@ -21,6 +24,7 @@
          * 未选择职业或裁判阵营为 Unknown
          * 英雄、工程、至多三个步兵、云台手、飞手
          */
+        [Serializable]
         public enum TypeT
         {
             Unknown = -1,
@@ -30,10 +34,17 @@
             InfantryB = 3,
             InfantryC = 4,
             Ptz = 5,
-            Drone = 6
+            Drone = 6,
+            Guard = 7,
+            SupplyStation = 8,
+            DartLauncher = 9,
+            Base = 10,
+            Outpost = 11,
+            EnergyMechanism = 12
         }
 
         // 角色类型包含了阵营与职业信息
+        [Serializable]
         public class RoleT
         {
             public readonly CampT Camp;

@@ -7,6 +7,7 @@ using Script.JudgeSystem;
 using Script.JudgeSystem.GameEvent;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
+using Script.Networking.Game;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -61,10 +62,6 @@ namespace Script.Controller
 
         [Header("Armor")] public ArmorController[] armors;
 
-        // 补给
-        [Header("Ammo")] public int maxAmmo;
-        private int _ammo;
-
         // 特殊角度导航
         private float _targetRot;
         private bool _isNav;
@@ -94,12 +91,12 @@ namespace Script.Controller
         {
             CmdHit(hitter, caliber);
         }
-        
+
         [Command(ignoreAuthority = true)]
         private void CmdHit(int hitter, CaliberT caliber)
         {
             gameManager.Emit(new HitEvent(hitter, id, caliber));
-        } 
+        }
 
         private void ArmorSetup()
         {
@@ -107,10 +104,10 @@ namespace Script.Controller
             {
                 armor.UnitRegister(this);
 
-                if (Role.IsInfantry())
+                if (role.IsInfantry())
                 {
                     // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
-                    switch (Role.Type)
+                    switch (role.Type)
                     {
                         case TypeT.InfantryA:
                             armor.ChangeLabel(1);
@@ -125,7 +122,7 @@ namespace Script.Controller
                 }
                 else
                     // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-                    switch (Role.Type)
+                    switch (role.Type)
                     {
                         case TypeT.Hero:
                             armor.ChangeLabel(4);
@@ -135,7 +132,7 @@ namespace Script.Controller
                             break;
                     }
 
-                switch (Role.Camp)
+                switch (role.Camp)
                 {
                     case CampT.Unknown:
                         armor.ChangeColor(ColorT.Down);
@@ -162,21 +159,26 @@ namespace Script.Controller
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
                 _fpActive = true;
-                // hud.SetActive(true);
             }
             else
             {
                 tpCam.SetActive(false);
                 fpCam.SetActive(false);
-                //canvas.SetActive(false);
-                //eventSystem.SetActive(false);
             }
 
             ToggleMeshRenderer(chassis, true);
             ToggleMeshRenderer(spinner, false);
-            _ammo = maxAmmo;
             _maxMotorTorque = oriMaxMotorTorque;
             _angleSpin = 0;
+        }
+
+        [Client]
+        public override void ConfirmLocalRobot()
+        {
+            base.ConfirmLocalRobot();
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            FindObjectOfType<GameManager>().LocalRobotRegister(this);
         }
 
         // 显示、隐藏模型
@@ -248,7 +250,7 @@ namespace Script.Controller
         private void Fire()
         {
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward * speed;
+            b.GetComponent<Rigidbody>().velocity = gun.forward * velocityLimit;
             var bulletController = b.GetComponent<BulletController>();
             bulletController.owner = id;
             bulletController.isActive = true;
@@ -265,11 +267,17 @@ namespace Script.Controller
             }
         }
 
+        public override void OnStopClient()
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
         public void FixedUpdate()
         {
             ArmorSetup();
 
-            if (isLocalRobot)
+            if (isLocalRobot && health > 0)
             {
                 // 车辆前后驱动
                 if (Cursor.lockState == CursorLockMode.Locked)
@@ -379,9 +387,13 @@ namespace Script.Controller
                 // 射击
                 if (Cursor.lockState == CursorLockMode.Locked && Input.GetMouseButton(0))
                 {
-                    if (_fireCd == 0 && _ammo > 0)
+                    var caliber = bullet.GetComponent<BulletController>().caliber;
+                    if (_fireCd == 0 && (caliber == CaliberT.Large ? largeAmmo > 0 : smallAmmo > 0))
                     {
-                        _ammo--;
+                        if (caliber == CaliberT.Large)
+                            largeAmmo--;
+                        else
+                            smallAmmo--;
                         Fire();
                         _fireCd = Random.Range(5, 15);
                         if (highFreq) _fireCd /= 2;

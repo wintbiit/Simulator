@@ -13,7 +13,8 @@
             FourMinute,
             ThreeMinute,
             TwoMinute,
-            OneMinute
+            OneMinute,
+            Reset,
         }
         
         /*

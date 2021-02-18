@@ -1,5 +1,4 @@
-﻿using System;
-using Mirror;
+﻿using Mirror;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 
@@ -14,7 +13,7 @@ namespace Script.Networking
         {
             [SyncVar] public int index;
             [SyncVar] public string displayName;
-            [SyncVar] public RoleT Role;
+            [SyncVar] public RoleT role;
 
             // 此处应实现为在合适的时机进行一次权限确认，循环没有必要
             private static int _slowUpdate;
@@ -25,23 +24,22 @@ namespace Script.Networking
                     FindObjectOfType<GameManager>().PlayerRegister(this);
             }
 
-            private void FixedUpdate()
+            [Server]
+            public void OnAllReady()
             {
-                if (_slowUpdate % 10 == 0)
-                {
-                    if (isLocalPlayer)
-                        // 该行有性能问题
-                        foreach (var robot in FindObjectsOfType<RobotBase>())
-                            // 如果是对应的 Robot，则进行确权
-                            if (robot.id == index)
-                            {
-                                robot.isLocalRobot = true;
-                                break;
-                            }
+                OnAllReadyRpc();
+            }
 
-                    _slowUpdate = 0;
-                }
-                else _slowUpdate++;
+            [ClientRpc]
+            private void OnAllReadyRpc()
+            {
+                if (!isLocalPlayer) return;
+                foreach (var robot in FindObjectsOfType<RobotBase>())
+                    if (robot.id == index)
+                    {
+                        robot.ConfirmLocalRobot();
+                        break;
+                    }
             }
         }
     }

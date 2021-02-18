@@ -1709,16 +1709,14 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   id: 0
+  level: 0
   health: 0
-  damageRate: 0
-  armorRate: 0
   smallAmmo: 0
   largeAmmo: 0
-  heatLimit: 0
   experience: 0
-  powerLimit: 0
-  chassisType: 0
-  gunType: 0
+  damageRate: 0
+  armorRate: 0
+  gameManager: {fileID: 0}
   isLocalRobot: 0
   axleInfos:
   - leftWheel: {fileID: 4061695243533972917}
@@ -1730,7 +1728,7 @@ MonoBehaviour:
   oriMaxMotorTorque: 50
   maxSteeringSpeed: 2.5
   pitch: {fileID: 1553143908400611858}
-  maxPitchAngle: 20
+  maxPitchAngle: 35
   chassis: {fileID: 8576152929785708052}
   spinner: {fileID: 8917468470483093294}
   gun: {fileID: 5107668994072277423}
