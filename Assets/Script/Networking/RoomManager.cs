@@ -29,6 +29,9 @@ namespace Script.Networking
             public GameObject dronePrefab;
             public GameObject guardPrefab;
             public GameObject basePrefab;
+            public GameObject outpostPrefab;
+            public GameObject silverPrefab;
+            public GameObject goldPrefab;
 
             // 客户端侧成员
             // 在客户端侧将本地用户名从登陆页面传递给本地大厅玩家
@@ -185,23 +188,25 @@ namespace Script.Networking
                         throw new ArgumentOutOfRangeException();
                 }
 
-                if (!robotInstance) return player;
-                var robotComponent = robotInstance.GetComponent<RobotBase>();
-                robotComponent.role = role;
-                robotComponent.id = roomPlayerComponent.id;
-                robotComponent.level = 1;
-                robotComponent.health = RobotPerformanceTable.Table[1][role.Type].HealthLimit;
-                robotComponent.experience = 0;
-                robotComponent.smallAmmo = RobotPerformanceTable.Table[1][role.Type].SmallAmmo;
-                robotComponent.largeAmmo = RobotPerformanceTable.Table[1][role.Type].LargeAmmo;
-                robotComponent.damageRate = 1.0f;
-                robotComponent.armorRate = 1.0f;
-                robotComponent.velocityLimit = RobotPerformanceTable.Table[1][role.Type].VelocityLimit;
+                if (robotInstance)
+                {
+                    var robotComponent = robotInstance.GetComponent<RobotBase>();
+                    robotComponent.role = role;
+                    robotComponent.id = roomPlayerComponent.id;
+                    robotComponent.level = 1;
+                    robotComponent.health = RobotPerformanceTable.table[1][role.Type].HealthLimit;
+                    robotComponent.experience = 0;
+                    robotComponent.smallAmmo = RobotPerformanceTable.table[1][role.Type].SmallAmmo;
+                    robotComponent.largeAmmo = RobotPerformanceTable.table[1][role.Type].LargeAmmo;
+                    robotComponent.damageRate = 1.0f;
+                    robotComponent.armorRate = 1.0f;
+                    robotComponent.velocityLimit = RobotPerformanceTable.table[1][role.Type].VelocityLimit;
 
-                robotComponent.gameManager = _gameManager;
-                _gameManager.RobotRegister(robotComponent);
-                // 将生成的机器人对象同步生成到所有客户端中
-                NetworkServer.Spawn(robotInstance, conn);
+                    robotComponent.gameManager = _gameManager;
+                    _gameManager.RobotRegister(robotComponent);
+                    // 将生成的机器人对象同步生成到所有客户端中
+                    NetworkServer.Spawn(robotInstance, conn);
+                }
 
                 // 自动化机器人、建筑等初始化
                 if (_facilitiesInitiated) return player;
@@ -215,15 +220,35 @@ namespace Script.Networking
                     var t = _gameManager.blueStart.guard;
                     var f = Instantiate(guardPrefab, t.position, t.rotation);
                     var c = f.GetComponent<RobotBase>();
-                    c.id = 11;
                     c.role = new RoleT(CampT.Blue, TypeT.Guard);
-                    
+                    c.id = 11;
+                    c.level = 1;
+                    c.health = RobotPerformanceTable.table[1][TypeT.Guard].HealthLimit;
+                    c.experience = 0;
+                    c.smallAmmo = RobotPerformanceTable.table[1][TypeT.Guard].SmallAmmo;
+                    c.largeAmmo = RobotPerformanceTable.table[1][TypeT.Guard].LargeAmmo;
+                    c.damageRate = 1.0f;
+                    c.armorRate = 1.0f;
+                    c.velocityLimit = RobotPerformanceTable.table[1][TypeT.Guard].VelocityLimit;
+                    c.gameManager = _gameManager;
+                    _gameManager.RobotRegister(c);
                     NetworkServer.Spawn(f, facilityOwner);
+                    
                     var t1 = _gameManager.redStart.guard;
                     var f1 = Instantiate(guardPrefab, t1.position, t1.rotation);
                     var c1 = f1.GetComponent<RobotBase>();
-                    c1.id = 12;
                     c1.role = new RoleT(CampT.Red, TypeT.Guard);
+                    c1.id = 12;
+                    c1.level = 1;
+                    c1.health = RobotPerformanceTable.table[1][TypeT.Guard].HealthLimit;
+                    c1.experience = 0;
+                    c1.smallAmmo = RobotPerformanceTable.table[1][TypeT.Guard].SmallAmmo;
+                    c1.largeAmmo = RobotPerformanceTable.table[1][TypeT.Guard].LargeAmmo;
+                    c1.damageRate = 1.0f;
+                    c1.armorRate = 1.0f;
+                    c1.velocityLimit = RobotPerformanceTable.table[1][TypeT.Guard].VelocityLimit;
+                    c1.gameManager = _gameManager;
+                    _gameManager.RobotRegister(c1);
                     NetworkServer.Spawn(f1, facilityOwner);
                 }
                 // 基地
@@ -234,8 +259,8 @@ namespace Script.Networking
                     c.id = 13;
                     c.role = new RoleT(CampT.Blue, TypeT.Base);
                     c.gameManager = _gameManager;
-                    c.health = 2000;
-                    c.healthLimit = 2000;
+                    c.health = 5500;
+                    c.healthLimit = 5500;
                     c.armorRate = 1.0f;
                     _gameManager.FacilityRegister(c);
                     NetworkServer.Spawn(f, facilityOwner);
@@ -246,11 +271,44 @@ namespace Script.Networking
                     c1.id = 14;
                     c1.role = new RoleT(CampT.Red, TypeT.Base);
                     c1.gameManager = _gameManager;
+                    c1.health = 5000;
+                    c1.healthLimit = 5000;
+                    c1.armorRate = 1.0f;
+                    _gameManager.FacilityRegister(c1);
+                    NetworkServer.Spawn(f1, facilityOwner);
+                }
+                // 前哨站
+                {
+                    var t = _gameManager.blueStart.campOutpost;
+                    var f = Instantiate(outpostPrefab, t.position, t.rotation);
+                    var c = f.GetComponent<FacilityBase>();
+                    c.id = 15;
+                    c.role = new RoleT(CampT.Blue, TypeT.Outpost);
+                    c.gameManager = _gameManager;
+                    c.health = 2000;
+                    c.healthLimit = 2000;
+                    c.armorRate = 1.0f;
+                    _gameManager.FacilityRegister(c);
+                    NetworkServer.Spawn(f, facilityOwner);
+                    
+                    var t1 = _gameManager.redStart.campOutpost;
+                    var f1 = Instantiate(outpostPrefab, t1.position, t1.rotation);
+                    var c1 = f1.GetComponent<FacilityBase>();
+                    c1.id = 16;
+                    c1.role = new RoleT(CampT.Red, TypeT.Outpost);
+                    c1.gameManager = _gameManager;
                     c1.health = 2000;
                     c1.healthLimit = 2000;
                     c1.armorRate = 1.0f;
                     _gameManager.FacilityRegister(c1);
                     NetworkServer.Spawn(f1, facilityOwner);
+                }
+                // 矿物
+                {
+                    foreach (var m in _gameManager.silverStart)
+                        NetworkServer.Spawn(Instantiate(silverPrefab, m.position, m.rotation), facilityOwner);
+                    foreach (var m in _gameManager.goldStart)
+                        NetworkServer.Spawn(Instantiate(goldPrefab, m.position, m.rotation), facilityOwner);
                 }
                 return player;
             }

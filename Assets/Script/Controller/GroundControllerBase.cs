@@ -87,6 +87,14 @@ namespace Script.Controller
         [SyncVar] private bool _isSpin;
         [SyncVar] private Quaternion _pitchRot;
 
+        protected virtual void OnTriggerEnter(Collider other)
+        {
+            if (!isLocalRobot) return;
+            if (other.name != (role.Camp == CampT.Red ? "RSZ" : "BSZ")) return;
+            if (health==0)
+                CmdRevive();
+        }
+
         public void Hit(int hitter, CaliberT caliber)
         {
             CmdHit(hitter, caliber);
@@ -110,13 +118,13 @@ namespace Script.Controller
                     switch (role.Type)
                     {
                         case TypeT.InfantryA:
-                            armor.ChangeLabel(1);
+                            armor.ChangeLabel(3);
                             break;
                         case TypeT.InfantryB:
-                            armor.ChangeLabel(2);
+                            armor.ChangeLabel(4);
                             break;
                         case TypeT.InfantryC:
-                            armor.ChangeLabel(3);
+                            armor.ChangeLabel(5);
                             break;
                     }
                 }
@@ -125,7 +133,10 @@ namespace Script.Controller
                     switch (role.Type)
                     {
                         case TypeT.Hero:
-                            armor.ChangeLabel(4);
+                            armor.ChangeLabel(1);
+                            break;
+                        case TypeT.Engineer:
+                            armor.ChangeLabel(2);
                             break;
                         default:
                             armor.ChangeLabel(0);
@@ -238,6 +249,28 @@ namespace Script.Controller
             FireRpc();
         }
 
+        [Command(ignoreAuthority = true)]
+        private void CmdDrag(Vector3 position)
+        {
+            RpcDrag(position);
+        }
+
+        [Command(ignoreAuthority = true)]
+        private void CmdRevive()
+        {
+            if (health == 0)
+            {
+                health = RobotPerformanceTable.table[level][role.Type].HealthLimit;
+            }
+        }
+
+        [ClientRpc]
+        private void RpcDrag(Vector3 position)
+        {
+            if (isLocalRobot)
+                transform.position = position;
+        }
+
         [ClientRpc]
         private void FireRpc()
         {
@@ -245,6 +278,11 @@ namespace Script.Controller
             var b = Instantiate(bullet, gun.position, gun.rotation);
             b.GetComponent<Rigidbody>().velocity = gun.forward * speed;
             Destroy(b, 4);
+        }
+
+        protected virtual bool FireOperation()
+        {
+            return false;
         }
 
         private void Fire()
@@ -256,6 +294,11 @@ namespace Script.Controller
             bulletController.isActive = true;
             Destroy(b, 4);
             CmdFire();
+        }
+
+        public void Drag(Vector3 position)
+        {
+            CmdDrag(position);
         }
 
         [ClientRpc]
@@ -273,7 +316,7 @@ namespace Script.Controller
             Cursor.visible = true;
         }
 
-        public void FixedUpdate()
+        public virtual void FixedUpdate()
         {
             ArmorSetup();
 
@@ -342,15 +385,8 @@ namespace Script.Controller
                 // UI切换、车辆旋转
                 if (Cursor.lockState == CursorLockMode.Locked)
                 {
-                    // guide.SetActive(false);
-                    // settings.SetActive(false);
                     transform.Rotate(Vector3.up, _steeringSpeed);
                     pitch.transform.Rotate(Vector3.right, _pitchingSpeed);
-                }
-                else
-                {
-                    // guide.SetActive(true);
-                    // settings.SetActive(true);
                 }
 
                 // 旋转阻尼效果
@@ -387,20 +423,23 @@ namespace Script.Controller
                 // 射击
                 if (Cursor.lockState == CursorLockMode.Locked && Input.GetMouseButton(0))
                 {
-                    var caliber = bullet.GetComponent<BulletController>().caliber;
-                    if (_fireCd == 0 && (caliber == CaliberT.Large ? largeAmmo > 0 : smallAmmo > 0))
+                    if (!FireOperation())
                     {
-                        if (caliber == CaliberT.Large)
-                            largeAmmo--;
+                        var caliber = bullet.GetComponent<BulletController>().caliber;
+                        if (_fireCd == 0 && (caliber == CaliberT.Large ? largeAmmo > 0 : smallAmmo > 0))
+                        {
+                            if (caliber == CaliberT.Large)
+                                largeAmmo--;
+                            else
+                                smallAmmo--;
+                            Fire();
+                            _fireCd = Random.Range(5, 15);
+                            if (highFreq) _fireCd /= 2;
+                        }
                         else
-                            smallAmmo--;
-                        Fire();
-                        _fireCd = Random.Range(5, 15);
-                        if (highFreq) _fireCd /= 2;
-                    }
-                    else
-                    {
-                        if (_fireCd > 0) _fireCd--;
+                        {
+                            if (_fireCd > 0) _fireCd--;
+                        }
                     }
                 }
 

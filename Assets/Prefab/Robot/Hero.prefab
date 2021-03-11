@@ -589,6 +589,7 @@ GameObject:
   - component: {fileID: 989679112910937996}
   - component: {fileID: 6768382220527965463}
   - component: {fileID: 841365404362280422}
+  - component: {fileID: 8965642437565690050}
   m_Layer: 0
   m_Name: FPCam
   m_TagString: Untagged
@@ -661,6 +662,66 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 883251184541810457}
   m_Enabled: 1
+--- !u!114 &8965642437565690050
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 883251184541810457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 948f4100a11a5c24981795d21301da5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  volumeTrigger: {fileID: 0}
+  volumeLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  stopNaNPropagation: 1
+  finalBlitToCameraTarget: 0
+  antialiasingMode: 3
+  temporalAntialiasing:
+    jitterSpread: 0.75
+    sharpness: 0.25
+    stationaryBlending: 0.95
+    motionBlending: 0.85
+  subpixelMorphologicalAntialiasing:
+    quality: 2
+  fastApproximateAntialiasing:
+    fastMode: 0
+    keepAlpha: 0
+  fog:
+    enabled: 1
+    excludeSkybox: 1
+  debugLayer:
+    lightMeter:
+      width: 512
+      height: 256
+      showCurves: 1
+    histogram:
+      width: 512
+      height: 256
+      channel: 3
+    waveform:
+      exposure: 0.12
+      height: 256
+    vectorscope:
+      size: 256
+      exposure: 0.12
+    overlaySettings:
+      linearDepth: 0
+      motionColorIntensity: 4
+      motionGridSize: 64
+      colorBlindnessType: 0
+      colorBlindnessStrength: 1
+  m_Resources: {fileID: 11400000, guid: d82512f9c8e5d4a4d938b575d47f88d4, type: 2}
+  m_ShowToolkit: 0
+  m_ShowCustomSorter: 0
+  breakBeforeColorGrading: 0
+  m_BeforeTransparentBundles: []
+  m_BeforeStackBundles: []
+  m_AfterStackBundles: []
 --- !u!1 &1326262184303122977
 GameObject:
   m_ObjectHideFlags: 0
@@ -1716,6 +1777,7 @@ MonoBehaviour:
   experience: 0
   damageRate: 0
   armorRate: 0
+  velocityLimit: 0
   gameManager: {fileID: 0}
   isLocalRobot: 0
   axleInfos:
@@ -1744,7 +1806,6 @@ MonoBehaviour:
   - {fileID: 8308953497093824297}
   - {fileID: 6937417342736197836}
   - {fileID: 1223589690406604437}
-  maxAmmo: 500
   tpCam: {fileID: 606920211317981568}
   fpCam: {fileID: 883251184541810457}
 --- !u!1 &3947758989139783681
@@ -4688,6 +4749,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4e1d5caa80035d44eaa92a5ab65e48c3, type: 3}
+--- !u!4 &4780487216514042120 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2684205932855062777, guid: 4e1d5caa80035d44eaa92a5ab65e48c3,
+    type: 3}
+  m_PrefabInstance: {fileID: 7428552176073439729}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &982476516440347955 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7689317982515293378, guid: 4e1d5caa80035d44eaa92a5ab65e48c3,
@@ -4700,12 +4767,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 087e079bbd5241b9b2d610c04660fdb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!4 &4780487216514042120 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2684205932855062777, guid: 4e1d5caa80035d44eaa92a5ab65e48c3,
-    type: 3}
-  m_PrefabInstance: {fileID: 7428552176073439729}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &7841328183225669892
 PrefabInstance:
   m_ObjectHideFlags: 0

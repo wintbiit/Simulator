@@ -7,12 +7,17 @@ using Script.JudgeSystem;
 using Script.JudgeSystem.GameEvent;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
+using UnityEngine;
 
 namespace Script.Controller
 {
     public class GuardController : RobotBase, IVulnerable
     {
         public List<ArmorController> armors = new List<ArmorController>();
+
+        private const float XMax = 2.0f;
+        private const float XMin = -2.0f;
+        private bool _left = true;
 
         private void ArmorSetup()
         {
@@ -43,6 +48,13 @@ namespace Script.Controller
         private void FixedUpdate()
         {
             ArmorSetup();
+            if (!isServer) return;
+            if (health <= 0) return;
+            if (transform.position.x > XMax)
+                _left = true;
+            if (transform.position.x < XMin)
+                _left = false;
+            transform.localPosition += Vector3.right * ((_left ? -1 : 1) * 0.05f);
         }
 
         public void Hit(int hitter, CaliberT caliber)

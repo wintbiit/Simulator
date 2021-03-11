@@ -74,7 +74,7 @@ namespace Script.JudgeSystem
 
         public static class RobotPerformanceTable
         {
-            public static Dictionary<int, Dictionary<TypeT, RobotLevel>> Table =
+            public static readonly Dictionary<int, Dictionary<TypeT, RobotLevel>> table =
                 new Dictionary<int, Dictionary<TypeT, RobotLevel>>
                 {
                     {
@@ -82,7 +82,7 @@ namespace Script.JudgeSystem
                         {
                             {
                                 TypeT.Hero, new RobotLevel(
-                                    0, 100,
+                                    0, 0,
                                     200, 100, 70, 16,
                                     20, 7.5f, 8.0f)
                             },
@@ -110,6 +110,13 @@ namespace Script.JudgeSystem
                                     150, 150, 60, 15,
                                     15, 2.5f, 3.0f)
                             },
+                            {
+                                TypeT.Guard, new RobotLevel(
+                                    500, 0,
+                                    600, 320, 30, 15,
+                                    100, 7.5f, float.MaxValue
+                                )
+                            }
                             // {TypeT.Ptz, new RobotLevel(0, 0, 0, 0, 0, 0, 0, 0)},
                             // {TypeT.Drone, new RobotLevel(0, 0, 0, 0, 0, 0, 0, 0)}
                         }
@@ -119,7 +126,7 @@ namespace Script.JudgeSystem
                         {
                             {
                                 TypeT.Hero, new RobotLevel(
-                                    0, 100,
+                                    0, 0,
                                     250, 200, 90, 16,
                                     60, 10.0f, 12.0f)
                             },
@@ -148,7 +155,7 @@ namespace Script.JudgeSystem
                         {
                             {
                                 TypeT.Hero, new RobotLevel(
-                                    0, 100,
+                                    0, 0,
                                     300, 300, 120, 16,
                                     100, 15.0f, 0.0f)
                             },

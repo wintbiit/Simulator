@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using Script.Controller.Bullet;
+using Script.Controller.Engineer;
+using Script.Controller.Hero;
+using Script.Controller.Infantry;
 using Script.JudgeSystem.Event;
 using Script.JudgeSystem.Facility;
 using Script.JudgeSystem.GameEvent;
@@ -29,6 +32,7 @@ namespace Script.Networking
             public Transform drone;
             public Transform guard;
             public Transform campBase;
+            public Transform campOutpost;
         }
 
         [Serializable]
@@ -45,6 +49,13 @@ namespace Script.Networking
             public TypeT type;
             public RectTransform bar;
             public float width;
+        }
+
+        [Serializable]
+        public class CampStatus
+        {
+            public int money;
+            public bool em;
         }
 
         /*
@@ -72,6 +83,9 @@ namespace Script.Networking
             public CampStart redStart;
             public CampStart blueStart;
 
+            public List<Transform> silverStart = new List<Transform>();
+            public List<Transform> goldStart = new List<Transform>();
+
             public List<HealthDisplay> redHealthDisplays = new List<HealthDisplay>();
             public List<HealthDisplay> blueHealthDisplays = new List<HealthDisplay>();
 
@@ -79,9 +93,19 @@ namespace Script.Networking
             public TMP_Text smallAmmoDisplay;
             public TMP_Text largeAmmoDisplay;
             public TMP_Text expDisplay;
+            public TMP_Text mineDisplay;
+            public TMP_Text moneyDisplay;
+            public TMP_Text extraDisplay;
+            public GameObject infantrySupplyHint;
+            public GameObject heroSupplyHint;
 
             public GameObject resultPanel;
             public TMP_Text resultTitle;
+
+            private int _redInfantrySupplyAmount;
+            private int _blueInfantrySupplyAmount;
+            private int _redHeroSupplyAmount;
+            private int _blueHeroSupplyAmount;
 
             private readonly List<TimeEventTrigger> _timeEventTriggers = new List<TimeEventTrigger>
             {
@@ -99,6 +123,12 @@ namespace Script.Networking
             [SyncVar] private bool _finished;
             [SyncVar] private int _startTime;
             [SyncVar] private int _finishTime;
+
+            [SyncVar] private int _redMoney;
+            [SyncVar] private int _blueMoney;
+
+            [SyncVar] private bool _redVirtualShield = true;
+            [SyncVar] private bool _blueVirtualShield = true;
 
             #region Server
 
@@ -166,6 +196,70 @@ namespace Script.Networking
                 return redBase.health > blueBase.health;
             }
 
+            [Command(ignoreAuthority = true)]
+            private void CmdExchange(CampT camp, int value)
+            {
+                switch (camp)
+                {
+                    case CampT.Unknown:
+                        break;
+                    case CampT.Red:
+                        _redMoney += value;
+                        break;
+                    case CampT.Blue:
+                        _blueMoney += value;
+                        break;
+                    case CampT.Judge:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(camp), camp, null);
+                }
+            }
+
+            [Command(ignoreAuthority = true)]
+            private void CmdSupply(RoleT role)
+            {
+                if (role.IsInfantry())
+                {
+                    var i = _robotBases.First(r => r.Value.role.Equals(role)).Value;
+                    if (role.Camp == CampT.Red && _redMoney > 50 || role.Camp == CampT.Blue && _blueMoney > 50)
+                    {
+                        if (role.Camp == CampT.Red && _redInfantrySupplyAmount < 1500)
+                        {
+                            _redMoney -= 50;
+                            _redInfantrySupplyAmount += 50;
+                            i.smallAmmo += 50;
+                        }
+                        else if (_blueInfantrySupplyAmount < 1500)
+                        {
+                            _blueMoney -= 50;
+                            _blueInfantrySupplyAmount += 50;
+                            i.smallAmmo += 50;
+                        }
+                    }
+                }
+
+                if (role.Type == TypeT.Hero)
+                {
+                    var h = _robotBases.First(r => r.Value.role.Equals(role)).Value;
+                    if (role.Camp == CampT.Red && _redMoney > 75 || role.Camp == CampT.Blue && _blueMoney > 75)
+                    {
+                        if (role.Camp == CampT.Red && _redHeroSupplyAmount < 100)
+                        {
+                            _redMoney -= 75;
+                            _redHeroSupplyAmount += 5;
+                            h.largeAmmo += 5;
+                        }
+                        else if (_blueHeroSupplyAmount < 100)
+                        {
+                            _blueMoney -= 75;
+                            _blueHeroSupplyAmount += 5;
+                            h.largeAmmo += 5;
+                        }
+                    }
+                }
+            }
+
             [Server]
             private void ServerFixedUpdate()
             {
@@ -206,19 +300,63 @@ namespace Script.Networking
                                 {
                                     _robotBases[hitEvent.Target].health = 0;
                                     _robotBases[hitEvent.Hitter].experience +=
-                                        RobotPerformanceTable.Table[_robotBases[hitEvent.Target].level][
+                                        RobotPerformanceTable.table[_robotBases[hitEvent.Target].level][
                                             _robotBases[hitEvent.Target].role.Type].ExpValue;
                                 }
                             }
 
                             if (_facilityBases.Keys.Contains(hitEvent.Target))
                             {
+                                if (_facilityBases[hitEvent.Target].role.Type == TypeT.Base)
+                                {
+                                    if (_facilityBases.First(fb =>
+                                        fb.Value.role.Type == TypeT.Outpost && fb.Value.role.Camp ==
+                                        _facilityBases[hitEvent.Target].role.Camp).Value.health > 0)
+                                    {
+                                        break;
+                                    }
+                                }
+
+                                if (hitEvent.Caliber == CaliberT.Large)
+                                    damage += _robotBases[hitEvent.Hitter].damageRate * 100;
                                 var protect = damage / _facilityBases[hitEvent.Target].armorRate;
                                 _facilityBases[hitEvent.Target].health -= (int) protect;
                                 if (_facilityBases[hitEvent.Target].health <= 0)
                                 {
                                     if (_facilityBases[hitEvent.Target].role.Type == TypeT.Base)
                                         Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameOver));
+                                    if (_facilityBases[hitEvent.Target].role.Type == TypeT.Outpost)
+                                    {
+                                        if (_robotBases.First(rb =>
+                                            rb.Value.role.Type == TypeT.Guard && rb.Value.role.Camp ==
+                                            _facilityBases[hitEvent.Target].role.Camp).Value.health <= 0)
+                                        {
+                                            if (_facilityBases[hitEvent.Target].role.Camp == CampT.Red &&
+                                                _redVirtualShield
+                                                || _facilityBases[hitEvent.Target].role.Camp == CampT.Blue &&
+                                                _blueVirtualShield)
+                                            {
+                                                _facilityBases.First(fb =>
+                                                    fb.Value.role.Type == TypeT.Base && fb.Value.role.Camp ==
+                                                    _facilityBases[hitEvent.Target].role.Camp).Value.health -= 500;
+                                                switch (_facilityBases[hitEvent.Target].role.Camp)
+                                                {
+                                                    case CampT.Unknown:
+                                                        break;
+                                                    case CampT.Red:
+                                                        _redVirtualShield = false;
+                                                        break;
+                                                    case CampT.Blue:
+                                                        _blueVirtualShield = false;
+                                                        break;
+                                                    case CampT.Judge:
+                                                        break;
+                                                    default:
+                                                        throw new ArgumentOutOfRangeException();
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -226,20 +364,37 @@ namespace Script.Networking
                         case JudgeSystem.Event.TypeT.GameStart:
                             _startTime = (int) Time.time;
                             _playing = true;
+                            _redMoney = 200;
+                            _blueMoney = 200;
+                            if (_roomManager.IsHost && _roomManager.roomSlots.Count == 1)
+                            {
+                                _redMoney = 10000;
+                                _blueMoney = 10000;
+                            }
                             foreach (var player in _players)
                                 player.OnAllReady();
                             break;
                         case JudgeSystem.Event.TypeT.SixMinute:
+                            _redMoney += 100;
+                            _blueMoney += 100;
                             break;
                         case JudgeSystem.Event.TypeT.FiveMinute:
+                            _redMoney += 100;
+                            _blueMoney += 100;
                             break;
                         case JudgeSystem.Event.TypeT.FourMinute:
+                            _redMoney += 100;
+                            _blueMoney += 100;
                             break;
                         case JudgeSystem.Event.TypeT.ThreeMinute:
+                            _redMoney += 100;
+                            _blueMoney += 100;
                             break;
                         case JudgeSystem.Event.TypeT.TwoMinute:
                             break;
                         case JudgeSystem.Event.TypeT.OneMinute:
+                            _redMoney += 100;
+                            _blueMoney += 100;
                             break;
                         case JudgeSystem.Event.TypeT.GameOver:
                             if (_finished) break;
@@ -272,12 +427,27 @@ namespace Script.Networking
 
             private List<RobotBase> _clientRobotBases;
             private List<FacilityBase> _clientFacilityBases;
-            
+
+            [Client]
+            public void Exchange(CampT camp, int value)
+            {
+                CmdExchange(camp, value);
+            }
+
+            [Client]
+            public void Supply(RoleT role)
+            {
+                CmdSupply(role);
+            }
+
             [Client]
             private void ClientStart()
             {
+                mineDisplay.text = "";
                 resultTitle.text = "";
                 resultPanel.SetActive(false);
+                infantrySupplyHint.SetActive(false);
+                heroSupplyHint.SetActive(false);
                 foreach (var hd in redHealthDisplays)
                 {
                     hd.width = hd.bar.rect.width;
@@ -319,24 +489,30 @@ namespace Script.Networking
             {
                 foreach (var r in _clientRobotBases)
                 {
-                    if (r.role.Type == TypeT.Guard) continue;
                     var healthDisplay = r.role.Camp == CampT.Red
                         ? redHealthDisplays.First(hd => hd.type == r.role.Type)
                         : blueHealthDisplays.First(hd => hd.type == r.role.Type);
-                    var healthRate = (float) r.health / RobotPerformanceTable.Table[r.level][r.role.Type].HealthLimit;
+                    var healthRate = (float) r.health / RobotPerformanceTable.table[r.level][r.role.Type].HealthLimit;
                     healthDisplay.bar.sizeDelta = new Vector2(
                         healthDisplay.width * (healthRate - 1), 0);
-                    healthDisplay.bar.offsetMin = Vector2.zero;
+                    if (r.role.Camp == CampT.Red)
+                        healthDisplay.bar.offsetMax = Vector2.zero;
+                    else
+                        healthDisplay.bar.offsetMin = Vector2.zero;
                 }
+
                 foreach (var f in _clientFacilityBases)
                 {
                     var healthDisplay = f.role.Camp == CampT.Red
                         ? redHealthDisplays.First(hd => hd.type == f.role.Type)
                         : blueHealthDisplays.First(hd => hd.type == f.role.Type);
-                    var healthRate = (float) f.health / 2000;
+                    var healthRate = (float) f.health / f.healthLimit;
                     healthDisplay.bar.sizeDelta = new Vector2(
                         healthDisplay.width * (healthRate - 1), 0);
-                    healthDisplay.bar.offsetMin = Vector2.zero;
+                    if (f.role.Camp == CampT.Red)
+                        healthDisplay.bar.offsetMax = Vector2.zero;
+                    else
+                        healthDisplay.bar.offsetMin = Vector2.zero;
                 }
 
                 var minute = (int) Math.Floor(_countDown / 60.0f);
@@ -354,10 +530,43 @@ namespace Script.Networking
 
                 countDownDisplay.text = minute + ":" + (second < 10 ? "0" : "") + second;
 
+                extraDisplay.text = "";
+                extraDisplay.text += "蓝方基地无敌：" +
+                                     (_clientFacilityBases.First(fb =>
+                                         fb.role.Equals(new RoleT(CampT.Blue, TypeT.Outpost))).health > 0
+                                         ? "是"
+                                         : "否") + '\n';
+                extraDisplay.text += "红方基地无敌：" +
+                                     (_clientFacilityBases.First(fb =>
+                                         fb.role.Equals(new RoleT(CampT.Red, TypeT.Outpost))).health > 0
+                                         ? "是"
+                                         : "否") + '\n';
+                extraDisplay.text += "蓝方虚拟护盾：" + (_blueVirtualShield ? "是" : "否") + '\n';
+                extraDisplay.text += "红方虚拟护盾：" + (_redVirtualShield ? "是" : "否") + '\n';
+
                 if (_localRobot == null) return;
                 smallAmmoDisplay.text = "17mm: " + _localRobot.smallAmmo;
                 largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
-                expDisplay.text = "EXP: " + _localRobot.experience;
+                expDisplay.text = "经验值：" + _localRobot.experience;
+                moneyDisplay.text =
+                    "团队金钱：" + (_localRobot.role.Camp == CampT.Red ? _redMoney : _blueMoney);
+                if (_localRobot.role.Type == TypeT.Engineer)
+                {
+                    var engineer = _localRobot.GetComponent<EngineerController>();
+                    mineDisplay.text = "矿物价值：" + engineer.MineValue();
+                }
+
+                if (_localRobot.role.IsInfantry())
+                {
+                    var infantry = _localRobot.GetComponent<InfantryController>();
+                    infantrySupplyHint.SetActive(infantry.atSupply);
+                }
+
+                if (_localRobot.role.Type == TypeT.Hero)
+                {
+                    var hero = _localRobot.GetComponent<HeroController>();
+                    heroSupplyHint.SetActive(hero.atSupply);
+                }
             }
 
             #endregion
