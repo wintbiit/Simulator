@@ -1,14 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mirror;
+using Script.JudgeSystem;
+using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
+using UnityEngine.Assertions.Comparers;
 
 namespace Script.Controller
 {
     namespace Engineer
     {
+        public class EngineerReviveBuff : BuffBase
+        {
+            public readonly float StartTime;
+
+            public EngineerReviveBuff()
+            {
+                StartTime = Time.time;
+                type = BuffT.EngineerRevive;
+                timeOut = float.MaxValue;
+            }
+        }
+
         public class EngineerController : GroundControllerBase
         {
             private readonly List<int> _mine = new List<int>();
@@ -16,69 +32,118 @@ namespace Script.Controller
             private float _lastExchange;
             private bool _drag;
             private GameObject _dragObject;
+            private bool _grab;
+            private GameObject _grabObject;
+
+            private float _lastPress = float.MaxValue;
+            private bool _pressed;
+            public float opProcess;
+
+            protected override void UnFireOperation()
+            {
+                _pressed = false;
+                _lastPress = float.MaxValue;
+            }
 
             protected override bool FireOperation()
             {
-                var ray = new Ray(fpCam.transform.position, fpCam.transform.forward);
-                if (!Physics.Raycast(ray, out var hit, Mathf.Infinity)) return true;
-                var mc = hit.collider.GetComponent<MineController>();
-                var gc = hit.collider.GetComponent<GroundControllerBase>();
-
-                // 采矿
-                if (mc != null)
+                if (GetComponent<Rigidbody>().velocity.magnitude < 0.5f)
                 {
-                    if ((hit.point - fpCam.transform.position).magnitude > 0.7f) return true;
-                    if (Time.time - _lastCollect > 2.0f)
+                    if (!_pressed)
                     {
-                        mc.Collect();
-                        switch (mc.type)
+                        _lastPress = Time.time;
+                        _pressed = true;
+                    }
+                    else if (Time.time - _lastPress > 5)
+                    {
+                        _lastPress = float.MaxValue;
+                        var ray = new Ray(fpCam.transform.position, fpCam.transform.forward);
+                        MineController mc = null;
+                        GroundControllerBase gc = null;
+                        BlockController bc = null;
+                        if (Physics.Raycast(ray, out var hit, Mathf.Infinity))
                         {
-                            case MineType.Silver:
-                                _mine.Add(75);
-                                break;
-                            case MineType.Gold:
-                                _mine.Add(300);
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
+                            mc = hit.collider.GetComponent<MineController>();
+                            gc = hit.collider.GetComponent<GroundControllerBase>();
+                            bc = hit.collider.GetComponent<BlockController>();
                         }
 
-                        _lastCollect = Time.time;
-                    }
-                }
-                else if (
-                    role.Camp == CampT.Red && hit.transform.name == "RE"
-                    || role.Camp == CampT.Blue && hit.transform.name == "BE")
-                {
-                    if ((hit.point - fpCam.transform.position).magnitude > 0.7f) return true;
-                    if (Time.time - _lastExchange > 3.0f)
-                    {
-                        if (_mine.Count > 0)
+                        // 采矿
+                        if (mc != null && !_grab && !_drag)
                         {
-                            FindObjectOfType<GameManager>().Exchange(role.Camp, _mine[0]);
-                            _mine.RemoveAt(0);
-                            _lastExchange = Time.time;
+                            if ((hit.point - fpCam.transform.position).magnitude > 0.7f) return true;
+                            if (Time.time - _lastCollect > 2.0f && _mine.Count < 3)
+                            {
+                                mc.Collect();
+                                switch (mc.type)
+                                {
+                                    case MineType.Silver:
+                                        _mine.Add(75);
+                                        break;
+                                    case MineType.Gold:
+                                        _mine.Add(300);
+                                        break;
+                                    default:
+                                        throw new ArgumentOutOfRangeException();
+                                }
+
+                                _lastCollect = Time.time;
+                            }
+                        } // 兑换
+                        else if (
+                            role.Camp == CampT.Red && hit.transform.name == "RE"
+                            || role.Camp == CampT.Blue && hit.transform.name == "BE" && !_grab && !_drag)
+                        {
+                            if ((hit.point - fpCam.transform.position).magnitude > 0.7f) return true;
+                            if (Time.time - _lastExchange > 3.0f)
+                            {
+                                if (_mine.Count > 0)
+                                {
+                                    FindObjectOfType<GameManager>().Exchange(role.Camp, _mine[0]);
+                                    _mine.RemoveAt(0);
+                                    _lastExchange = Time.time;
+                                }
+                            }
+                        } // 拖拽
+                        else if (gc != null)
+                        {
+                            if ((hit.point - fpCam.transform.position).magnitude > 2.0f) return true;
+                            if (gc.role.Camp == role.Camp)
+                                // && gc.health == 0)
+                            {
+                                if (!_drag && !_grab)
+                                {
+                                    _dragObject = gc.gameObject;
+                                    _drag = true;
+                                    _dragObject.GetComponent<Rigidbody>().isKinematic = true;
+                                }
+                            }
+                        }
+                        else if (_drag)
+                        {
+                            _drag = false;
+                            _dragObject.GetComponent<Rigidbody>().isKinematic = false;
+                        }
+                        else if (bc != null)
+                        {
+                            if ((hit.point - fpCam.transform.position).magnitude > 2.0f) return true;
+                            if (!_grab && !_drag)
+                            {
+                                _grabObject = bc.gameObject;
+                                _grab = true;
+                                _grabObject.GetComponent<Rigidbody>().isKinematic = true;
+                            }
+                        }
+                        else if (_grab)
+                        {
+                            _grab = false;
+                            _grabObject.GetComponent<Rigidbody>().isKinematic = false;
                         }
                     }
                 }
-                else if (gc != null)
+                else
                 {
-                    if ((hit.point - fpCam.transform.position).magnitude > 2.0f) return true;
-                    if (gc.role.Camp == role.Camp)
-                        // && gc.health == 0)
-                    {
-                        if (!_drag)
-                        {
-                            _dragObject = gc.gameObject;
-                            _drag = true;
-                            _dragObject.GetComponent<Rigidbody>().isKinematic = true;
-                        }
-                    }
-                }
-                else if (_drag)
-                {
-                    _drag = false;
-                    _dragObject.GetComponent<Rigidbody>().isKinematic = false;
+                    _lastPress = float.MaxValue;
                 }
 
                 return true;
@@ -86,17 +151,49 @@ namespace Script.Controller
 
             public int MineValue() => _mine.Sum(m => m);
 
-            public override void FixedUpdate()
+            [Command]
+            private void CmdReviveProtect()
+            {
+                if (Buffs.All(b => b.type != BuffT.ReviveProtect))
+                    Buffs.Add(new ReviveProtectBuff(10));
+            }
+
+            protected override void FixedUpdate()
             {
                 base.FixedUpdate();
-                if (isLocalRobot && health > 0)
+                if (isLocalRobot)
                 {
-                    if (_drag)
+                    opProcess = Time.time - _lastPress < 5 ? (Time.time - _lastPress) / 5 : 0;
+                    if (health > 0)
                     {
-                        var t = transform;
-                        _dragObject
-                            .GetComponent<GroundControllerBase>()
-                            .Drag(t.position + t.forward + t.right);
+                        if (_drag)
+                        {
+                            var t = transform;
+                            _dragObject
+                                .GetComponent<GroundControllerBase>()
+                                .Drag(t.position + t.forward + t.right * 0.5f);
+                        }
+
+                        if (_grab)
+                        {
+                            var t = transform;
+                            _grabObject
+                                .GetComponent<BlockController>()
+                                .Drag(t.position + t.forward + t.up * -0.2f, t.rotation);
+                        }
+                    }
+                    else
+                    {
+                        if (Buffs.Any(b => b.type == BuffT.EngineerRevive))
+                        {
+                            var er = (EngineerReviveBuff) Buffs.First(b => b.type == BuffT.EngineerRevive);
+                            if (Time.time - er.StartTime > 20)
+                            {
+                                health = (int) (RobotPerformanceTable.table[level][role.Type].HealthLimit * 0.2f);
+                                Buffs.RemoveAll(b => b.type == BuffT.EngineerRevive);
+                                CmdReviveProtect();
+                            }
+                        }
                     }
                 }
             }

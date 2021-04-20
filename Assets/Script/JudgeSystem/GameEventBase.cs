@@ -15,6 +15,9 @@
             TwoMinute,
             OneMinute,
             Reset,
+            BuffActivate,
+            AirRaid,
+            Dart
         }
         
         /*

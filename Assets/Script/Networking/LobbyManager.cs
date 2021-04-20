@@ -274,7 +274,7 @@ namespace Script.Networking
                 {
                     _allReady = _roomManager.allPlayersReady;
                     // 判断是否为单机跑图
-                    _isHost = _roomManager.IsHost && _roles.Count == 1;
+                    _isHost = _roomManager.IsHost;// && _roles.Count == 1;
                     // 如果是纯服务器模式后面的UI处理就不需要了
                     if (_roomManager.IsServer && !_roomManager.IsHost) return;
                 }
@@ -291,18 +291,19 @@ namespace Script.Networking
                         // 已经选了角色
                         if (_roles[_localPlayer.id].Camp != CampT.Unknown)
                         {
-                            // 单机跑图可以直接开始游戏
-                            if (_isHost) CmdStartGame();
-                            // 如果不是裁判，则改变准备状态
-                            if (_roles[_localPlayer.id].Camp != CampT.Judge)
-                            {
-                                var currentState = _readyStatus[_localPlayer.id];
-                                _localPlayer.CmdChangeReadyState(!currentState);
-                                CmdChangeReadyState(_localPlayer.id, !currentState);
-                            }
-                            // 是裁判而且全部玩家准备完毕，可以开始游戏
-                            else if (_allReady)
-                                CmdStartGame();
+                            // // 单机跑图可以直接开始游戏
+                            // if (_isHost) CmdStartGame();
+                            // // 如果不是裁判，则改变准备状态
+                            // if (_roles[_localPlayer.id].Camp != CampT.Judge)
+                            // {
+                            //     var currentState = _readyStatus[_localPlayer.id];
+                            //     _localPlayer.CmdChangeReadyState(!currentState);
+                            //     CmdChangeReadyState(_localPlayer.id, !currentState);
+                            // }
+                            // // 是裁判而且全部玩家准备完毕，可以开始游戏
+                            // else if (_allReady)
+                            //     CmdStartGame();
+                            CmdStartGame();
                         }
                     }
                 }

@@ -400,6 +400,7 @@ MonoBehaviour:
   - {fileID: 73271692171135257}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 1102129739221381476}
 --- !u!1 &2752303330134738270
 GameObject:
@@ -523,9 +524,8 @@ MonoBehaviour:
   smallAmmo: 0
   largeAmmo: 0
   experience: 0
-  damageRate: 0
-  armorRate: 0
   velocityLimit: 0
+  heat: 0
   gameManager: {fileID: 0}
   isLocalRobot: 0
   axleInfos:
@@ -545,6 +545,7 @@ MonoBehaviour:
   bullet: {fileID: 8655787454687237716, guid: 541c42d5451f98f4884eee4a04166377, type: 3}
   speed: 15
   highFreq: 0
+  safe: 1
   armors:
   - {fileID: 1145447428413079548}
   - {fileID: 8884199711202579621}
@@ -556,6 +557,7 @@ MonoBehaviour:
   - {fileID: 2888407024346430114}
   tpCam: {fileID: 6138098553586302900}
   fpCam: {fileID: 6138098554603028440}
+  atSupply: 0
 --- !u!1 &2793038647711133839
 GameObject:
   m_ObjectHideFlags: 0
@@ -941,6 +943,7 @@ MonoBehaviour:
   - {fileID: 5760633813576237567}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 4737290863926589826}
 --- !u!1 &5713828992854330304
 GameObject:
@@ -1505,7 +1508,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6138098554603028440}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.81, z: 4.04}
+  m_LocalPosition: {x: 0, y: 0.755, z: 4.23}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2313128091533650955}
@@ -1707,13 +1710,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6138098554651853637}
-  m_LocalRotation: {x: -0.026827982, y: -0, z: -0, w: 0.9996401}
-  m_LocalPosition: {x: 0, y: 0.000006198883, z: 3.410002}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.000006198883, z: 4.247}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2313128091533650955}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: -3.075, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6138098554807747856
 GameObject:
   m_ObjectHideFlags: 0
@@ -2751,6 +2754,7 @@ MonoBehaviour:
   - {fileID: 7781920321043865434}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 7327693399084656423}
 --- !u!1 &7485096958754023062
 GameObject:
@@ -2851,6 +2855,7 @@ MonoBehaviour:
   - {fileID: 7866032571683758005}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 7162447360272902088}
 --- !u!1 &7497157465682700112
 GameObject:

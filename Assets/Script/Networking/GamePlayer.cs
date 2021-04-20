@@ -1,6 +1,8 @@
-﻿using Mirror;
+﻿using System;
+using Mirror;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
+using UnityEngine;
 
 namespace Script.Networking
 {
@@ -34,6 +36,8 @@ namespace Script.Networking
             private void OnAllReadyRpc()
             {
                 if (!isLocalPlayer) return;
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
                 foreach (var robot in FindObjectsOfType<RobotBase>())
                     if (robot.id == index)
                     {

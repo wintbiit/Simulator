@@ -30,10 +30,12 @@ namespace Script.Controller
             public MeshRenderer[] lights;
             public Material redLight;
             public Material blueLight;
+            public Material noLight;
 
             public TMP_Text label;
 
             private IVulnerable _unit;
+            private ColorT _color;
 
             public void UnitRegister(IVulnerable unit)
             {
@@ -47,12 +49,13 @@ namespace Script.Controller
 
             public void ChangeColor(ColorT color)
             {
+                _color = color;
                 foreach (var armorLight in lights)
                 {
                     switch (color)
                     {
                         case ColorT.Down:
-                            armorLight.material = null;
+                            armorLight.material = noLight;
                             break;
                         case ColorT.Red:
                             armorLight.material = redLight;
@@ -65,6 +68,8 @@ namespace Script.Controller
                     }
                 }
             }
+
+            public ColorT GetColor() => _color;
 
             public void ChangeLabel(int labelNumber) => label.text = labelNumber != 0 ? (labelNumber % 10).ToString() : "";
         }

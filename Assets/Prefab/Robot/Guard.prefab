@@ -375,9 +375,20 @@ MonoBehaviour:
   velocityLimit: 0
   gameManager: {fileID: 0}
   isLocalRobot: 0
+  speed: 15
   armors:
   - {fileID: 8960474269093472969}
   - {fileID: 8484576572629499338}
+  ptz:
+  - yaw: {fileID: 612137954187171343}
+    pitch: {fileID: 7080653663623676737}
+    gun: {fileID: 5900363067768673149}
+    aim: {fileID: 7903631804184425363}
+  - yaw: {fileID: 2207318844127560877}
+    pitch: {fileID: 8879206467994285653}
+    gun: {fileID: 0}
+    aim: {fileID: 0}
+  bullet: {fileID: 8655787454687237716, guid: 541c42d5451f98f4884eee4a04166377, type: 3}
 --- !u!114 &7911034398708830001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -547,6 +558,80 @@ Transform:
   m_Father: {fileID: 8222389222290525638}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5900363067768673149
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6165939545751782369}
+  - component: {fileID: 7903631804184425363}
+  m_Layer: 0
+  m_Name: Gun
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6165939545751782369
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5900363067768673149}
+  m_LocalRotation: {x: 0.12278779, y: -0.6963643, z: 0.12278779, w: 0.6963643}
+  m_LocalPosition: {x: -0.086, y: -0.0313, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4722689513662819320}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 20, y: -90.00001, z: 0}
+--- !u!20 &7903631804184425363
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5900363067768673149}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_FocalLength: 50
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
 --- !u!1 &7080653663623676737
 GameObject:
   m_ObjectHideFlags: 0
@@ -575,7 +660,8 @@ Transform:
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.00004100791, y: -0.17751093, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 6165939545751782369}
   m_Father: {fileID: 348107640370136632}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1061,12 +1147,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4e1d5caa80035d44eaa92a5ab65e48c3, type: 3}
---- !u!4 &4200314276875084273 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2684205932855062777, guid: 4e1d5caa80035d44eaa92a5ab65e48c3,
-    type: 3}
-  m_PrefabInstance: {fileID: 2236798659707949320}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &8484576572629499338 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7689317982515293378, guid: 4e1d5caa80035d44eaa92a5ab65e48c3,
@@ -1079,3 +1159,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 087e079bbd5241b9b2d610c04660fdb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!4 &4200314276875084273 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2684205932855062777, guid: 4e1d5caa80035d44eaa92a5ab65e48c3,
+    type: 3}
+  m_PrefabInstance: {fileID: 2236798659707949320}
+  m_PrefabAsset: {fileID: 0}

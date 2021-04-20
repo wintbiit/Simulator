@@ -40,8 +40,9 @@ namespace Script.Controller
             }
         }
 
-        private void FixedUpdate()
+        protected override void FixedUpdate()
         {
+            base.FixedUpdate();
             ArmorSetup();
         }
 

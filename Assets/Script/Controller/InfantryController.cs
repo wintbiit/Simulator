@@ -1,4 +1,5 @@
-﻿using Script.JudgeSystem.Role;
+﻿using System;
+using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
 
@@ -16,20 +17,21 @@ namespace Script.Controller
                 atSupply = other.name == (role.Camp == CampT.Red ? "RS" : "BS");
             }
 
-            private void OnTriggerExit(Collider other)
+            protected override void OnTriggerExit(Collider other)
             {
+                base.OnTriggerExit(other);
                 if (role.Camp == CampT.Red && other.name == "RS"
                     || role.Camp == CampT.Blue && other.name == "BS")
                     atSupply = false;
             }
 
             private bool _oDown;
-            public override void FixedUpdate()
+
+            private void Update()
             {
-                base.FixedUpdate();
                 if (isLocalRobot && health > 0)
                 {
-                    if (Input.GetKeyDown(KeyCode.O))
+                    if (Input.GetKeyDown(KeyCode.O) && atSupply)
                     {
                         if (!_oDown)
                         {

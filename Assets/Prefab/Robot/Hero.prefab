@@ -605,7 +605,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 883251184541810457}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.0019, y: 0.0852, z: 0.1195}
+  m_LocalPosition: {x: -0.0019, y: 0.039, z: 0.156}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 3430390925247013957}
@@ -1652,6 +1652,7 @@ MonoBehaviour:
   - {fileID: 2700686710053359067}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 3113422611850573222}
 --- !u!1 &3824758814212177295
 GameObject:
@@ -1775,9 +1776,8 @@ MonoBehaviour:
   smallAmmo: 0
   largeAmmo: 0
   experience: 0
-  damageRate: 0
-  armorRate: 0
   velocityLimit: 0
+  heat: 0
   gameManager: {fileID: 0}
   isLocalRobot: 0
   axleInfos:
@@ -1795,8 +1795,9 @@ MonoBehaviour:
   spinner: {fileID: 8917468470483093294}
   gun: {fileID: 5107668994072277423}
   bullet: {fileID: 2065509969735240974, guid: 667408e66b12df64fbed3efab058eb79, type: 3}
-  speed: 10
+  speed: 20
   highFreq: 0
+  safe: 1
   armors:
   - {fileID: 460510134942315974}
   - {fileID: 982476516440347955}
@@ -1808,6 +1809,7 @@ MonoBehaviour:
   - {fileID: 1223589690406604437}
   tpCam: {fileID: 606920211317981568}
   fpCam: {fileID: 883251184541810457}
+  atSupply: 0
 --- !u!1 &3947758989139783681
 GameObject:
   m_ObjectHideFlags: 0
@@ -1999,7 +2001,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4204815825473566009}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.1125}
+  m_LocalPosition: {x: 0, y: 0.0032, z: 0.161}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 3430390925247013957}
@@ -2183,6 +2185,7 @@ MonoBehaviour:
   - {fileID: 3923542642707790398}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 4052364596368704067}
 --- !u!1 &4379869996527715787
 GameObject:
@@ -2535,6 +2538,7 @@ MonoBehaviour:
   - {fileID: 5655228006499573662}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 4626528289088055267}
 --- !u!1 &4969391446071074092
 GameObject:
@@ -3599,6 +3603,7 @@ MonoBehaviour:
   - {fileID: 6181045658404891522}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 6595699056648737791}
 --- !u!1 &6863491374032046926
 GameObject:

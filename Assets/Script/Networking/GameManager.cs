@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
+using Script.Controller;
 using Script.Controller.Bullet;
 using Script.Controller.Engineer;
 using Script.Controller.Hero;
 using Script.Controller.Infantry;
+using Script.JudgeSystem;
 using Script.JudgeSystem.Event;
 using Script.JudgeSystem.Facility;
 using Script.JudgeSystem.GameEvent;
@@ -14,6 +17,8 @@ using Script.JudgeSystem.Role;
 using Script.Networking.Lobby;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+using Random = System.Random;
 using TypeT = Script.JudgeSystem.Role.TypeT;
 
 namespace Script.Networking
@@ -33,6 +38,7 @@ namespace Script.Networking
             public Transform guard;
             public Transform campBase;
             public Transform campOutpost;
+            public Transform campBuff;
         }
 
         [Serializable]
@@ -86,6 +92,8 @@ namespace Script.Networking
             public List<Transform> silverStart = new List<Transform>();
             public List<Transform> goldStart = new List<Transform>();
 
+            public List<Transform> blockStart = new List<Transform>();
+
             public List<HealthDisplay> redHealthDisplays = new List<HealthDisplay>();
             public List<HealthDisplay> blueHealthDisplays = new List<HealthDisplay>();
 
@@ -102,10 +110,26 @@ namespace Script.Networking
             public GameObject resultPanel;
             public TMP_Text resultTitle;
 
+            public RawImage overHeat;
+            public Image heatProcess;
+
+            public GameObject optionsPanel;
+            public Slider sensitivitySlide;
+
+            public GameObject deadHint;
+
+            public RawImage hurtHint;
+
+            public GameObject loadingHint;
+
+            public Image operationProcess;
+
             private int _redInfantrySupplyAmount;
             private int _blueInfantrySupplyAmount;
             private int _redHeroSupplyAmount;
             private int _blueHeroSupplyAmount;
+            private int _redAirRaidAmount;
+            private int _blueAirRaidAmount;
 
             private readonly List<TimeEventTrigger> _timeEventTriggers = new List<TimeEventTrigger>
             {
@@ -130,6 +154,13 @@ namespace Script.Networking
             [SyncVar] private bool _redVirtualShield = true;
             [SyncVar] private bool _blueVirtualShield = true;
 
+            [SyncVar] private bool _smallBuffStart;
+            [SyncVar] private bool _smallBuffEnable;
+            [SyncVar] private bool _largeBuffStart;
+            [SyncVar] private bool _largeBuffEnable;
+            [SyncVar] private float _smallBuffColdDown;
+            [SyncVar] private float _largeBuffColdDown;
+
             #region Server
 
             [Server]
@@ -151,7 +182,7 @@ namespace Script.Networking
                              && r.Camp != CampT.Unknown)
                     .Count(
                         r => r.Type != TypeT.Unknown
-                             && r.Type < TypeT.Ptz) == 0)
+                             && r.Type != TypeT.Ptz && r.Type <= TypeT.Drone) == 0)
                     Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameStart));
             }
 
@@ -222,7 +253,7 @@ namespace Script.Networking
                 if (role.IsInfantry())
                 {
                     var i = _robotBases.First(r => r.Value.role.Equals(role)).Value;
-                    if (role.Camp == CampT.Red && _redMoney > 50 || role.Camp == CampT.Blue && _blueMoney > 50)
+                    if (role.Camp == CampT.Red && _redMoney >= 50 || role.Camp == CampT.Blue && _blueMoney >= 50)
                     {
                         if (role.Camp == CampT.Red && _redInfantrySupplyAmount < 1500)
                         {
@@ -230,7 +261,7 @@ namespace Script.Networking
                             _redInfantrySupplyAmount += 50;
                             i.smallAmmo += 50;
                         }
-                        else if (_blueInfantrySupplyAmount < 1500)
+                        else if (role.Camp == CampT.Blue && _blueInfantrySupplyAmount < 1500)
                         {
                             _blueMoney -= 50;
                             _blueInfantrySupplyAmount += 50;
@@ -242,7 +273,7 @@ namespace Script.Networking
                 if (role.Type == TypeT.Hero)
                 {
                     var h = _robotBases.First(r => r.Value.role.Equals(role)).Value;
-                    if (role.Camp == CampT.Red && _redMoney > 75 || role.Camp == CampT.Blue && _blueMoney > 75)
+                    if (role.Camp == CampT.Red && _redMoney >= 75 || role.Camp == CampT.Blue && _blueMoney >= 75)
                     {
                         if (role.Camp == CampT.Red && _redHeroSupplyAmount < 100)
                         {
@@ -250,7 +281,7 @@ namespace Script.Networking
                             _redHeroSupplyAmount += 5;
                             h.largeAmmo += 5;
                         }
-                        else if (_blueHeroSupplyAmount < 100)
+                        else if (role.Camp == CampT.Blue && _blueHeroSupplyAmount < 100)
                         {
                             _blueMoney -= 75;
                             _blueHeroSupplyAmount += 5;
@@ -276,10 +307,12 @@ namespace Script.Networking
                     }
                 }
 
+                if (!isServerOnly) _clientRobotBases = new List<RobotBase>(FindObjectsOfType<RobotBase>());
+
                 // 处理事件队列
                 for (var i = 0; i < 5; i++)
                 {
-                    if (_eventQueue.Count <= 0) return;
+                    if (_eventQueue.Count <= 0) break;
                     var e = _eventQueue.Dequeue();
                     switch (e.Type)
                     {
@@ -289,12 +322,14 @@ namespace Script.Networking
                             var hitEvent = (HitEvent) e;
                             var caliberDamage = hitEvent.Caliber == CaliberT.Small ? 10 : 100;
                             // 计算攻击力与护甲加成效果
-                            var damage = _robotBases[hitEvent.Hitter].damageRate * caliberDamage;
+                            float damage = 0;
+                            if (hitEvent.Caliber != CaliberT.Dart)
+                                damage = _robotBases[hitEvent.Hitter].GetAttr().DamageRate * caliberDamage;
 
                             if (_robotBases.Keys.Contains(hitEvent.Target))
                             {
                                 if (_robotBases[hitEvent.Target].health <= 0) break;
-                                var protect = damage / _robotBases[hitEvent.Target].armorRate;
+                                var protect = damage * (1 - _robotBases[hitEvent.Target].GetAttr().ArmorRate);
                                 _robotBases[hitEvent.Target].health -= (int) protect;
                                 if (_robotBases[hitEvent.Target].health <= 0)
                                 {
@@ -302,11 +337,18 @@ namespace Script.Networking
                                     _robotBases[hitEvent.Hitter].experience +=
                                         RobotPerformanceTable.table[_robotBases[hitEvent.Target].level][
                                             _robotBases[hitEvent.Target].role.Type].ExpValue;
+                                    if (_robotBases[hitEvent.Target].role.Type == TypeT.Engineer)
+                                    {
+                                        var engineer = _robotBases[hitEvent.Target];
+                                        if (engineer.Buffs.All(b => b.type != BuffT.EngineerRevive))
+                                            engineer.Buffs.Add(new EngineerReviveBuff());
+                                    }
                                 }
                             }
 
                             if (_facilityBases.Keys.Contains(hitEvent.Target))
                             {
+                                // 基地无敌
                                 if (_facilityBases[hitEvent.Target].role.Type == TypeT.Base)
                                 {
                                     if (_facilityBases.First(fb =>
@@ -317,9 +359,15 @@ namespace Script.Networking
                                     }
                                 }
 
-                                if (hitEvent.Caliber == CaliberT.Large)
-                                    damage += _robotBases[hitEvent.Hitter].damageRate * 100;
-                                var protect = damage / _facilityBases[hitEvent.Target].armorRate;
+                                float protect;
+                                if (hitEvent.Caliber != CaliberT.Dart)
+                                {
+                                    if (hitEvent.Caliber == CaliberT.Large)
+                                        damage += _robotBases[hitEvent.Hitter].GetAttr().DamageRate * 100;
+                                    protect = damage * (1 - _facilityBases[hitEvent.Target].GetArmorRate());
+                                }
+                                else protect = new Random().Next(3) == 0 ? 0 : 1000;
+
                                 _facilityBases[hitEvent.Target].health -= (int) protect;
                                 if (_facilityBases[hitEvent.Target].health <= 0)
                                 {
@@ -358,6 +406,28 @@ namespace Script.Networking
                                         }
                                     }
                                 }
+                                else
+                                {
+                                    if (hitEvent.Caliber == CaliberT.Large && _robotBases[hitEvent.Hitter].Buffs
+                                        .Any(b => b.type == BuffT.HeroSnipe))
+                                    {
+                                        switch (_facilityBases[hitEvent.Target].role.Type)
+                                        {
+                                            case TypeT.Base:
+                                                if (_facilityBases[hitEvent.Target].Buffs
+                                                    .All(b => b.type != BuffT.OutpostBaseSnipe))
+                                                    _facilityBases[hitEvent.Target].Buffs
+                                                        .Add(new OutpostBaseSnipeBuff());
+                                                break;
+                                            case TypeT.Outpost:
+                                                if (_facilityBases[hitEvent.Target].Buffs
+                                                    .All(b => b.type != BuffT.OutpostBaseSnipe))
+                                                    _facilityBases[hitEvent.Target].Buffs
+                                                        .Add(new OutpostBaseSnipeBuff());
+                                                break;
+                                        }
+                                    }
+                                }
                             }
 
                             break;
@@ -366,17 +436,21 @@ namespace Script.Networking
                             _playing = true;
                             _redMoney = 200;
                             _blueMoney = 200;
+                            // 单机无限金钱
                             if (_roomManager.IsHost && _roomManager.roomSlots.Count == 1)
                             {
                                 _redMoney = 10000;
                                 _blueMoney = 10000;
                             }
+
                             foreach (var player in _players)
                                 player.OnAllReady();
+                            GameStartRpc();
                             break;
                         case JudgeSystem.Event.TypeT.SixMinute:
                             _redMoney += 100;
                             _blueMoney += 100;
+                            _smallBuffStart = true;
                             break;
                         case JudgeSystem.Event.TypeT.FiveMinute:
                             _redMoney += 100;
@@ -385,16 +459,21 @@ namespace Script.Networking
                         case JudgeSystem.Event.TypeT.FourMinute:
                             _redMoney += 100;
                             _blueMoney += 100;
+                            foreach (var r in _robotBases)
+                                r.Value.Buffs.RemoveAll(b => b.type == BuffT.SmallEnergy);
+
+                            _smallBuffStart = false;
                             break;
                         case JudgeSystem.Event.TypeT.ThreeMinute:
                             _redMoney += 100;
                             _blueMoney += 100;
+                            _largeBuffStart = true;
                             break;
                         case JudgeSystem.Event.TypeT.TwoMinute:
                             break;
                         case JudgeSystem.Event.TypeT.OneMinute:
-                            _redMoney += 100;
-                            _blueMoney += 100;
+                            _redMoney += 200;
+                            _blueMoney += 200;
                             break;
                         case JudgeSystem.Event.TypeT.GameOver:
                             if (_finished) break;
@@ -403,11 +482,144 @@ namespace Script.Networking
                             _finishTime = (int) Time.time;
                             RpcOnClientGameOver(IsRedWin());
                             break;
+                        case JudgeSystem.Event.TypeT.BuffActivate:
+                            foreach (var f in _facilityBases.Where(f => f.Value.role.Type == TypeT.EnergyMechanism))
+                            {
+                                var b = (EnergyMechanismController) f.Value;
+                                b.Disable();
+                            }
+
+                            var buffEvent = (BuffActivateEvent) e;
+
+                            if (buffEvent.Camp == CampT.Red)
+                            {
+                                if (buffEvent.Large && _largeBuffEnable)
+                                {
+                                    foreach (var r in _robotBases.Where(r => r.Value.role.Camp == CampT.Red))
+                                        if (r.Value.Buffs.All(b => b.type != BuffT.LargeEnergy))
+                                            r.Value.Buffs.Add(new LargeEnergyBuff());
+                                }
+                                else if (_smallBuffEnable)
+                                {
+                                    foreach (var r in _robotBases.Where(r => r.Value.role.Camp == CampT.Red))
+                                        if (r.Value.Buffs.All(b => b.type != BuffT.SmallEnergy))
+                                            r.Value.Buffs.Add(new SmallEnergyBuff());
+                                }
+                            }
+                            else
+                            {
+                                if (buffEvent.Large && _largeBuffEnable)
+                                {
+                                    foreach (var r in _robotBases.Where(r => r.Value.role.Camp == CampT.Blue))
+                                        if (r.Value.Buffs.All(b => b.type != BuffT.LargeEnergy))
+                                            r.Value.Buffs.Add(new LargeEnergyBuff());
+                                }
+                                else if (_smallBuffEnable)
+                                {
+                                    foreach (var r in _robotBases.Where(r => r.Value.role.Camp == CampT.Blue))
+                                        if (r.Value.Buffs.All(b => b.type != BuffT.SmallEnergy))
+                                            r.Value.Buffs.Add(new SmallEnergyBuff());
+                                }
+                            }
+
+                            if (buffEvent.Large && _largeBuffEnable)
+                            {
+                                _largeBuffEnable = false;
+                                _largeBuffColdDown = Time.time + 75;
+                            }
+                            else if (_smallBuffEnable)
+                            {
+                                _smallBuffEnable = false;
+                                _smallBuffColdDown = Time.time + 75;
+                            }
+
+                            break;
+                        case JudgeSystem.Event.TypeT.AirRaid:
+                            var aR = (AirRaidEvent) e;
+                            switch (aR.Camp)
+                            {
+                                case CampT.Red:
+                                    if (_redMoney >= 400 && _redAirRaidAmount < 3)
+                                    {
+                                        _redMoney -= 400;
+                                        var d = (DroneController) _robotBases.First(r =>
+                                                r.Value.role.Equals(new RoleT(CampT.Red, TypeT.Drone)))
+                                            .Value;
+                                        d.raidTill = Time.time + 30;
+                                        d.smallAmmo = 500;
+                                        _redAirRaidAmount++;
+                                    }
+
+                                    break;
+                                case CampT.Blue:
+                                    if (_blueMoney >= 400 && _blueAirRaidAmount < 3)
+                                    {
+                                        _blueMoney -= 400;
+                                        var d = (DroneController) _robotBases.First(r =>
+                                                r.Value.role.Equals(new RoleT(CampT.Blue, TypeT.Drone)))
+                                            .Value;
+                                        d.raidTill = Time.time + 30;
+                                        d.smallAmmo = 500;
+                                        _blueAirRaidAmount++;
+                                    }
+
+                                    break;
+                            }
+
+                            break;
+                        case JudgeSystem.Event.TypeT.Dart:
+                            var dR = (DartEvent) e;
+                            var op = _facilityBases.First(f =>
+                                f.Value.role.Equals(new RoleT(dR.Camp == CampT.Blue ? CampT.Red : CampT.Blue,
+                                    TypeT.Outpost))).Value;
+                            var ba = _facilityBases.First(f =>
+                                f.Value.role.Equals(new RoleT(dR.Camp == CampT.Blue ? CampT.Red : CampT.Blue,
+                                    TypeT.Base))).Value;
+                            Emit(op.health > 0
+                                ? new HitEvent(0, op.id, CaliberT.Dart)
+                                : new HitEvent(0, ba.id, CaliberT.Dart));
+                            break;
                         case JudgeSystem.Event.TypeT.Reset:
                             _roomManager.ResetServer();
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
+                    }
+                }
+
+                // 神符
+                if (_smallBuffStart)
+                {
+                    if (!_smallBuffEnable && Time.time > _smallBuffColdDown)
+                    {
+                        foreach (var f in _facilityBases.Where(f => f.Value.role.Type == TypeT.EnergyMechanism))
+                        {
+                            var b = (EnergyMechanismController) f.Value;
+                            b.Enable(false);
+                        }
+
+                        _smallBuffEnable = true;
+                    }
+                }
+                else if (_largeBuffStart)
+                {
+                    if (!_largeBuffEnable && Time.time > _largeBuffColdDown)
+                    {
+                        foreach (var f in _facilityBases.Where(f => f.Value.role.Type == TypeT.EnergyMechanism))
+                        {
+                            var b = (EnergyMechanismController) f.Value;
+                            b.Enable(true);
+                        }
+
+                        _largeBuffEnable = true;
+                    }
+                }
+                else
+                {
+                    foreach (var f in _facilityBases.Where(f => f.Value.role.Type == TypeT.EnergyMechanism))
+                    {
+                        var b = (EnergyMechanismController) f.Value;
+                        b.Disable();
                     }
                 }
             }
@@ -423,10 +635,29 @@ namespace Script.Networking
             #region Client
 
             [Client]
-            public void LocalRobotRegister(RobotBase robot) => _localRobot = robot;
+            public void LocalRobotRegister(RobotBase robot)
+            {
+                _localRobot = robot;
+                StartCoroutine(HideLoading());
+            }
 
-            private List<RobotBase> _clientRobotBases;
-            private List<FacilityBase> _clientFacilityBases;
+            private IEnumerator HideLoading()
+            {
+                yield return new WaitForSeconds(0.5f);
+                loadingHint.SetActive(false);
+            }
+
+            private List<RobotBase> _clientRobotBases = new List<RobotBase>();
+            private List<FacilityBase> _clientFacilityBases = new List<FacilityBase>();
+
+            [Client]
+            public float GetSensitivity()
+            {
+                return sensitivitySlide.value * 2;
+            }
+
+            [Client]
+            public void Hurt() => hurtHint.color = new Color(1, 0, 0, 1);
 
             [Client]
             public void Exchange(CampT camp, int value)
@@ -462,6 +693,42 @@ namespace Script.Networking
                     hd.bar.offsetMax = Vector2.zero;
                 }
 
+                var mesh = GameObject.Find("Arena21").GetComponent<MeshFilter>().sharedMesh;
+                var vertices = mesh.vertices;
+                var uvs = new Vector2[vertices.Length];
+                var normals = mesh.normals;
+
+                //Cubic Unfold
+                for (var i = 0; i < normals.Length; i++)
+                {
+                    //X-Plane
+                    if (Mathf.Abs(normals[i].x) > Mathf.Abs(normals[i].y) &&
+                        Mathf.Abs(normals[i].x) > Mathf.Abs(normals[i].z))
+                    {
+                        uvs[i] = new Vector2(vertices[i].y, vertices[i].z);
+                    }
+
+                    //Y-Plane
+                    if (Mathf.Abs(normals[i].y) > Mathf.Abs(normals[i].x) &&
+                        Mathf.Abs(normals[i].y) > Mathf.Abs(normals[i].z))
+                    {
+                        uvs[i] = new Vector2(vertices[i].x, vertices[i].z);
+                    }
+
+                    //Z-Plane
+                    if (Mathf.Abs(normals[i].z) > Mathf.Abs(normals[i].x) &&
+                        Mathf.Abs(normals[i].z) > Mathf.Abs(normals[i].y))
+                    {
+                        uvs[i] = new Vector2(vertices[i].x, vertices[i].y);
+                    }
+                }
+
+                mesh.uv = uvs;
+            }
+
+            [ClientRpc]
+            private void GameStartRpc()
+            {
                 _clientRobotBases = new List<RobotBase>(FindObjectsOfType<RobotBase>());
                 _clientFacilityBases = new List<FacilityBase>(FindObjectsOfType<FacilityBase>());
             }
@@ -487,85 +754,176 @@ namespace Script.Networking
             [Client]
             private void ClientFixedUpdate()
             {
-                foreach (var r in _clientRobotBases)
+                if (_clientFacilityBases.Count > 0)
                 {
-                    var healthDisplay = r.role.Camp == CampT.Red
-                        ? redHealthDisplays.First(hd => hd.type == r.role.Type)
-                        : blueHealthDisplays.First(hd => hd.type == r.role.Type);
-                    var healthRate = (float) r.health / RobotPerformanceTable.table[r.level][r.role.Type].HealthLimit;
-                    healthDisplay.bar.sizeDelta = new Vector2(
-                        healthDisplay.width * (healthRate - 1), 0);
-                    if (r.role.Camp == CampT.Red)
-                        healthDisplay.bar.offsetMax = Vector2.zero;
+                    // 信息显示更新
+                    if (_localRobot)
+                    {
+                        optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
+                        deadHint.SetActive(_localRobot.health == 0);
+                        if (_localRobot.role.Type != TypeT.Engineer)
+                        {
+                            var heatLimit = RobotPerformanceTable.table[_localRobot.level][_localRobot.role.Type]
+                                .HeatLimit;
+                            var processColor = _localRobot.heat < heatLimit
+                                ? (heatLimit - _localRobot.heat) / heatLimit
+                                : 0;
+                            heatProcess.color = new Color(1, processColor, processColor);
+                            heatProcess.fillAmount = _localRobot.heat < heatLimit ? _localRobot.heat / heatLimit : 1;
+                            overHeat.color = new Color(1, 1, 1,
+                                _localRobot.heat > heatLimit ? (_localRobot.heat - heatLimit) / (heatLimit / 4.0f) : 0);
+                        }
+                        else
+                        {
+                            heatProcess.fillAmount = 0;
+                            overHeat.color = new Color(1, 1, 1, 0);
+                        }
+
+                        hurtHint.color = hurtHint.color.a >= 0.04f
+                            ? new Color(1, 0, 0, hurtHint.color.a - 0.04f)
+                            : new Color(1, 0, 0, 0);
+                    }
+
+                    foreach (var r in _clientRobotBases)
+                    {
+                        if (r.role.Type == TypeT.Drone) continue;
+                        var healthDisplay = r.role.Camp == CampT.Red
+                            ? redHealthDisplays.First(hd => hd.type == r.role.Type)
+                            : blueHealthDisplays.First(hd => hd.type == r.role.Type);
+                        var healthRate = (float) r.health /
+                                         RobotPerformanceTable.table[r.level][r.role.Type].HealthLimit;
+                        healthDisplay.bar.sizeDelta = new Vector2(
+                            healthDisplay.width * (healthRate - 1), 0);
+                        if (r.role.Camp == CampT.Red)
+                            healthDisplay.bar.offsetMax = Vector2.zero;
+                        else
+                            healthDisplay.bar.offsetMin = Vector2.zero;
+                    }
+
+                    foreach (var f in _clientFacilityBases)
+                    {
+                        if (f.role.Type == TypeT.EnergyMechanism) continue;
+                        var healthDisplay = f.role.Camp == CampT.Red
+                            ? redHealthDisplays.First(hd => hd.type == f.role.Type)
+                            : blueHealthDisplays.First(hd => hd.type == f.role.Type);
+                        var healthRate = (float) f.health / f.healthLimit;
+                        healthDisplay.bar.sizeDelta = new Vector2(
+                            healthDisplay.width * (healthRate - 1), 0);
+                        if (f.role.Camp == CampT.Red)
+                            healthDisplay.bar.offsetMax = Vector2.zero;
+                        else
+                            healthDisplay.bar.offsetMin = Vector2.zero;
+                    }
+
+                    var minute = (int) Math.Floor(_countDown / 60.0f);
+                    var second = _countDown % 60;
+                    if (minute == 0 && second <= 10)
+                        countDownDisplay.color = Color.red;
+                    if (_finished)
+                    {
+                        countDownDisplay.color = Color.red;
+                        minute = 0;
+                        second = 10 + (_countDown - (gameTime - (_finishTime - _startTime)));
+                        if (second == 0)
+                            CmdReset();
+                    }
+
+                    countDownDisplay.text = minute + ":" + (second < 10 ? "0" : "") + second;
+
+                    extraDisplay.text = "";
+                    extraDisplay.text += "蓝方基地无敌：" +
+                                         (_clientFacilityBases.First(fb =>
+                                             fb.role.Equals(new RoleT(CampT.Blue, TypeT.Outpost))).health > 0
+                                             ? "是"
+                                             : "否") + '\n';
+                    extraDisplay.text += "红方基地无敌：" +
+                                         (_clientFacilityBases.First(fb =>
+                                             fb.role.Equals(new RoleT(CampT.Red, TypeT.Outpost))).health > 0
+                                             ? "是"
+                                             : "否") + '\n';
+                    extraDisplay.text += "蓝方虚拟护盾：" + (_blueVirtualShield ? "是" : "否") + '\n';
+                    extraDisplay.text += "红方虚拟护盾：" + (_redVirtualShield ? "是" : "否") + '\n';
+
+                    if (_localRobot == null) return;
+                    smallAmmoDisplay.text = "17mm: " + _localRobot.smallAmmo;
+                    largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
+                    expDisplay.text = "经验值：" + _localRobot.experience;
+                    moneyDisplay.text =
+                        "团队金钱：" + (_localRobot.role.Camp == CampT.Red ? _redMoney : _blueMoney);
+                    operationProcess.fillAmount = 0;
+                    if (_localRobot.role.Type == TypeT.Engineer)
+                    {
+                        var engineer = _localRobot.GetComponent<EngineerController>();
+                        mineDisplay.text = "矿物价值：" + engineer.MineValue();
+                        if (engineer.Buffs.Any(b => b.type == BuffT.EngineerRevive))
+                        {
+                            var timeLeft = 20 - (Time.time -
+                                                 ((EngineerReviveBuff) engineer.Buffs.First(b =>
+                                                     b.type == BuffT.EngineerRevive))
+                                                 .StartTime);
+                            extraDisplay.text += Mathf.RoundToInt(timeLeft) + "秒后自动复活\n";
+                        }
+
+                        operationProcess.fillAmount = engineer.opProcess;
+                    }
+
+                    if (_localRobot.role.IsInfantry())
+                    {
+                        var infantry = _localRobot.GetComponent<InfantryController>();
+                        infantrySupplyHint.SetActive(infantry.atSupply);
+                    }
+
+                    if (_localRobot.role.Type == TypeT.Hero)
+                    {
+                        var hero = _localRobot.GetComponent<HeroController>();
+                        heroSupplyHint.SetActive(hero.atSupply);
+                    }
+
+                    if (_localRobot.role.Type == TypeT.Drone)
+                    {
+                        var drone = _localRobot.GetComponent<DroneController>();
+                        if (drone.raidStart > 0)
+                            extraDisplay.text +=
+                                "空中支援剩余" + Mathf.RoundToInt(30 - (Time.time - drone.raidStart)) + "秒\n";
+                        else if (drone.role.Camp == CampT.Red && _redMoney >= 400 ||
+                                 drone.role.Camp == CampT.Blue && _blueMoney >= 400)
+                            extraDisplay.text += "按H兑换空中支援\n";
+                        extraDisplay.text += "导弹剩余" + (4 - drone.dartCount) + "次\n";
+                        if (drone.dartCount < 4)
+                        {
+                            if (drone.dartTill > Time.time)
+                                extraDisplay.text += Mathf.RoundToInt(drone.dartTill - Time.time) + "秒后导弹就绪\n";
+                            else
+                                extraDisplay.text += "按Y发射导弹\n";
+                        }
+                    }
+
+                    var a = _localRobot.GetAttr();
+                    if (Math.Abs(a.DamageRate - 1) > 1e-2) extraDisplay.text += "攻击加成" + a.DamageRate * 100 + "%\n";
+                    if (Math.Abs(a.ArmorRate - 0) > 1e-2) extraDisplay.text += "防御加成" + a.ArmorRate * 100 + "%\n";
+                    if (Math.Abs(a.ColdDownRate - 1) > 1e-2) extraDisplay.text += "冷却速度" + a.ColdDownRate * 100 + "%\n";
+                    if (Math.Abs(a.ReviveRate - 0) > 1e-2) extraDisplay.text += "生命回复" + a.ReviveRate * 100 + "%\n";
+
+                    if (_localRobot.Buffs.Any(b => b.type == BuffT.SmallEnergy)) extraDisplay.text += "小神符" + '\n';
+                    if (_localRobot.Buffs.Any(b => b.type == BuffT.LargeEnergy)) extraDisplay.text += "大神符" + '\n';
+                }
+            }
+
+            private void ClientUpdate()
+            {
+                // 解锁鼠标
+                if (Input.GetKeyDown(KeyCode.Escape))
+                {
+                    if (Cursor.lockState == CursorLockMode.Locked)
+                    {
+                        Cursor.lockState = CursorLockMode.None;
+                        Cursor.visible = true;
+                    }
                     else
-                        healthDisplay.bar.offsetMin = Vector2.zero;
-                }
-
-                foreach (var f in _clientFacilityBases)
-                {
-                    var healthDisplay = f.role.Camp == CampT.Red
-                        ? redHealthDisplays.First(hd => hd.type == f.role.Type)
-                        : blueHealthDisplays.First(hd => hd.type == f.role.Type);
-                    var healthRate = (float) f.health / f.healthLimit;
-                    healthDisplay.bar.sizeDelta = new Vector2(
-                        healthDisplay.width * (healthRate - 1), 0);
-                    if (f.role.Camp == CampT.Red)
-                        healthDisplay.bar.offsetMax = Vector2.zero;
-                    else
-                        healthDisplay.bar.offsetMin = Vector2.zero;
-                }
-
-                var minute = (int) Math.Floor(_countDown / 60.0f);
-                var second = _countDown % 60;
-                if (minute == 0 && second <= 10)
-                    countDownDisplay.color = Color.red;
-                if (_finished)
-                {
-                    countDownDisplay.color = Color.red;
-                    minute = 0;
-                    second = 10 + (_countDown - (gameTime - (_finishTime - _startTime)));
-                    if (second == 0)
-                        CmdReset();
-                }
-
-                countDownDisplay.text = minute + ":" + (second < 10 ? "0" : "") + second;
-
-                extraDisplay.text = "";
-                extraDisplay.text += "蓝方基地无敌：" +
-                                     (_clientFacilityBases.First(fb =>
-                                         fb.role.Equals(new RoleT(CampT.Blue, TypeT.Outpost))).health > 0
-                                         ? "是"
-                                         : "否") + '\n';
-                extraDisplay.text += "红方基地无敌：" +
-                                     (_clientFacilityBases.First(fb =>
-                                         fb.role.Equals(new RoleT(CampT.Red, TypeT.Outpost))).health > 0
-                                         ? "是"
-                                         : "否") + '\n';
-                extraDisplay.text += "蓝方虚拟护盾：" + (_blueVirtualShield ? "是" : "否") + '\n';
-                extraDisplay.text += "红方虚拟护盾：" + (_redVirtualShield ? "是" : "否") + '\n';
-
-                if (_localRobot == null) return;
-                smallAmmoDisplay.text = "17mm: " + _localRobot.smallAmmo;
-                largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
-                expDisplay.text = "经验值：" + _localRobot.experience;
-                moneyDisplay.text =
-                    "团队金钱：" + (_localRobot.role.Camp == CampT.Red ? _redMoney : _blueMoney);
-                if (_localRobot.role.Type == TypeT.Engineer)
-                {
-                    var engineer = _localRobot.GetComponent<EngineerController>();
-                    mineDisplay.text = "矿物价值：" + engineer.MineValue();
-                }
-
-                if (_localRobot.role.IsInfantry())
-                {
-                    var infantry = _localRobot.GetComponent<InfantryController>();
-                    infantrySupplyHint.SetActive(infantry.atSupply);
-                }
-
-                if (_localRobot.role.Type == TypeT.Hero)
-                {
-                    var hero = _localRobot.GetComponent<HeroController>();
-                    heroSupplyHint.SetActive(hero.atSupply);
+                    {
+                        Cursor.lockState = CursorLockMode.Locked;
+                        Cursor.visible = false;
+                    }
                 }
             }
 
@@ -573,6 +931,9 @@ namespace Script.Networking
 
             private void Start()
             {
+#if UNITY_EDITOR
+                GameObject.Find("Directional Light").SetActive(false);
+#endif
                 if (isServer) ServerStart();
                 if (isClient) ClientStart();
             }
@@ -581,6 +942,11 @@ namespace Script.Networking
             {
                 if (isServer) ServerFixedUpdate();
                 if (isClient) ClientFixedUpdate();
+            }
+
+            private void Update()
+            {
+                if (isClient) ClientUpdate();
             }
         }
     }

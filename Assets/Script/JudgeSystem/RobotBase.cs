@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Mirror;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
+using UnityEngine;
 
 namespace Script.JudgeSystem
 {
@@ -89,7 +91,7 @@ namespace Script.JudgeSystem
                             {
                                 TypeT.Engineer, new RobotLevel(
                                     0, 0,
-                                    500, 0, 80, 0,
+                                    500, int.MaxValue, 80, 0,
                                     0, 5, 0.0f)
                             },
                             {
@@ -116,9 +118,14 @@ namespace Script.JudgeSystem
                                     600, 320, 30, 15,
                                     100, 7.5f, float.MaxValue
                                 )
-                            }
+                            },
                             // {TypeT.Ptz, new RobotLevel(0, 0, 0, 0, 0, 0, 0, 0)},
-                            // {TypeT.Drone, new RobotLevel(0, 0, 0, 0, 0, 0, 0, 0)}
+                            {
+                                TypeT.Drone, new RobotLevel(
+                                    500, 0,
+                                    1, int.MaxValue, 0, 0,
+                                    100, 0, 0)
+                            }
                         }
                     },
                     {
@@ -182,6 +189,14 @@ namespace Script.JudgeSystem
                 };
         }
 
+        public class Attr
+        {
+            public float DamageRate;
+            public float ArmorRate;
+            public float ColdDownRate;
+            public float ReviveRate;
+        }
+
         /*
          * 所有 RobotController 的基类，包含了机器人的基本信息
          * 
@@ -212,10 +227,11 @@ namespace Script.JudgeSystem
             [SyncVar] public int smallAmmo;
             [SyncVar] public int largeAmmo;
             [SyncVar] public float experience;
-            [SyncVar] public float damageRate;
-            [SyncVar] public float armorRate;
             [SyncVar] public float velocityLimit;
 
+            [SyncVar] public float heat;
+
+            public readonly SyncList<BuffBase> Buffs = new SyncList<BuffBase>();
             // [SyncVar] public ChassisT chassisType;
             // [SyncVar] public GunT gunType;
 
@@ -224,6 +240,37 @@ namespace Script.JudgeSystem
 
             [Client]
             public virtual void ConfirmLocalRobot() => isLocalRobot = true;
+
+            public Attr GetAttr()
+            {
+                var damage = 1.0f;
+                var armor = 0.0f;
+                var coldDown = 1.0f;
+                var revive = 0.0f;
+                foreach (var b in Buffs)
+                {
+                    if (b.damageRate > damage) damage = b.damageRate;
+                    if (b.armorRate > armor) armor = b.armorRate;
+                    if (b.coolDownRate > coldDown) coldDown = b.coolDownRate;
+                    if (b.reviveRate > revive) revive = b.reviveRate;
+                }
+
+                var attr = new Attr();
+                attr.DamageRate = damage;
+                attr.ArmorRate = armor;
+                attr.ColdDownRate = coldDown;
+                attr.ReviveRate = revive;
+                return attr;
+            }
+
+            protected virtual void FixedUpdate()
+            {
+                if (!isServer) return;
+                foreach (var b in Buffs.Where(b => Time.time > b.timeOut))
+                {
+                    Buffs.Remove(b);
+                }
+            }
         }
     }
 }

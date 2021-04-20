@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Script.Controller.Armor;
 using UnityEngine;
 
@@ -32,11 +33,22 @@ namespace Script.Controller
             public int owner;
             public CaliberT caliber = CaliberT.Small;
 
+            private void Start()
+            {
+                StartCoroutine(RemoveRigid());
+            }
+
             private void OnCollisionEnter(Collision other)
             {
                 if (!isActive || !other.collider.CompareTag("Armor")) return;
                 other.gameObject.GetComponent<ArmorController>().Hit(owner, caliber);
                 Destroy(this);
+            }
+
+            private IEnumerator RemoveRigid()
+            {
+                yield return new WaitForSeconds(10);
+                Destroy(GetComponent<Rigidbody>());
             }
         }
     }

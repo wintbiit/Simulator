@@ -210,6 +210,7 @@ MonoBehaviour:
   - {fileID: 661733945650005004}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 531757477802654833}
 --- !u!1 &440092709313680968
 GameObject:
@@ -241,7 +242,7 @@ Transform:
   m_GameObject: {fileID: 440092709313680968}
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
   m_Children:
   - {fileID: 4903115676946126291}
   - {fileID: 158335591970282043}
@@ -331,9 +332,8 @@ MonoBehaviour:
   smallAmmo: 0
   largeAmmo: 0
   experience: 0
-  damageRate: 0
-  armorRate: 0
   velocityLimit: 0
+  heat: 0
   gameManager: {fileID: 0}
   isLocalRobot: 0
   axleInfos:
@@ -346,13 +346,14 @@ MonoBehaviour:
   oriMaxMotorTorque: 50
   maxSteeringSpeed: 2.5
   pitch: {fileID: 6009261709017031260}
-  maxPitchAngle: 35
+  maxPitchAngle: 60
   chassis: {fileID: 4903115676946126291}
   spinner: {fileID: 158335591970282043}
   gun: {fileID: 0}
   bullet: {fileID: 0}
   speed: 0
   highFreq: 0
+  safe: 1
   armors:
   - {fileID: 2464439350565902746}
   - {fileID: 233931578681673796}
@@ -2351,6 +2352,7 @@ MonoBehaviour:
   - {fileID: 6451411615890166529}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 6325263554516265852}
 --- !u!1 &6009261708657153536
 GameObject:
@@ -3376,6 +3378,7 @@ MonoBehaviour:
   - {fileID: 7757659300987015555}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 7342946671754144254}
 --- !u!1 &7072365212580485216
 GameObject:
@@ -4413,6 +4416,7 @@ MonoBehaviour:
   - {fileID: 8422259364227395237}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 0}
   label: {fileID: 8840070581365233368}
 --- !u!1001 &1325805556803680554
 PrefabInstance:

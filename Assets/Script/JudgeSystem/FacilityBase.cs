@@ -1,6 +1,8 @@
-﻿using Mirror;
+﻿using System.Linq;
+using Mirror;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
+using UnityEngine;
 
 namespace Script.JudgeSystem
 {
@@ -13,9 +15,24 @@ namespace Script.JudgeSystem
 
             [SyncVar] public int health;
             [SyncVar] public int healthLimit;
-            [SyncVar] public float armorRate;
-            
+
+            public readonly SyncList<BuffBase> Buffs = new SyncList<BuffBase>();
+
             public GameManager gameManager;
+
+            public float GetArmorRate()
+            {
+                return Buffs.Select(b => b.armorRate).Prepend(0.0f).Max();
+            }
+
+            protected virtual void FixedUpdate()
+            {
+                if (!isServer) return;
+                foreach (var b in Buffs.Where(b => Time.time > b.timeOut))
+                {
+                    Buffs.Remove(b);
+                }
+            }
         }
     }
 }

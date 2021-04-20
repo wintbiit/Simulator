@@ -305,6 +305,7 @@ MonoBehaviour:
   - {fileID: 3425442607439628757}
   redLight: {fileID: 2100000, guid: 9c9be6c0f78bf5b46a96bb6cf1943385, type: 2}
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
+  noLight: {fileID: 2100000, guid: 411843eb3a7235f4399505f3ccb7e112, type: 2}
   label: {fileID: 2433704085685383592}
 --- !u!1 &3401314187842192362
 GameObject:
