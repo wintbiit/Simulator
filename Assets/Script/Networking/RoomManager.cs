@@ -127,6 +127,14 @@ namespace Script.Networking
                 ServerChangeScene(GameplayScene);
             }
 
+            [Server]
+            public RoleT GetRole(int id)
+            {
+                if (_lobbyManager != null)
+                    return _lobbyManager.GetRole(id);
+                return new RoleT(CampT.Unknown, TypeT.Unknown);
+            }
+
             /*
              * GamePlayer 和 Robot 是两个概念
              * 由于存在裁判、云台手、飞手这样的角色，故将机器人和操作手的概念分离
@@ -390,7 +398,7 @@ namespace Script.Networking
             {
                 IsServer = true;
                 if (_wsApi == null)
-                    _wsApi = new WsApi();
+                    _wsApi = new WsApi(this);
             }
 
             public override void OnGUI()

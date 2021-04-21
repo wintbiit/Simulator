@@ -74,6 +74,14 @@ namespace Script.Networking
                 _roomManager = roomManager;
             }
 
+            [Server]
+            public RoleT GetRole(int id)
+            {
+                if (_roles.Keys.Contains(id))
+                    return _roles[id];
+                return new RoleT(CampT.Unknown, TypeT.Unknown);
+            }
+
             [Command(ignoreAuthority = true)]
             private void CmdStartGame()
             {
@@ -145,7 +153,7 @@ namespace Script.Networking
 
                 // 如果想选择的角色已被占用，忽略
                 if (_roles.Any(role => role.Value.Equals(target))) return;
-                
+
                 // 选择到角色
                 _roles[index] = target;
                 // 如果选择的不是裁判，同时游戏模式不是单人跑图，默认准备状态为未准备
@@ -251,7 +259,7 @@ namespace Script.Networking
                     roleIndex++;
                 }
             }
-            
+
             // 此处应重写为 TargetRpc
             [ClientRpc]
             private void RpcChangeReadyState(int index, bool state)
@@ -274,7 +282,7 @@ namespace Script.Networking
                 {
                     _allReady = _roomManager.allPlayersReady;
                     // 判断是否为单机跑图
-                    _isHost = _roomManager.IsHost;// && _roles.Count == 1;
+                    _isHost = _roomManager.IsHost; // && _roles.Count == 1;
                     // 如果是纯服务器模式后面的UI处理就不需要了
                     if (_roomManager.IsServer && !_roomManager.IsHost) return;
                 }
@@ -340,7 +348,7 @@ namespace Script.Networking
                     if (!_vivoxManager.Ready && !_vivoxManager.Fail)
                         readyHint.text = "等待音频设备就绪";
                 }
-                
+
                 // UI更新代码可以降低执行频率以降低CPU占用
                 // 还原UI显示
                 _judgeSelect.displayName.text = "等待中";

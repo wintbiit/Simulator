@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Script.Networking.Game;
+using Script.Networking.Lobby;
 using UnityEngine;
 using UnityWebSocket;
 
@@ -31,9 +32,11 @@ namespace Script.Networking
     {
         private readonly WebSocket _socket;
         private GameManager _gameManager;
+        private RoomManager _roomManager;
 
-        public WsApi()
+        public WsApi(RoomManager rm)
         {
+            _roomManager = rm;
             _socket = new WebSocket("ws://127.0.0.1:8765");
             _socket.OnOpen += OnOpen;
             _socket.OnClose += OnClose;
@@ -77,7 +80,12 @@ namespace Script.Networking
                     _socket.SendAsync(JsonUtility.ToJson(new StatusReport
                     {
                         status = ServerStatus.Lobby,
-                        players = new PlayerStatus[0]
+                        players = _roomManager.roomSlots.Select(player => new PlayerStatus
+                        {
+                            name = ((RoomPlayer) player).displayName,
+                            role = _roomManager.GetRole(((RoomPlayer) player).id).Camp + " " +
+                                   _roomManager.GetRole(((RoomPlayer) player).id).Type
+                        }).ToArray()
                     }));
                 }
             }
