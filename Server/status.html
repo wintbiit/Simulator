@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulator Status</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <style>
+        * {
+            user-select: none;
+        }
+
+        body {
+            background-color: #474747;
+        }
+
+        #app {
+            border-width: 0 5px;
+            border-color: transparent;
+            border-style: solid;
+            border-image: radial-gradient(#575757, #474747);
+            border-image-slice: 10;
+            color: #636363;
+            margin-top: 15vh;
+            padding: 15px 20px;
+        }
+
+        .status-label {
+            text-align: right;
+            padding-right: 0;
+        }
+
+        .player-list-title {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .outer-player-list {
+            width: 100%;
+            padding: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .outer-player-list::before {
+            position: absolute;
+            bottom: calc(100% - 15px);
+            display: block;
+            content: ' ';
+            width: 100%;
+            height: 20px;
+            background-image: linear-gradient(to bottom, #474747, rgba(0, 0, 0, 0));
+        }
+
+        .outer-player-list::after {
+            position: absolute;
+            bottom: 0;
+            display: block;
+            content: ' ';
+            width: 100%;
+            height: 20px;
+            background-image: linear-gradient(to top, #474747, rgba(0, 0, 0, 0));
+        }
+
+        .player-list {
+            width: calc(100% + 18px);
+            max-height: 40vh;
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
+
+        .players-label {
+            text-align: center;
+        }
+
+        .player-item {
+            margin-top: 5px;
+            color: white;
+        }
+
+        /* .form-input {
+                width: 100%;
+                background-color: #474747;
+                border-color: #575757;
+                color: white;
+                border-width: 2px;
+            }
+        
+            .form-input:focus,
+            .form-input:hover {
+                background-color: #474747;
+                border-color: #575757;
+                color: white;
+                box-shadow: none;
+            }
+        
+            .form-input:hover {
+                border-color: white;
+            } */
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2 col-sm-10 offset-sm-1" id="app">
+                <div class="row" style="margin-bottom: 10px;">
+                    <div class="col-12">
+                        <h1 style="text-align: center; color: white;">Simulator</h1>
+                    </div>
+                </div>
+                <div class="row justify-content-center">
+                    <h4 class="col-4 status-label">服务器：</h4>
+                    <h4 class="col-6" style="color: rgb(0, 121, 241); padding-left: 0;">{{serverUrl}}</h4>
+                </div>
+                <div class="row justify-content-center">
+                    <h4 class="col-4 status-label">状态：</h4>
+                    <h4 v-if="serverStatus==-1" class="col-6" style="color: red; padding-left: 0;">离线</h4>
+                    <h4 v-if="serverStatus==0" class="col-6" style="color: rgb(230, 230, 0); padding-left: 0;">大厅</h4>
+                    <h4 v-if="serverStatus==1" class="col-6" style="color: rgb(0, 168, 0); padding-left: 0;">比赛中</h4>
+                    <!-- <h4 style="display: inline-block; color: red">离线</h2> -->
+                    <!-- <h4 style="display: inline-block; color: rgb(230, 230, 0)">大厅</h2> -->
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="row player-list-title">
+                            <div class="col-6 players-label">用户名</div>
+                            <div class="col-6 players-label">角色</div>
+                        </div>
+                    </div>
+                    <div class="col-12 outer-player-list">
+                        <div class="player-list">
+                            <div style="width: 10px; height: 10px;"></div>
+                            <div v-for="p,i in playerStatus" :key="i" class="row player-item">
+                                <div class="col-6 players-label">{{p.name}}</div>
+                                <div class="col-6 players-label">{{p.role}}</div>
+                            </div>
+                            <div style="width: 10px; height: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- <hr>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-8 offset-4">
+                        <div style="width: 100%; height: 30px; background-color: #575757; border-radius: 15px;"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-8">
+                        <div style="width: 100%; height: 30px; background-color: #575757; border-radius: 15px;"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;">
+                    <div class="col-9">
+                        <input class="form-control form-input">
+                    </div>
+                    <div class="col-3">
+                        <button class="btn btn-light form-input">发送</button>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+    crossorigin="anonymous"></script>
+<script src="https://unpkg.com/vue@next"></script>
+<script>
+    Vue.createApp({
+        data() {
+            return {
+                serverUrl: "127.0.0.1",
+                serverStatus: -1,
+                playerStatus: []
+            }
+        },
+        mounted() {
+            const socket = new WebSocket('ws://' + this.serverUrl + ":8765")
+            socket.addEventListener('open', e => console.log("Connected"));
+            socket.addEventListener('message', e => {
+                const report = JSON.parse(e.data)
+                this.serverStatus = report.status
+                this.playerStatus = []
+                report.players.forEach(p => this.playerStatus.push({ name: p.name, role: p.role }))
+            })
+            socket.addEventListener('close', e => {
+                this.serverStatus = -1
+                this.playerStatus = []
+            })
+        }
+    }).mount("#app")
+</script>
+
+</html>

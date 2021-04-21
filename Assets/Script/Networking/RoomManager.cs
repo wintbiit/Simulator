@@ -39,6 +39,9 @@ namespace Script.Networking
             // 在客户端侧将本地用户名从登陆页面传递给本地大厅玩家
             public string LocalDisplayName { set; get; }
 
+            // WebSocket 服务
+            private WsApi _wsApi;
+
             // 服务端侧成员
             private LobbyManager _lobbyManager;
 
@@ -98,6 +101,8 @@ namespace Script.Networking
                     case "Assets/Scenes/Game.unity":
                         _gameManager = GameObject.Find("Main Camera").GetComponent<GameManager>();
                         _gameManager.RoomManagerRegister(this);
+                        if (_wsApi != null)
+                            _wsApi.SetGameManager(_gameManager);
                         break;
                 }
             }
@@ -140,6 +145,7 @@ namespace Script.Networking
                 gamePlayer.index = roomPlayerComponent.id;
                 gamePlayer.displayName = roomPlayerComponent.displayName;
                 gamePlayer.role = _roles[roomPlayerComponent.id];
+                Debug.Log("Creating Game Player:" + gamePlayer.displayName);
 
                 // 创建 Robot
                 GameObject robotInstance = null;
@@ -347,7 +353,9 @@ namespace Script.Networking
 
             private void FixedUpdate()
             {
-                if (!IsServer || _gameManager == null) return;
+                if (!IsServer) return;
+                _wsApi?.OnFixedUpdate();
+                if (_gameManager == null) return;
                 if (_connections.Count != 0) return;
                 ResetServer();
             }
@@ -367,6 +375,7 @@ namespace Script.Networking
                 _roles.Clear();
                 _connections.Clear();
                 _facilitiesInitiated = false;
+                _wsApi.Stop();
             }
 
             #endregion
@@ -377,7 +386,12 @@ namespace Script.Networking
 
             public override void OnRoomStartHost() => IsHost = true;
 
-            public override void OnRoomStartServer() => IsServer = true;
+            public override void OnRoomStartServer()
+            {
+                IsServer = true;
+                if (_wsApi == null)
+                    _wsApi = new WsApi();
+            }
 
             public override void OnGUI()
             {

@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using System;
+using Mirror;
 using UnityEngine;
 
 namespace Script.Networking
@@ -24,7 +25,14 @@ namespace Script.Networking
                 _registered = true;
                 // 从本地 RoomManager 获取本地用户名
                 displayName = GameObject.Find("RoomManager").GetComponent<RoomManager>().LocalDisplayName;
+                UpdateDisplayName(displayName);
                 GameObject.Find("Main Camera").GetComponent<LobbyManager>().PlayerRegister(this);
+            }
+
+            [Command(ignoreAuthority = true)]
+            private void UpdateDisplayName(string n)
+            {
+                displayName = n;
             }
 
             public override void OnGUI()

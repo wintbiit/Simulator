@@ -164,6 +164,12 @@ namespace Script.Networking
             #region Server
 
             [Server]
+            public List<GamePlayer> GetPlayers()
+            {
+                return _players;
+            }
+
+            [Server]
             public void RoomManagerRegister(RoomManager roomManager)
             {
                 _roomManager = roomManager;
