@@ -6,6 +6,7 @@ using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace Script.Networking
 {

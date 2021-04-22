@@ -32,18 +32,25 @@ namespace Script.Networking
     {
         private readonly WebSocket _socket;
         private GameManager _gameManager;
-        private RoomManager _roomManager;
+        private readonly RoomManager _roomManager;
 
         public WsApi(RoomManager rm)
         {
             _roomManager = rm;
-            _socket = new WebSocket("ws://127.0.0.1:8765");
-            _socket.OnOpen += OnOpen;
-            _socket.OnClose += OnClose;
-            _socket.OnError += OnError;
-            _socket.OnMessage += OnMessage;
-            _socket.ConnectAsync();
-            _socket.SendAsync("Hello WsFwd.");
+            try
+            {
+                _socket = new WebSocket("ws://127.0.0.1:8765");
+                _socket.OnOpen += OnOpen;
+                _socket.OnClose += OnClose;
+                _socket.OnError += OnError;
+                _socket.OnMessage += OnMessage;
+                _socket.ConnectAsync();
+                _socket.SendAsync("Hello WsFwd.");
+            }
+            catch
+            {
+                Debug.Log("No WebSocket Service.");
+            }
         }
 
         public void Stop()
@@ -57,7 +64,7 @@ namespace Script.Networking
         private static void OnClose(object sender, CloseEventArgs e) => Debug.Log("Closed");
         private static void OnError(object sender, ErrorEventArgs e) => Debug.Log("Error:" + e.Message);
 
-        private void OnMessage(object sender, MessageEventArgs e) => Debug.Log("Message:" + e.Data);
+        private static void OnMessage(object sender, MessageEventArgs e) => Debug.Log("Message:" + e.Data);
 
         private float _lastReportTime;
 

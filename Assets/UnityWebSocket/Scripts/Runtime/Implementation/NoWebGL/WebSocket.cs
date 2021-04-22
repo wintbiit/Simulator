@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Net.WebSockets;
+using UnityEngine;
 
 namespace UnityWebSocket.NoWebGL
 {
@@ -31,6 +32,7 @@ namespace UnityWebSocket.NoWebGL
                     case System.Net.WebSockets.WebSocketState.Open:
                         return WebSocketState.Open;
                 }
+
                 return WebSocketState.Closed;
             }
         }
@@ -42,7 +44,12 @@ namespace UnityWebSocket.NoWebGL
 
         private ClientWebSocket socket;
         private CancellationTokenSource cts;
-        private bool IsCtsCancel { get { return cts == null || cts.IsCancellationRequested; } }
+
+        private bool IsCtsCancel
+        {
+            get { return cts == null || cts.IsCancellationRequested; }
+        }
+
         private bool isSendAsyncRunning;
         private bool isReceiveAsyncRunning;
 
@@ -53,6 +60,7 @@ namespace UnityWebSocket.NoWebGL
         public static bool runOnMainThread { get; set; } = false;
 
         #region APIs
+
         public WebSocket(string address)
         {
             this.Address = address;
@@ -65,6 +73,7 @@ namespace UnityWebSocket.NoWebGL
                 HandleError(new Exception("socket is busy."));
                 return;
             }
+
             cts = new CancellationTokenSource();
             socket = new ClientWebSocket();
             RunConnectAsync();
@@ -87,9 +96,11 @@ namespace UnityWebSocket.NoWebGL
             var sendBuffer = SpawnBuffer(WebSocketMessageType.Text, data);
             PushBuffer(sendBuffer);
         }
+
         #endregion
 
         #region Run Async
+
         private async void RunConnectAsync()
         {
             Log("Run ConnectAsync ...");
@@ -144,7 +155,7 @@ namespace UnityWebSocket.NoWebGL
             catch (Exception e)
             {
                 HandleError(e);
-                HandleClose((ushort)CloseStatusCode.Abnormal, e.Message);
+                HandleClose((ushort) CloseStatusCode.Abnormal, e.Message);
                 SocketDispose();
                 return;
             }
@@ -185,14 +196,16 @@ namespace UnityWebSocket.NoWebGL
                 {
                     if (sendBuffers.Count <= 0)
                     {
-                        await Task.Delay(1);
+                        await Task.Delay(100);
                         continue;
                     }
+
                     buffer = PopBuffer();
                     if (!IsCtsCancel)
                     {
                         await socket.SendAsync(buffer.buffer, buffer.type, true, cts.Token);
                     }
+
                     ReleaseBuffer(buffer);
 
                     Log("SendBuffers: " + sendBuffers.Count + ", PoolelBuffers: " + pooledSendBuffers.Count);
@@ -208,6 +221,7 @@ namespace UnityWebSocket.NoWebGL
                 {
                     ReleaseBuffer(PopBuffer());
                 }
+
                 isSendAsyncRunning = false;
             }
 
@@ -268,10 +282,11 @@ namespace UnityWebSocket.NoWebGL
                             break;
                         case WebSocketMessageType.Close:
                             isClosed = true;
-                            closeCode = (ushort)result.CloseStatus;
+                            closeCode = (ushort) result.CloseStatus;
                             closeReason = result.CloseStatusDescription;
                             break;
                     }
+
                     received = 0;
                     segment = new ArraySegment<byte>(buffer);
                 }
@@ -279,7 +294,7 @@ namespace UnityWebSocket.NoWebGL
             catch (Exception e)
             {
                 HandleError(e);
-                closeCode = (ushort)CloseStatusCode.Abnormal;
+                closeCode = (ushort) CloseStatusCode.Abnormal;
                 closeReason = e.Message;
             }
             finally
@@ -337,6 +352,7 @@ namespace UnityWebSocket.NoWebGL
             {
                 buffer = sendBuffers.Dequeue();
             }
+
             return buffer;
         }
 
@@ -401,9 +417,9 @@ namespace UnityWebSocket.NoWebGL
         private void Log(string msg)
         {
             UnityEngine.Debug.Log($"<color=yellow>[UnityWebSocket]</color>" +
-                $"<color=green>[T-{Thread.CurrentThread.ManagedThreadId:D3}]</color>" +
-                $"<color=red>[{DateTime.Now.TimeOfDay}]</color>" +
-                $" {msg}");
+                                  $"<color=green>[T-{Thread.CurrentThread.ManagedThreadId:D3}]</color>" +
+                                  $"<color=red>[{DateTime.Now.TimeOfDay}]</color>" +
+                                  $" {msg}");
         }
     }
 }

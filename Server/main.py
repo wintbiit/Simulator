@@ -35,6 +35,6 @@ if __name__ == "__main__":
     if os.path.exists(executable_path):
         subprocess.Popen(os.path.join(os.getcwd(), executable_path))
     asyncio.get_event_loop().run_until_complete(
-        websockets.serve(forward, "localhost", 8765)
+        websockets.serve(forward, "0.0.0.0", 8765)
     )
     asyncio.get_event_loop().run_forever()
