@@ -229,18 +229,17 @@ namespace Script.Networking
 
                 // 自动化机器人、建筑等初始化
                 if (_facilitiesInitiated) return player;
-                // NetworkConnection facilityOwner = null;
-                // if (IsHost) facilityOwner = conn;
-                // else if (role.Camp == CampT.Judge) facilityOwner = conn;
-                // if (facilityOwner == null) return player;
                 _facilitiesInitiated = true;
+
+                var FID = gamePlayer.index + 20;
+                
                 // 哨兵
                 {
                     var t = _gameManager.blueStart.guard;
                     var f = Instantiate(guardPrefab, t.position, t.rotation);
                     var c = f.GetComponent<RobotBase>();
                     c.role = new RoleT(CampT.Blue, TypeT.Guard);
-                    c.id = 11;
+                    c.id = ++FID;
                     c.level = 1;
                     c.health = RobotPerformanceTable.Table[1][TypeT.Guard].HealthLimit;
                     c.experience = 0;
@@ -255,7 +254,7 @@ namespace Script.Networking
                     var f1 = Instantiate(guardPrefab, t1.position, t1.rotation);
                     var c1 = f1.GetComponent<RobotBase>();
                     c1.role = new RoleT(CampT.Red, TypeT.Guard);
-                    c1.id = 12;
+                    c1.id = ++FID;
                     c1.level = 1;
                     c1.health = RobotPerformanceTable.Table[1][TypeT.Guard].HealthLimit;
                     c1.experience = 0;
@@ -271,7 +270,7 @@ namespace Script.Networking
                     var t = _gameManager.blueStart.campBase;
                     var f = Instantiate(basePrefab, t.position, t.rotation);
                     var c = f.GetComponent<FacilityBase>();
-                    c.id = 13;
+                    c.id = ++FID;
                     c.role = new RoleT(CampT.Blue, TypeT.Base);
                     c.gameManager = _gameManager;
                     c.health = 5500;
@@ -282,7 +281,7 @@ namespace Script.Networking
                     var t1 = _gameManager.redStart.campBase;
                     var f1 = Instantiate(basePrefab, t1.position, t1.rotation);
                     var c1 = f1.GetComponent<FacilityBase>();
-                    c1.id = 14;
+                    c1.id = ++FID;
                     c1.role = new RoleT(CampT.Red, TypeT.Base);
                     c1.gameManager = _gameManager;
                     c1.health = 5000;
@@ -295,7 +294,7 @@ namespace Script.Networking
                     var t = _gameManager.blueStart.campOutpost;
                     var f = Instantiate(outpostPrefab, t.position, t.rotation);
                     var c = f.GetComponent<FacilityBase>();
-                    c.id = 15;
+                    c.id = ++FID;
                     c.role = new RoleT(CampT.Blue, TypeT.Outpost);
                     c.gameManager = _gameManager;
                     c.health = 2000;
@@ -306,7 +305,7 @@ namespace Script.Networking
                     var t1 = _gameManager.redStart.campOutpost;
                     var f1 = Instantiate(outpostPrefab, t1.position, t1.rotation);
                     var c1 = f1.GetComponent<FacilityBase>();
-                    c1.id = 16;
+                    c1.id = ++FID;
                     c1.role = new RoleT(CampT.Red, TypeT.Outpost);
                     c1.gameManager = _gameManager;
                     c1.health = 2000;
@@ -319,7 +318,7 @@ namespace Script.Networking
                     var t = _gameManager.blueStart.campBuff;
                     var f = Instantiate(buffPrefab, t.position, t.rotation);
                     var c = f.GetComponent<FacilityBase>();
-                    c.id = 17;
+                    c.id = ++FID;
                     c.role = new RoleT(CampT.Blue, TypeT.EnergyMechanism);
                     c.gameManager = _gameManager;
                     c.health = 2000;
@@ -330,7 +329,7 @@ namespace Script.Networking
                     var t1 = _gameManager.redStart.campBuff;
                     var f1 = Instantiate(buffPrefab, t1.position, t1.rotation);
                     var c1 = f1.GetComponent<FacilityBase>();
-                    c1.id = 18;
+                    c1.id = ++FID;
                     c1.role = new RoleT(CampT.Red, TypeT.EnergyMechanism);
                     c1.gameManager = _gameManager;
                     c1.health = 2000;

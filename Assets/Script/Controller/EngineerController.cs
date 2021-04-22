@@ -105,9 +105,9 @@ namespace Script.Controller
                                 }
                             }
                         } // 拖拽
-                        else if (gc != null)
+                        else if (gc != null && !_drag)
                         {
-                            if ((hit.point - fpCam.transform.position).magnitude > 2.0f) return true;
+                            if ((hit.point - fpCam.transform.position).magnitude > 3.0f) return true;
                             if (gc.role.Camp == role.Camp)
                                 // && gc.health == 0)
                             {
@@ -124,9 +124,9 @@ namespace Script.Controller
                             _drag = false;
                             _dragObject.GetComponent<Rigidbody>().isKinematic = false;
                         }
-                        else if (bc != null)
+                        else if (bc != null && !_grab)
                         {
-                            if ((hit.point - fpCam.transform.position).magnitude > 2.0f) return true;
+                            if ((hit.point - fpCam.transform.position).magnitude > 3.0f) return true;
                             if (!_grab && !_drag)
                             {
                                 _grabObject = bc.gameObject;
@@ -171,7 +171,7 @@ namespace Script.Controller
                             var t = transform;
                             _dragObject
                                 .GetComponent<GroundControllerBase>()
-                                .Drag(t.position + t.forward + t.right * 0.5f);
+                                .Drag(t.position + t.forward + t.up * 0.2f);
                         }
 
                         if (_grab)

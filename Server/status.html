@@ -119,8 +119,10 @@
                 <div class="row justify-content-left">
                     <h4 class="col-4 status-label">状态：</h4>
                     <h4 v-if="serverStatus==-1" class="col-6" style="color: red; padding-left: 0;">离线</h4>
-                    <h4 v-if="serverStatus==0" class="col-6" style="color: rgb(230, 230, 0); padding-left: 0;">大厅</h4>
-                    <h4 v-if="serverStatus==1" class="col-6" style="color: rgb(0, 168, 0); padding-left: 0;">比赛中</h4>
+                    <h4 v-if="serverStatus==0" class="col-6" style="color: rgb(230, 230, 0); padding-left: 0;">
+                        大厅（{{playerStatus.length}}人）</h4>
+                    <h4 v-if="serverStatus==1" class="col-6" style="color: rgb(0, 168, 0); padding-left: 0;">
+                        比赛中（{{playerStatus.length}}人）</h4>
                     <!-- <h4 style="display: inline-block; color: red">离线</h2> -->
                     <!-- <h4 style="display: inline-block; color: rgb(230, 230, 0)">大厅</h2> -->
                 </div>
@@ -175,23 +177,36 @@
         data() {
             return {
                 serverUrl: "127.0.0.1",
+                socket: null,
                 serverStatus: -1,
                 playerStatus: []
             }
         },
-        mounted() {
-            const socket = new WebSocket('ws://' + this.serverUrl + ":8765")
-            socket.addEventListener('open', e => console.log("Connected"));
-            socket.addEventListener('message', e => {
-                const report = JSON.parse(e.data)
-                this.serverStatus = report.status
-                this.playerStatus = []
-                report.players.forEach(p => this.playerStatus.push({ name: p.name, role: p.role }))
-            })
-            socket.addEventListener('close', e => {
-                this.serverStatus = -1
-                this.playerStatus = []
-            })
+        created(){
+            this.initSocket()
+        },
+        methods: {
+            initSocket() {
+                console.log("Init")
+                this.socket = new WebSocket('ws://' + this.serverUrl + ":8765")
+                if (!this.socket) setTimeout(this.initSocket, 1000)
+                else {
+                    this.socket.addEventListener('open', e => console.log("Connected"));
+                    this.socket.addEventListener('message', e => {
+                        console.log(e.data)
+                        const report = JSON.parse(e.data)
+                        this.serverStatus = report.status
+                        this.playerStatus = []
+                        report.players.forEach(p => this.playerStatus.push({ name: p.name, role: p.role }))
+                    })
+                    this.socket.addEventListener('close', e => {
+                        this.serverStatus = -1
+                        this.playerStatus = []
+                        this.socket = null
+                        setTimeout(this.initSocket, 1000)
+                    })
+                }
+            }
         }
     }).mount("#app")
 </script>

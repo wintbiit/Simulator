@@ -224,13 +224,32 @@ namespace Script.Networking
                     .First(
                         f =>
                             f.Value.role.Equals(
-                                new RoleT(CampT.Red, TypeT.Base))).Value;
+                                new RoleT(CampT.Red, TypeT.Base)))
+                    .Value;
                 var blueBase = _facilityBases
                     .First(
                         f =>
                             f.Value.role.Equals(
-                                new RoleT(CampT.Blue, TypeT.Base))).Value;
-                return redBase.health > blueBase.health;
+                                new RoleT(CampT.Blue, TypeT.Base)))
+                    .Value;
+                if (redBase.health != blueBase.health)
+                    return redBase.health > blueBase.health;
+                var redOutpost = _facilityBases
+                    .First(
+                        f =>
+                            f.Value.role.Equals(
+                                new RoleT(CampT.Red, TypeT.Outpost)))
+                    .Value;
+                var blueOutpost = _facilityBases
+                    .First(
+                        f =>
+                            f.Value.role.Equals(
+                                new RoleT(CampT.Blue, TypeT.Outpost)))
+                    .Value;
+                if (redOutpost.health != blueOutpost.health)
+                    return redOutpost.health > blueOutpost.health;
+                // TODO: 伤害统计
+                return true;
             }
 
             [Command(ignoreAuthority = true)]
