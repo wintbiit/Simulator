@@ -260,7 +260,7 @@ namespace Script.Controller
                     }
 
                     if (heat > 0)
-                        heat -= RobotPerformanceTable.table[level][role.Type].CoolDownRate * GetAttr().ColdDownRate *
+                        heat -= RobotPerformanceTable.Table[level][role.Type].CoolDownRate * GetAttr().ColdDownRate *
                                 (Time.fixedDeltaTime / 1.0f);
 
                     // 射速切换
@@ -297,8 +297,6 @@ namespace Script.Controller
                         {
                             var position = cam.transform.position;
                             var targetPosition = target.transform.position;
-                            var noise = Random.Range(-0.1f, 0.1f);
-                            targetPosition += new Vector3(noise, noise, noise);
                             if (target == _lastTarget)
                             {
                                 if (_prediction != Vector3.zero)
@@ -345,6 +343,8 @@ namespace Script.Controller
                             delta *= 10;
                             delta.y /= Screen.height;
                             delta.x /= Screen.width;
+                            var noise = Random.Range(-0.16f, 0.16f);
+                            delta += new Vector3(noise, noise, 0);
                             _pitchingSpeed -= 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f;
                             _steeringSpeed += 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f;
 

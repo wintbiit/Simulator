@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Mirror;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
@@ -38,12 +39,26 @@ namespace Script.Networking
                 if (!isLocalPlayer) return;
                 Cursor.lockState = CursorLockMode.Locked;
                 Cursor.visible = false;
-                foreach (var robot in FindObjectsOfType<RobotBase>())
-                    if (robot.id == index)
+            }
+
+            private void FixedUpdate()
+            {
+                if (_slowUpdate > 30)
+                {
+                    _slowUpdate = 0;
+                    if (isLocalPlayer && isClient)
                     {
-                        robot.ConfirmLocalRobot();
-                        break;
+                        foreach (var robot in FindObjectsOfType<RobotBase>())
+                            if (!robot.registered)
+                            {
+                                if (robot.id != index) continue;
+                                robot.ConfirmLocalRobot();
+                                break;
+                            }
                     }
+                }
+
+                _slowUpdate++;
             }
         }
     }

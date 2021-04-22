@@ -341,7 +341,7 @@ namespace Script.Networking
                                 {
                                     _robotBases[hitEvent.Target].health = 0;
                                     _robotBases[hitEvent.Hitter].experience +=
-                                        RobotPerformanceTable.table[_robotBases[hitEvent.Target].level][
+                                        RobotPerformanceTable.Table[_robotBases[hitEvent.Target].level][
                                             _robotBases[hitEvent.Target].role.Type].ExpValue;
                                     if (_robotBases[hitEvent.Target].role.Type == TypeT.Engineer)
                                     {
@@ -467,7 +467,6 @@ namespace Script.Networking
                             _blueMoney += 100;
                             foreach (var r in _robotBases)
                                 r.Value.Buffs.RemoveAll(b => b.type == BuffT.SmallEnergy);
-
                             _smallBuffStart = false;
                             break;
                         case JudgeSystem.Event.TypeT.ThreeMinute:
@@ -497,44 +496,20 @@ namespace Script.Networking
 
                             var buffEvent = (BuffActivateEvent) e;
 
-                            if (buffEvent.Camp == CampT.Red)
-                            {
-                                if (buffEvent.Large && _largeBuffEnable)
-                                {
-                                    foreach (var r in _robotBases.Where(r => r.Value.role.Camp == CampT.Red))
-                                        if (r.Value.Buffs.All(b => b.type != BuffT.LargeEnergy))
-                                            r.Value.Buffs.Add(new LargeEnergyBuff());
-                                }
-                                else if (_smallBuffEnable)
-                                {
-                                    foreach (var r in _robotBases.Where(r => r.Value.role.Camp == CampT.Red))
-                                        if (r.Value.Buffs.All(b => b.type != BuffT.SmallEnergy))
-                                            r.Value.Buffs.Add(new SmallEnergyBuff());
-                                }
-                            }
-                            else
-                            {
-                                if (buffEvent.Large && _largeBuffEnable)
-                                {
-                                    foreach (var r in _robotBases.Where(r => r.Value.role.Camp == CampT.Blue))
-                                        if (r.Value.Buffs.All(b => b.type != BuffT.LargeEnergy))
-                                            r.Value.Buffs.Add(new LargeEnergyBuff());
-                                }
-                                else if (_smallBuffEnable)
-                                {
-                                    foreach (var r in _robotBases.Where(r => r.Value.role.Camp == CampT.Blue))
-                                        if (r.Value.Buffs.All(b => b.type != BuffT.SmallEnergy))
-                                            r.Value.Buffs.Add(new SmallEnergyBuff());
-                                }
-                            }
-
                             if (buffEvent.Large && _largeBuffEnable)
                             {
+                                foreach (var r in _robotBases.Where(r => r.Value.role.Camp == buffEvent.Camp))
+                                    if (r.Value.Buffs.All(b => b.type != BuffT.LargeEnergy))
+                                        r.Value.Buffs.Add(new LargeEnergyBuff());
                                 _largeBuffEnable = false;
                                 _largeBuffColdDown = Time.time + 75;
                             }
-                            else if (_smallBuffEnable)
+
+                            if (!buffEvent.Large && _smallBuffEnable)
                             {
+                                foreach (var r in _robotBases.Where(r => r.Value.role.Camp == buffEvent.Camp))
+                                    if (r.Value.Buffs.All(b => b.type != BuffT.SmallEnergy))
+                                        r.Value.Buffs.Add(new SmallEnergyBuff());
                                 _smallBuffEnable = false;
                                 _smallBuffColdDown = Time.time + 75;
                             }
@@ -769,7 +744,7 @@ namespace Script.Networking
                         deadHint.SetActive(_localRobot.health == 0);
                         if (_localRobot.role.Type != TypeT.Engineer)
                         {
-                            var heatLimit = RobotPerformanceTable.table[_localRobot.level][_localRobot.role.Type]
+                            var heatLimit = RobotPerformanceTable.Table[_localRobot.level][_localRobot.role.Type]
                                 .HeatLimit;
                             var processColor = _localRobot.heat < heatLimit
                                 ? (heatLimit - _localRobot.heat) / heatLimit
@@ -797,7 +772,7 @@ namespace Script.Networking
                             ? redHealthDisplays.First(hd => hd.type == r.role.Type)
                             : blueHealthDisplays.First(hd => hd.type == r.role.Type);
                         var healthRate = (float) r.health /
-                                         RobotPerformanceTable.table[r.level][r.role.Type].HealthLimit;
+                                         RobotPerformanceTable.Table[r.level][r.role.Type].HealthLimit;
                         healthDisplay.bar.sizeDelta = new Vector2(
                             healthDisplay.width * (healthRate - 1), 0);
                         if (r.role.Camp == CampT.Red)

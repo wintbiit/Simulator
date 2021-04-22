@@ -547,9 +547,9 @@ namespace Script.Controller
             {
                 if (Time.time - _reviveUpdate > 1)
                 {
-                    health += (int) (GetAttr().ReviveRate * RobotPerformanceTable.table[level][role.Type].HealthLimit);
-                    if (health > RobotPerformanceTable.table[level][role.Type].HealthLimit)
-                        health = RobotPerformanceTable.table[level][role.Type].HealthLimit;
+                    health += (int) (GetAttr().ReviveRate * RobotPerformanceTable.Table[level][role.Type].HealthLimit);
+                    if (health > RobotPerformanceTable.Table[level][role.Type].HealthLimit)
+                        health = RobotPerformanceTable.Table[level][role.Type].HealthLimit;
                     _reviveUpdate = Time.time;
                 }
             }
@@ -642,8 +642,6 @@ namespace Script.Controller
                     {
                         var position = fpCam.transform.position;
                         var targetPosition = target.transform.position;
-                        var noise = Random.Range(-0.1f, 0.1f);
-                        targetPosition += new Vector3(noise, noise, noise);
                         if (target == _lastTarget)
                         {
                             if (_prediction != Vector3.zero)
@@ -694,6 +692,8 @@ namespace Script.Controller
                         delta *= 10;
                         delta.y /= Screen.height;
                         delta.x /= Screen.width;
+                        var noise = Random.Range(-0.16f, 0.16f);
+                        delta += new Vector3(noise, noise, 0);
                         _pitchingSpeed -= (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f) * 1.5f;
                         _steeringSpeed += (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f) * 1.5f;
 
@@ -853,12 +853,12 @@ namespace Script.Controller
                 }
 
 
-                var heatLimit = RobotPerformanceTable.table[level][role.Type].HeatLimit;
-                var healthLimit = RobotPerformanceTable.table[level][role.Type].HealthLimit;
+                var heatLimit = RobotPerformanceTable.Table[level][role.Type].HeatLimit;
+                var healthLimit = RobotPerformanceTable.Table[level][role.Type].HealthLimit;
                 if (heat > heatLimit && heat < heatLimit * 2)
                 {
                     health -= (int) ((heat - heatLimit) / 250 * healthLimit * (Time.fixedDeltaTime / 1.0f));
-                    heat -= RobotPerformanceTable.table[level][role.Type].CoolDownRate * GetAttr().ColdDownRate *
+                    heat -= RobotPerformanceTable.Table[level][role.Type].CoolDownRate * GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
                 }
                 else if (heat > heatLimit * 2)
@@ -867,7 +867,7 @@ namespace Script.Controller
                     heat = heatLimit * 2;
                 }
                 else if (heat > 0)
-                    heat -= RobotPerformanceTable.table[level][role.Type].CoolDownRate * GetAttr().ColdDownRate *
+                    heat -= RobotPerformanceTable.Table[level][role.Type].CoolDownRate * GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
 
                 // 射速切换

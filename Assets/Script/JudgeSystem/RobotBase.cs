@@ -76,7 +76,7 @@ namespace Script.JudgeSystem
 
         public static class RobotPerformanceTable
         {
-            public static readonly Dictionary<int, Dictionary<TypeT, RobotLevel>> table =
+            public static readonly Dictionary<int, Dictionary<TypeT, RobotLevel>> Table =
                 new Dictionary<int, Dictionary<TypeT, RobotLevel>>
                 {
                     {
@@ -255,21 +255,36 @@ namespace Script.JudgeSystem
                     if (b.reviveRate > revive) revive = b.reviveRate;
                 }
 
-                var attr = new Attr();
-                attr.DamageRate = damage;
-                attr.ArmorRate = armor;
-                attr.ColdDownRate = coldDown;
-                attr.ReviveRate = revive;
+                var attr = new Attr
+                {
+                    DamageRate = damage, ArmorRate = armor, ColdDownRate = coldDown, ReviveRate = revive
+                };
                 return attr;
             }
 
+            [SyncVar] public bool registered = true;
+
             protected virtual void FixedUpdate()
             {
-                if (!isServer) return;
-                foreach (var b in Buffs.Where(b => Time.time > b.timeOut))
+                if (isClient)
                 {
-                    Buffs.Remove(b);
+                    if (!registered && isLocalRobot) CmdRegister();
                 }
+
+                if (isServer)
+                {
+                    foreach (var b in Buffs.Where(b => Time.time > b.timeOut))
+                    {
+                        Buffs.Remove(b);
+                    }
+                }
+            }
+
+            [Command(ignoreAuthority = true)]
+            private void CmdRegister()
+            {
+                if (!registered) gameManager.RobotRegister(this);
+                registered = true;
             }
         }
     }

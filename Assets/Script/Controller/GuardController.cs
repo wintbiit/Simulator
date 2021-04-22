@@ -125,8 +125,6 @@ namespace Script.Controller
                     {
                         var position = fpCam.transform.position;
                         var targetPosition = target.transform.position;
-                        var noise = Random.Range(-0.3f, 0.3f);
-                        targetPosition += new Vector3(noise, noise, noise);
                         // 辅助瞄准算法
                         Debug.DrawRay(position, targetPosition - position, Color.red);
                         var distance = (targetPosition - position).magnitude;
@@ -177,6 +175,8 @@ namespace Script.Controller
                         delta *= 10;
                         delta.y /= Screen.height;
                         delta.x /= Screen.width;
+                        var noise = Random.Range(-0.16f, 0.16f);
+                        delta += new Vector3(noise, noise, 0);
                         _pitchingSpeed -= 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f;
                         _steeringSpeed += 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f;
 

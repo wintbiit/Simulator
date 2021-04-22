@@ -215,14 +215,14 @@ namespace Script.Networking
                     robotComponent.role = role;
                     robotComponent.id = roomPlayerComponent.id;
                     robotComponent.level = 1;
-                    robotComponent.health = RobotPerformanceTable.table[1][role.Type].HealthLimit;
+                    robotComponent.health = RobotPerformanceTable.Table[1][role.Type].HealthLimit;
                     robotComponent.experience = 0;
-                    robotComponent.smallAmmo = RobotPerformanceTable.table[1][role.Type].SmallAmmo;
-                    robotComponent.largeAmmo = RobotPerformanceTable.table[1][role.Type].LargeAmmo;
-                    robotComponent.velocityLimit = RobotPerformanceTable.table[1][role.Type].VelocityLimit;
+                    robotComponent.smallAmmo = RobotPerformanceTable.Table[1][role.Type].SmallAmmo;
+                    robotComponent.largeAmmo = RobotPerformanceTable.Table[1][role.Type].LargeAmmo;
+                    robotComponent.velocityLimit = RobotPerformanceTable.Table[1][role.Type].VelocityLimit;
 
                     robotComponent.gameManager = _gameManager;
-                    _gameManager.RobotRegister(robotComponent);
+                    robotComponent.registered = false;
                     // 将生成的机器人对象同步生成到所有客户端中
                     NetworkServer.Spawn(robotInstance, conn);
                 }
@@ -242,11 +242,11 @@ namespace Script.Networking
                     c.role = new RoleT(CampT.Blue, TypeT.Guard);
                     c.id = 11;
                     c.level = 1;
-                    c.health = RobotPerformanceTable.table[1][TypeT.Guard].HealthLimit;
+                    c.health = RobotPerformanceTable.Table[1][TypeT.Guard].HealthLimit;
                     c.experience = 0;
-                    c.smallAmmo = RobotPerformanceTable.table[1][TypeT.Guard].SmallAmmo;
-                    c.largeAmmo = RobotPerformanceTable.table[1][TypeT.Guard].LargeAmmo;
-                    c.velocityLimit = RobotPerformanceTable.table[1][TypeT.Guard].VelocityLimit;
+                    c.smallAmmo = RobotPerformanceTable.Table[1][TypeT.Guard].SmallAmmo;
+                    c.largeAmmo = RobotPerformanceTable.Table[1][TypeT.Guard].LargeAmmo;
+                    c.velocityLimit = RobotPerformanceTable.Table[1][TypeT.Guard].VelocityLimit;
                     c.gameManager = _gameManager;
                     _gameManager.RobotRegister(c);
                     NetworkServer.Spawn(f);
@@ -257,11 +257,11 @@ namespace Script.Networking
                     c1.role = new RoleT(CampT.Red, TypeT.Guard);
                     c1.id = 12;
                     c1.level = 1;
-                    c1.health = RobotPerformanceTable.table[1][TypeT.Guard].HealthLimit;
+                    c1.health = RobotPerformanceTable.Table[1][TypeT.Guard].HealthLimit;
                     c1.experience = 0;
-                    c1.smallAmmo = RobotPerformanceTable.table[1][TypeT.Guard].SmallAmmo;
-                    c1.largeAmmo = RobotPerformanceTable.table[1][TypeT.Guard].LargeAmmo;
-                    c1.velocityLimit = RobotPerformanceTable.table[1][TypeT.Guard].VelocityLimit;
+                    c1.smallAmmo = RobotPerformanceTable.Table[1][TypeT.Guard].SmallAmmo;
+                    c1.largeAmmo = RobotPerformanceTable.Table[1][TypeT.Guard].LargeAmmo;
+                    c1.velocityLimit = RobotPerformanceTable.Table[1][TypeT.Guard].VelocityLimit;
                     c1.gameManager = _gameManager;
                     _gameManager.RobotRegister(c1);
                     NetworkServer.Spawn(f1);
