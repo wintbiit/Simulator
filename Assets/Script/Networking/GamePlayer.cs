@@ -1,6 +1,5 @@
-﻿using System;
-using System.Linq;
-using Mirror;
+﻿using Mirror;
+using Script.Controller;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using UnityEngine;
@@ -20,6 +19,7 @@ namespace Script.Networking
 
             // 此处应实现为在合适的时机进行一次权限确认，循环没有必要
             private static int _slowUpdate;
+            private bool _localRobotConfirmed;
 
             private void Start()
             {
@@ -48,13 +48,31 @@ namespace Script.Networking
                     _slowUpdate = 0;
                     if (isLocalPlayer && isClient)
                     {
-                        foreach (var robot in FindObjectsOfType<RobotBase>())
-                            if (!robot.registered)
+                        if (!_localRobotConfirmed)
+                        {
+                            if (role.Type != TypeT.Ptz)
                             {
-                                if (robot.id != index) continue;
-                                robot.ConfirmLocalRobot();
-                                break;
+                                foreach (var robot in FindObjectsOfType<RobotBase>())
+                                    if (!robot.registered)
+                                    {
+                                        if (robot.id != index) continue;
+                                        robot.ConfirmLocalRobot();
+                                        _localRobotConfirmed = true;
+                                        break;
+                                    }
                             }
+                            else
+                            {
+                                foreach (var robot in FindObjectsOfType<RobotBase>())
+                                    if (robot.role.Camp == role.Camp && robot.role.Type == TypeT.Drone)
+                                    {
+                                        robot.ConfirmLocalRobot();
+                                        ((DroneController) robot).isPtz = true;
+                                        _localRobotConfirmed = true;
+                                        break;
+                                    }
+                            }
+                        }
                     }
                 }
 

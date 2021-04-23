@@ -94,7 +94,6 @@ namespace Script.Controller
     {
         // 车辆最大驱动扭矩、最大转向速度
         [Header("Motor")] public List<AxleInfo> axleInfos;
-        public float oriMaxMotorTorque;
         private float _maxMotorTorque;
         public float maxSteeringSpeed;
 
@@ -109,7 +108,6 @@ namespace Script.Controller
         // 射击
         [Header("Fire")] public Transform gun;
         public GameObject bullet;
-        public float speed;
         public bool highFreq;
         public bool safe = true;
 
@@ -403,7 +401,7 @@ namespace Script.Controller
             fpCam.SetActive(false);
             ToggleMeshRenderer(chassis, true);
             ToggleMeshRenderer(spinner, false);
-            _maxMotorTorque = oriMaxMotorTorque;
+            _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit;
             _angleSpin = 0;
         }
 
@@ -493,7 +491,7 @@ namespace Script.Controller
         {
             if (isLocalRobot) return;
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward * speed;
+            b.GetComponent<Rigidbody>().velocity = gun.forward * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
             // Destroy(b, 4);
         }
 
@@ -509,7 +507,7 @@ namespace Script.Controller
         private void Fire()
         {
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward * speed;
+            b.GetComponent<Rigidbody>().velocity = gun.forward * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
             var bulletController = b.GetComponent<BulletController>();
             bulletController.owner = id;
             bulletController.isActive = true;
@@ -547,9 +545,9 @@ namespace Script.Controller
             {
                 if (Time.time - _reviveUpdate > 1)
                 {
-                    health += (int) (GetAttr().ReviveRate * RobotPerformanceTable.Table[level][role.Type].HealthLimit);
-                    if (health > RobotPerformanceTable.Table[level][role.Type].HealthLimit)
-                        health = RobotPerformanceTable.Table[level][role.Type].HealthLimit;
+                    health += (int) (GetAttr().ReviveRate * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit);
+                    if (health > RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit)
+                        health = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit;
                     _reviveUpdate = Time.time;
                 }
             }
@@ -658,8 +656,8 @@ namespace Script.Controller
                         const float g = -9.8f;
                         for (var i = 0; i < 100; i++)
                         {
-                            var vX0 = Mathf.Cos(theta) * speed;
-                            var vY0 = Mathf.Sin(theta) * speed;
+                            var vX0 = Mathf.Cos(theta) * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
+                            var vY0 = Mathf.Sin(theta) * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
                             var t = Mathf.Cos(alpha) * distance / vX0;
                             _flightTime = t;
                             var sY = vY0 * t + 0.5f * g * Mathf.Pow(t, 2);
@@ -698,7 +696,7 @@ namespace Script.Controller
                         _steeringSpeed += (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f) * 1.5f;
 
                         {
-                            var vY0 = Mathf.Sin(theta) * speed;
+                            var vY0 = Mathf.Sin(theta) * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
                             var xDir = new Vector3(targetPosition.x, 0, targetPosition.z) -
                                        new Vector3(position.x, 0, position.z);
                             var points = new List<Vector3>();
@@ -755,11 +753,11 @@ namespace Script.Controller
                 // 车辆左右平移
                 if (Cursor.lockState == CursorLockMode.Locked)
                 {
-                    if (Math.Abs(_maxMotorTorque - oriMaxMotorTorque) < 1e-2)
+                    if (Math.Abs(_maxMotorTorque - RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit) < 1e-2)
                     {
                         transform.Translate(
                             Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
-                                ? oriMaxMotorTorque
+                                ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit
                                 : _maxMotorTorque) * 2)
                             / 10000);
                     }
@@ -767,7 +765,7 @@ namespace Script.Controller
                     {
                         transform.Translate(
                             Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
-                                ? oriMaxMotorTorque
+                                ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit
                                 : _maxMotorTorque) * 2)
                             / 20000);
                     }
@@ -778,12 +776,12 @@ namespace Script.Controller
                     if (Input.GetMouseButton(1))
                     {
                         SetSpin(true);
-                        _maxMotorTorque = oriMaxMotorTorque / 2;
+                        _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit / 2.0f;
                     }
                     else
                     {
                         SetSpin(false);
-                        _maxMotorTorque = oriMaxMotorTorque;
+                        _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit;
                     }
                 }
 
@@ -792,18 +790,18 @@ namespace Script.Controller
                 if (climb < -2)
                 {
                     _climbing = true;
-                    _maxMotorTorque = oriMaxMotorTorque * Mathf.Abs(climb);
+                    _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * Mathf.Abs(climb);
                 }
                 else
                 {
                     _climbing = false;
-                    _maxMotorTorque = oriMaxMotorTorque;
+                    _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit;
                 }
 
                 // Boost效果
                 if (Input.GetKey(KeyCode.LeftShift) && !_isSpin || role.Type == TypeT.Engineer)
                 {
-                    _maxMotorTorque = oriMaxMotorTorque * 4;
+                    _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 4;
                 }
 
                 // 射击
@@ -853,12 +851,12 @@ namespace Script.Controller
                 }
 
 
-                var heatLimit = RobotPerformanceTable.Table[level][role.Type].HeatLimit;
-                var healthLimit = RobotPerformanceTable.Table[level][role.Type].HealthLimit;
+                var heatLimit = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HeatLimit;
+                var healthLimit = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit;
                 if (heat > heatLimit && heat < heatLimit * 2)
                 {
                     health -= (int) ((heat - heatLimit) / 250 * healthLimit * (Time.fixedDeltaTime / 1.0f));
-                    heat -= RobotPerformanceTable.Table[level][role.Type].CoolDownRate * GetAttr().ColdDownRate *
+                    heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate * GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
                 }
                 else if (heat > heatLimit * 2)
@@ -867,7 +865,7 @@ namespace Script.Controller
                     heat = heatLimit * 2;
                 }
                 else if (heat > 0)
-                    heat -= RobotPerformanceTable.Table[level][role.Type].CoolDownRate * GetAttr().ColdDownRate *
+                    heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate * GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
 
                 // 射速切换

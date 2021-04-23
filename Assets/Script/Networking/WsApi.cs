@@ -89,7 +89,7 @@ namespace Script.Networking
                         status = ServerStatus.Lobby,
                         players = _roomManager.roomSlots.Select(player => new PlayerStatus
                         {
-                            name = ((RoomPlayer) player).id.ToString(),
+                            name = ((RoomPlayer) player).displayName,
                             role = _roomManager.GetRole(((RoomPlayer) player).id).Camp + " " +
                                    _roomManager.GetRole(((RoomPlayer) player).id).Type
                         }).ToArray()

@@ -121,10 +121,7 @@ GameObject:
   - component: {fileID: 7533658459668434242}
   - component: {fileID: 7441951404446060134}
   - component: {fileID: 532292208970075507}
-  - component: {fileID: 6615713338490663074}
   - component: {fileID: 4010177359326903314}
-  - component: {fileID: 4684954893781977762}
-  - component: {fileID: 2073311845597839417}
   m_Layer: 0
   m_Name: Drone
   m_TagString: Untagged
@@ -179,14 +176,16 @@ MonoBehaviour:
   syncInterval: 0.1
   id: 0
   level: 0
+  chassisType: 0
+  gunType: 0
   health: 0
   smallAmmo: 0
   largeAmmo: 0
   experience: 0
-  velocityLimit: 0
   heat: 0
   gameManager: {fileID: 0}
   isLocalRobot: 0
+  registered: 1
   cam: {fileID: 4680832207817395795}
   yaw: {fileID: 86750230075780705}
   pitch: {fileID: 6545223667571839787}
@@ -198,24 +197,10 @@ MonoBehaviour:
   raidStart: -1
   bullet: {fileID: 8655787454687237716, guid: 541c42d5451f98f4884eee4a04166377, type: 3}
   gun: {fileID: 2237456643837714561}
-  speed: 30
   highFreq: 0
---- !u!54 &6615713338490663074
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2952865584694654478}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_UseGravity: 0
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 126
-  m_CollisionDetection: 0
+  dartTill: 0
+  dartCount: 0
+  isPtz: 0
 --- !u!114 &4010177359326903314
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -234,32 +219,6 @@ MonoBehaviour:
   localPositionSensitivity: 0.01
   localRotationSensitivity: 0.01
   localScaleSensitivity: 0.01
---- !u!65 &4684954893781977762
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2952865584694654478}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1.5795813, y: 0.2559893, z: 1.7650471}
-  m_Center: {x: 0.011591911, y: 0.13089931, z: 0.0023183823}
---- !u!65 &2073311845597839417
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2952865584694654478}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.24267578, y: 0.05712533, z: 0.2523365}
-  m_Center: {x: 0.032402992, y: -0.27035034, z: 0.0059986115}
 --- !u!1 &4680832207817395795
 GameObject:
   m_ObjectHideFlags: 0

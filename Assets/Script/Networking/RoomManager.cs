@@ -6,7 +6,6 @@ using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace Script.Networking
 {
@@ -215,11 +214,15 @@ namespace Script.Networking
                     robotComponent.role = role;
                     robotComponent.id = roomPlayerComponent.id;
                     robotComponent.level = 1;
-                    robotComponent.health = RobotPerformanceTable.Table[1][role.Type].HealthLimit;
+                    robotComponent.chassisType = ChassisT.Default;
+                    robotComponent.gunType = GunT.Default;
+                    robotComponent.health = RobotPerformanceTable.Table[1][role.Type][ChassisT.Default][GunT.Default]
+                        .HealthLimit;
                     robotComponent.experience = 0;
-                    robotComponent.smallAmmo = RobotPerformanceTable.Table[1][role.Type].SmallAmmo;
-                    robotComponent.largeAmmo = RobotPerformanceTable.Table[1][role.Type].LargeAmmo;
-                    robotComponent.velocityLimit = RobotPerformanceTable.Table[1][role.Type].VelocityLimit;
+                    robotComponent.smallAmmo = RobotPerformanceTable.Table[1][role.Type][ChassisT.Default][GunT.Default]
+                        .SmallAmmo;
+                    robotComponent.largeAmmo = RobotPerformanceTable.Table[1][role.Type][ChassisT.Default][GunT.Default]
+                        .LargeAmmo;
 
                     robotComponent.gameManager = _gameManager;
                     robotComponent.registered = false;
@@ -231,21 +234,22 @@ namespace Script.Networking
                 if (_facilitiesInitiated) return player;
                 _facilitiesInitiated = true;
 
-                var FID = gamePlayer.index + 20;
-                
+                var fid = gamePlayer.index + 20;
+
                 // 哨兵
                 {
                     var t = _gameManager.blueStart.guard;
                     var f = Instantiate(guardPrefab, t.position, t.rotation);
                     var c = f.GetComponent<RobotBase>();
                     c.role = new RoleT(CampT.Blue, TypeT.Guard);
-                    c.id = ++FID;
+                    c.id = ++fid;
                     c.level = 1;
-                    c.health = RobotPerformanceTable.Table[1][TypeT.Guard].HealthLimit;
+                    c.chassisType = ChassisT.Default;
+                    c.gunType = GunT.Default;
+                    c.health = RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default].HealthLimit;
                     c.experience = 0;
-                    c.smallAmmo = RobotPerformanceTable.Table[1][TypeT.Guard].SmallAmmo;
-                    c.largeAmmo = RobotPerformanceTable.Table[1][TypeT.Guard].LargeAmmo;
-                    c.velocityLimit = RobotPerformanceTable.Table[1][TypeT.Guard].VelocityLimit;
+                    c.smallAmmo = RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default].SmallAmmo;
+                    c.largeAmmo = RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default].LargeAmmo;
                     c.gameManager = _gameManager;
                     _gameManager.RobotRegister(c);
                     NetworkServer.Spawn(f);
@@ -254,13 +258,16 @@ namespace Script.Networking
                     var f1 = Instantiate(guardPrefab, t1.position, t1.rotation);
                     var c1 = f1.GetComponent<RobotBase>();
                     c1.role = new RoleT(CampT.Red, TypeT.Guard);
-                    c1.id = ++FID;
+                    c1.id = ++fid;
                     c1.level = 1;
-                    c1.health = RobotPerformanceTable.Table[1][TypeT.Guard].HealthLimit;
+                    c.chassisType = ChassisT.Default;
+                    c.gunType = GunT.Default;
+                    c1.health = RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default].HealthLimit;
                     c1.experience = 0;
-                    c1.smallAmmo = RobotPerformanceTable.Table[1][TypeT.Guard].SmallAmmo;
-                    c1.largeAmmo = RobotPerformanceTable.Table[1][TypeT.Guard].LargeAmmo;
-                    c1.velocityLimit = RobotPerformanceTable.Table[1][TypeT.Guard].VelocityLimit;
+                    c1.smallAmmo = RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
+                        .SmallAmmo;
+                    c1.largeAmmo = RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
+                        .LargeAmmo;
                     c1.gameManager = _gameManager;
                     _gameManager.RobotRegister(c1);
                     NetworkServer.Spawn(f1);
@@ -270,7 +277,7 @@ namespace Script.Networking
                     var t = _gameManager.blueStart.campBase;
                     var f = Instantiate(basePrefab, t.position, t.rotation);
                     var c = f.GetComponent<FacilityBase>();
-                    c.id = ++FID;
+                    c.id = ++fid;
                     c.role = new RoleT(CampT.Blue, TypeT.Base);
                     c.gameManager = _gameManager;
                     c.health = 5500;
@@ -281,7 +288,7 @@ namespace Script.Networking
                     var t1 = _gameManager.redStart.campBase;
                     var f1 = Instantiate(basePrefab, t1.position, t1.rotation);
                     var c1 = f1.GetComponent<FacilityBase>();
-                    c1.id = ++FID;
+                    c1.id = ++fid;
                     c1.role = new RoleT(CampT.Red, TypeT.Base);
                     c1.gameManager = _gameManager;
                     c1.health = 5000;
@@ -294,7 +301,7 @@ namespace Script.Networking
                     var t = _gameManager.blueStart.campOutpost;
                     var f = Instantiate(outpostPrefab, t.position, t.rotation);
                     var c = f.GetComponent<FacilityBase>();
-                    c.id = ++FID;
+                    c.id = ++fid;
                     c.role = new RoleT(CampT.Blue, TypeT.Outpost);
                     c.gameManager = _gameManager;
                     c.health = 2000;
@@ -305,7 +312,7 @@ namespace Script.Networking
                     var t1 = _gameManager.redStart.campOutpost;
                     var f1 = Instantiate(outpostPrefab, t1.position, t1.rotation);
                     var c1 = f1.GetComponent<FacilityBase>();
-                    c1.id = ++FID;
+                    c1.id = ++fid;
                     c1.role = new RoleT(CampT.Red, TypeT.Outpost);
                     c1.gameManager = _gameManager;
                     c1.health = 2000;
@@ -318,7 +325,7 @@ namespace Script.Networking
                     var t = _gameManager.blueStart.campBuff;
                     var f = Instantiate(buffPrefab, t.position, t.rotation);
                     var c = f.GetComponent<FacilityBase>();
-                    c.id = ++FID;
+                    c.id = ++fid;
                     c.role = new RoleT(CampT.Blue, TypeT.EnergyMechanism);
                     c.gameManager = _gameManager;
                     c.health = 2000;
@@ -329,7 +336,7 @@ namespace Script.Networking
                     var t1 = _gameManager.redStart.campBuff;
                     var f1 = Instantiate(buffPrefab, t1.position, t1.rotation);
                     var c1 = f1.GetComponent<FacilityBase>();
-                    c1.id = ++FID;
+                    c1.id = ++fid;
                     c1.role = new RoleT(CampT.Red, TypeT.EnergyMechanism);
                     c1.gameManager = _gameManager;
                     c1.health = 2000;

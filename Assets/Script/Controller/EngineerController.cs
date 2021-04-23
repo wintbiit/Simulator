@@ -7,7 +7,6 @@ using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
-using UnityEngine.Assertions.Comparers;
 
 namespace Script.Controller
 {
@@ -189,7 +188,7 @@ namespace Script.Controller
                             var er = (EngineerReviveBuff) Buffs.First(b => b.type == BuffT.EngineerRevive);
                             if (Time.time - er.StartTime > 20)
                             {
-                                health = (int) (RobotPerformanceTable.Table[level][role.Type].HealthLimit * 0.2f);
+                                health = (int) (RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit * 0.2f);
                                 Buffs.RemoveAll(b => b.type == BuffT.EngineerRevive);
                                 CmdReviveProtect();
                             }
