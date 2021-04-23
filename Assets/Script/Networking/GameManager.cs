@@ -176,6 +176,12 @@ namespace Script.Networking
             }
 
             [Server]
+            public void PlayerLeave(int id)
+            {
+                _players.RemoveAll(p => p.index == id);
+            }
+
+            [Server]
             public void RoomManagerRegister(RoomManager roomManager)
             {
                 _roomManager = roomManager;
@@ -638,8 +644,21 @@ namespace Script.Networking
             private void CmdConfirmType(int id, ChassisT c, GunT g)
             {
                 var robot = _robotBases[id];
-                robot.chassisType = c;
-                robot.gunType = g;
+                if (robot.health ==
+                    RobotPerformanceTable.Table[robot.level][robot.role.Type][robot.chassisType][robot.gunType]
+                        .HealthLimit)
+                {
+                    robot.chassisType = c;
+                    robot.gunType = g;
+                    robot.health =
+                        RobotPerformanceTable.Table[robot.level][robot.role.Type][robot.chassisType][robot.gunType]
+                            .HealthLimit;
+                }
+                else
+                {
+                    robot.chassisType = c;
+                    robot.gunType = g;
+                }
             }
 
             [Command(ignoreAuthority = true)]
@@ -647,7 +666,7 @@ namespace Script.Networking
             {
                 Emit(new TimeEvent(JudgeSystem.Event.TypeT.Reset));
             }
-
+            
             #endregion
 
             #region Client
@@ -896,7 +915,6 @@ namespace Script.Networking
                         if (player.role.Type == TypeT.Ptz)
                         {
                             loadingHint.SetActive(true);
-                            Debug.Log("飞手带着无人机跑了");
                         }
                     }
                     else
@@ -913,11 +931,7 @@ namespace Script.Networking
                             mineDisplay.text = "矿物价值：" + engineer.MineValue();
                             if (engineer.Buffs.Any(b => b.type == BuffT.EngineerRevive))
                             {
-                                var timeLeft = 20 - (Time.time -
-                                                     ((EngineerReviveBuff) engineer.Buffs.First(b =>
-                                                         b.type == BuffT.EngineerRevive))
-                                                     .StartTime);
-                                extraDisplay.text += Mathf.RoundToInt(timeLeft) + "秒后自动复活\n";
+                                extraDisplay.text += ((EngineerController)_localRobot).reviveTime + "秒后自动复活\n";
                             }
 
                             operationProcess.fillAmount = engineer.opProcess;

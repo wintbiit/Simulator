@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine.Serialization;
 
 namespace Script.JudgeSystem
 {
@@ -26,5 +27,6 @@ namespace Script.JudgeSystem
         public float coolDownRate;
         public float reviveRate;
         public float timeOut;
+        public float startTime;
     }
 }

@@ -502,8 +502,8 @@ Camera:
   m_GameObject: {fileID: 606920211317981568}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.2784314, g: 0.2784314, b: 0.2784314, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -620,8 +620,8 @@ Camera:
   m_GameObject: {fileID: 883251184541810457}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.2784314, g: 0.2784314, b: 0.2784314, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -1684,7 +1684,7 @@ Transform:
   m_GameObject: {fileID: 3824758814212177295}
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0.047391143, y: 2.2559732e-17, z: -0.015074833}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8, y: 0.8, z: 0.8}
   m_Children:
   - {fileID: 8576152929785708052}
   - {fileID: 8917468470483093294}
@@ -1772,14 +1772,16 @@ MonoBehaviour:
   syncInterval: 0.1
   id: 0
   level: 0
+  chassisType: 0
+  gunType: 0
   health: 0
   smallAmmo: 0
   largeAmmo: 0
   experience: 0
-  velocityLimit: 0
   heat: 0
   gameManager: {fileID: 0}
   isLocalRobot: 0
+  registered: 1
   axleInfos:
   - leftWheel: {fileID: 4061695243533972917}
     rightWheel: {fileID: 3237360049631878984}
@@ -1787,7 +1789,6 @@ MonoBehaviour:
   - leftWheel: {fileID: 2473238839439928132}
     rightWheel: {fileID: 8545225068481997831}
     motor: 0
-  oriMaxMotorTorque: 50
   maxSteeringSpeed: 2.5
   pitch: {fileID: 1553143908400611858}
   maxPitchAngle: 35
@@ -1795,7 +1796,6 @@ MonoBehaviour:
   spinner: {fileID: 8917468470483093294}
   gun: {fileID: 5107668994072277423}
   bullet: {fileID: 2065509969735240974, guid: 667408e66b12df64fbed3efab058eb79, type: 3}
-  speed: 20
   highFreq: 0
   safe: 1
   armors:

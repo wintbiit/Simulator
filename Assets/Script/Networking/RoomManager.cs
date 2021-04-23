@@ -116,6 +116,8 @@ namespace Script.Networking
             {
                 // 在服务端回调中删除数据以保证没有僵尸玩家
                 _lobbyManager.PlayerLeave(conn.connectionId);
+                if (_gameManager)
+                    _gameManager.PlayerLeave(conn.connectionId);
                 _connections.Remove(conn.connectionId);
             }
 

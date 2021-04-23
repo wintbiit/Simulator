@@ -14,11 +14,9 @@ namespace Script.Controller
     {
         public class EngineerReviveBuff : BuffBase
         {
-            public readonly float StartTime;
-
             public EngineerReviveBuff()
             {
-                StartTime = Time.time;
+                startTime = Time.time;
                 type = BuffT.EngineerRevive;
                 timeOut = float.MaxValue;
             }
@@ -37,6 +35,8 @@ namespace Script.Controller
             private float _lastPress = float.MaxValue;
             private bool _pressed;
             public float opProcess;
+
+            [SyncVar] public int reviveTime;
 
             protected override void UnFireOperation()
             {
@@ -150,13 +150,6 @@ namespace Script.Controller
 
             public int MineValue() => _mine.Sum(m => m);
 
-            [Command]
-            private void CmdReviveProtect()
-            {
-                if (Buffs.All(b => b.type != BuffT.ReviveProtect))
-                    Buffs.Add(new ReviveProtectBuff(10));
-            }
-
             protected override void FixedUpdate()
             {
                 base.FixedUpdate();
@@ -181,17 +174,24 @@ namespace Script.Controller
                                 .Drag(t.position + t.forward + t.up * -0.2f, t.rotation);
                         }
                     }
-                    else
+                }
+
+                if (isServer)
+                {
+                    if (health <= 0)
                     {
                         if (Buffs.Any(b => b.type == BuffT.EngineerRevive))
                         {
-                            var er = (EngineerReviveBuff) Buffs.First(b => b.type == BuffT.EngineerRevive);
-                            if (Time.time - er.StartTime > 20)
+                            var er = Buffs.First(b => b.type == BuffT.EngineerRevive);
+                            if (Time.time - er.startTime > 20)
                             {
-                                health = (int) (RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit * 0.2f);
+                                health = (int) (RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                                    .HealthLimit * 0.2f);
                                 Buffs.RemoveAll(b => b.type == BuffT.EngineerRevive);
-                                CmdReviveProtect();
+                                if (Buffs.All(b => b.type != BuffT.ReviveProtect))
+                                    Buffs.Add(new ReviveProtectBuff(10));
                             }
+                            else reviveTime = Mathf.RoundToInt(20 - (Time.time - er.startTime));
                         }
                     }
                 }
