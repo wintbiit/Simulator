@@ -175,7 +175,7 @@ namespace Script.Controller
                         delta *= 10;
                         delta.y /= Screen.height;
                         delta.x /= Screen.width;
-                        var noise = Random.Range(-0.2f, 0.2f);
+                        var noise = Random.Range(-0.3f, 0.3f);
                         delta += new Vector3(noise, noise, 0);
                         _pitchingSpeed -= 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f;
                         _steeringSpeed += 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f;
@@ -184,7 +184,7 @@ namespace Script.Controller
                         {
                             smallAmmo--;
                             Fire(0);
-                            _fireCd = Random.Range(4, 8);
+                            _fireCd = Random.Range(8, 16);
                         }
                         else
                         {

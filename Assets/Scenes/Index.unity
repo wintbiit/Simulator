@@ -2450,7 +2450,7 @@ MonoBehaviour:
   runInBackground: 1
   autoStartServerBuild: 1
   showDebugMessages: 0
-  serverTickRate: 64
+  serverTickRate: 32
   offlineScene: Assets/Scenes/Index.unity
   onlineScene: Assets/Scenes/Lobby.unity
   transport: {fileID: 1514517853}

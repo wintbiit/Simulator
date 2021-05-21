@@ -1,0 +1,46 @@
+Laser - Basic
+
+This asset is a basic all in one laser script that works with a custom additive mask shader and line renderer and RayCast to create any variation of thin low performance cost laser. The script allows to attach a source or end flare and or enable lights to enhance the effect. A UV texture scrolling direction control is also available to simulate dust.
+
+-	Flares auto respond to camera distance over 20 and angle to source object of more then 155 degrees
+-	Perfect for gun sight lasers
+-	Comes with laser pointer prefab
+-	2D environment compatible
+
+This asset also works well with Unity standard Bloom post effect to enhance the laser lighting effect (Bloom is Unity Pro Only) 
+
+
+Custom Shader: LaserAdditive
+
+Main Color – Main Color
+
+Mask (A) – Mask Texture alpha controls the overall texture alpha fade masking (texture alpha channel controls material cutoff)
+
+Pattern (A) – Texture alpha controls secondary alpha (texture alpha channel controls material cutoff)
+
+Alpha Cutoff – Controls the amount of alpha cutoff
+
+
+Script: Laser
+
+Start Point – Assign Staring point of laser. Laser only uses local Z axis (Vector3.forward) as its direction (cannot be left blank)
+Laser Direction – direction of laser from start point (X, Y, Z only)
+Use 2D – Switch 2D mode on and off
+Layer 2D Mask– Adjust the 2D sort layer of the 
+Laser On – Turn just laser on and off
+UseUVPan – Enable texture pan
+End Flare Offset – Controls the end flare and end light offset 
+Source Flare – Source Flare Slot (optional)
+End Flare - Source Flare Slot (optional)
+Add Source Light – Auto Creates a light at beginning of laser (optional as it will cost a draw call)
+Add End Light - Auto Creates a light at beginning of laser (optional as it will cost a draw call)
+Laser Color – Change all laser, flare and light color realtime
+Start Width – Controls start width
+End Width - Controls end width
+Laser Dist – Controls the distance of the laser
+TexScrollX – controls the speed the texture pans in X axis (only works with shader above)
+TexScrollY - controls the speed the texture pans in Y axis (only works with shader above)
+UV Tex Scale - controls the U and V scale of the assigned texture (only works with shader above)
+
+
+

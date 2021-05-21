@@ -53,7 +53,7 @@ namespace Script.Networking
         public class HealthDisplay
         {
             public TypeT type;
-            public RectTransform bar;
+            public Image bar;
             public float width;
         }
 
@@ -96,6 +96,19 @@ namespace Script.Networking
 
             public List<HealthDisplay> redHealthDisplays = new List<HealthDisplay>();
             public List<HealthDisplay> blueHealthDisplays = new List<HealthDisplay>();
+            public Image redBaseHealthBar;
+            public Image blueBaseHealthBar;
+            public TMP_Text redBaseHealthDisplay;
+            public TMP_Text blueBaseHealthDisplay;
+            public TMP_Text redGuardHealthDisplay;
+            public TMP_Text blueGuardHealthDisplay;
+            public TMP_Text redOutpostHealthDisplay;
+            public TMP_Text blueOutpostHealthDisplay;
+            public TMP_Text redMoneyDisplay;
+            public TMP_Text blueMoneyDisplay;
+
+            public Image superCDisplay;
+            public Image healthDisplay;
 
             public TMP_Text countDownDisplay;
             public TMP_Text smallAmmoDisplay;
@@ -410,6 +423,7 @@ namespace Script.Networking
                                 _facilityBases[hitEvent.Target].health -= (int) protect;
                                 if (_facilityBases[hitEvent.Target].health <= 0)
                                 {
+                                    _facilityBases[hitEvent.Target].health = 0;
                                     if (_facilityBases[hitEvent.Target].role.Type == TypeT.Base)
                                         Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameOver));
                                     if (_facilityBases[hitEvent.Target].role.Type == TypeT.Outpost)
@@ -666,7 +680,7 @@ namespace Script.Networking
             {
                 Emit(new TimeEvent(JudgeSystem.Event.TypeT.Reset));
             }
-            
+
             #endregion
 
             #region Client
@@ -731,20 +745,6 @@ namespace Script.Networking
                 typeConfirm.interactable = false;
                 chassisTypeSelect.interactable = false;
                 gunTypeSelect.interactable = false;
-
-                foreach (var hd in redHealthDisplays)
-                {
-                    hd.width = hd.bar.rect.width;
-                    hd.bar.sizeDelta = new Vector2(hd.width * -2, 0);
-                    hd.bar.offsetMin = Vector2.zero;
-                }
-
-                foreach (var hd in blueHealthDisplays)
-                {
-                    hd.width = hd.bar.rect.width;
-                    hd.bar.sizeDelta = new Vector2(hd.width * -2, 0);
-                    hd.bar.offsetMax = Vector2.zero;
-                }
 
                 var mesh = GameObject.Find("Arena21").GetComponent<MeshFilter>().sharedMesh;
                 var vertices = mesh.vertices;
@@ -851,34 +851,46 @@ namespace Script.Networking
                     foreach (var r in _clientRobotBases)
                     {
                         if (r.role.Type == TypeT.Drone) continue;
-                        var healthDisplay = r.role.Camp == CampT.Red
-                            ? redHealthDisplays.First(hd => hd.type == r.role.Type)
-                            : blueHealthDisplays.First(hd => hd.type == r.role.Type);
-                        var healthRate = (float) r.health /
-                                         RobotPerformanceTable.Table[r.level][r.role.Type][r.chassisType][r.gunType]
-                                             .HealthLimit;
-                        healthDisplay.bar.sizeDelta = new Vector2(
-                            healthDisplay.width * (healthRate - 1), 0);
-                        if (r.role.Camp == CampT.Red)
-                            healthDisplay.bar.offsetMax = Vector2.zero;
+                        if (r.role.Type == TypeT.Guard)
+                        {
+                            var display = r.role.Camp == CampT.Red
+                                ? redGuardHealthDisplay
+                                : blueGuardHealthDisplay;
+                            display.text = r.health.ToString();
+                        }
                         else
-                            healthDisplay.bar.offsetMin = Vector2.zero;
+                        {
+                            var healthDisplay = r.role.Camp == CampT.Red
+                                ? redHealthDisplays.First(hd => hd.type == r.role.Type)
+                                : blueHealthDisplays.First(hd => hd.type == r.role.Type);
+                            var healthRate = (float) r.health /
+                                             RobotPerformanceTable.Table[r.level][r.role.Type][r.chassisType][r.gunType]
+                                                 .HealthLimit;
+                            healthDisplay.bar.fillAmount = healthRate;
+                        }
                     }
 
                     foreach (var f in _clientFacilityBases)
                     {
                         if (f.role.Type == TypeT.EnergyMechanism) continue;
-                        var healthDisplay = f.role.Camp == CampT.Red
-                            ? redHealthDisplays.First(hd => hd.type == f.role.Type)
-                            : blueHealthDisplays.First(hd => hd.type == f.role.Type);
-                        var healthRate = (float) f.health / f.healthLimit;
-                        healthDisplay.bar.sizeDelta = new Vector2(
-                            healthDisplay.width * (healthRate - 1), 0);
-                        if (f.role.Camp == CampT.Red)
-                            healthDisplay.bar.offsetMax = Vector2.zero;
-                        else
-                            healthDisplay.bar.offsetMin = Vector2.zero;
+                        if (f.role.Type == TypeT.Outpost)
+                        {
+                            var hd = f.role.Camp == CampT.Red ? redOutpostHealthDisplay : blueOutpostHealthDisplay;
+                            hd.text = f.health.ToString();
+                        }
+
+                        if (f.role.Type == TypeT.Base)
+                        {
+                            var hd = f.role.Camp == CampT.Red ? redBaseHealthDisplay : blueBaseHealthDisplay;
+                            hd.text = f.health.ToString();
+                            var healthDisplay = f.role.Camp == CampT.Red ? redBaseHealthBar : blueBaseHealthBar;
+                            var healthRate = (float) f.health / f.healthLimit;
+                            healthDisplay.fillAmount = healthRate;
+                        }
                     }
+
+                    redMoneyDisplay.text = _redMoney.ToString();
+                    blueMoneyDisplay.text = _blueMoney.ToString();
 
                     var minute = (int) Math.Floor(_countDown / 60.0f);
                     var second = _countDown % 60;
@@ -925,13 +937,24 @@ namespace Script.Networking
                         moneyDisplay.text =
                             "团队金钱：" + (_localRobot.role.Camp == CampT.Red ? _redMoney : _blueMoney);
                         operationProcess.fillAmount = 0;
+                        if (_localRobot is GroundControllerBase)
+                        {
+                            var ground = _localRobot.GetComponent<GroundControllerBase>();
+                            superCDisplay.color = ground.con ? Color.red : Color.green;
+                            superCDisplay.fillAmount = ground.capability;
+                            healthDisplay.fillAmount = (float)ground.health /
+                                                       RobotPerformanceTable.Table[ground.level][ground.role.Type][
+                                                           ground.chassisType][
+                                                           ground.gunType].HealthLimit;
+                        }
+
                         if (_localRobot.role.Type == TypeT.Engineer)
                         {
                             var engineer = _localRobot.GetComponent<EngineerController>();
                             mineDisplay.text = "矿物价值：" + engineer.MineValue();
                             if (engineer.Buffs.Any(b => b.type == BuffT.EngineerRevive))
                             {
-                                extraDisplay.text += ((EngineerController)_localRobot).reviveTime + "秒后自动复活\n";
+                                extraDisplay.text += ((EngineerController) _localRobot).reviveTime + "秒后自动复活\n";
                             }
 
                             operationProcess.fillAmount = engineer.opProcess;
@@ -993,6 +1016,13 @@ namespace Script.Networking
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.LargeEnergy)) extraDisplay.text += "大神符" + '\n';
 
                         extraDisplay.text += "等级" + _localRobot.level + "\n";
+
+                        extraDisplay.text += "己方备弹情况\n";
+                        foreach (var r in _clientRobotBases.Where(r => r.role.Camp == _localRobot.role.Camp))
+                        {
+                            extraDisplay.text += r.role.Type + " 大弹丸：" + r.largeAmmo + " 小弹丸：" +
+                                                 r.smallAmmo + "\n";
+                        }
                     }
                 }
             }

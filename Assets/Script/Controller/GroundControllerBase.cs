@@ -11,6 +11,7 @@ using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 using TypeT = Script.JudgeSystem.Role.TypeT;
 
@@ -126,6 +127,15 @@ namespace Script.Controller
         // 防翻车回溯
         private Vector3 _lastAngle;
 
+        // 启动力矩
+        private float _startTime;
+        private bool _started;
+
+        // 超级电容
+        public float capability;
+        public bool con;
+        private bool _cDown;
+
         // 辅助瞄准
         private ArmorController _lastTarget;
         private Vector3 _lastPosition;
@@ -146,6 +156,7 @@ namespace Script.Controller
         [SyncVar] private Quaternion _pitchRot;
         private bool _climbing;
 
+
         protected virtual void OnTriggerStay(Collider other)
         {
             if (!isLocalRobot) return;
@@ -154,7 +165,7 @@ namespace Script.Controller
                 if (_isSpin && health > 0)
                 {
                     if (Random.Range(0, 5) > 3)
-                        transform.Translate(Vector3.up * Random.Range(0, 0.1f));
+                        transform.Translate(Vector3.up * Random.Range(0, 0.05f));
                 }
             }
         }
@@ -491,7 +502,9 @@ namespace Script.Controller
         {
             if (isLocalRobot) return;
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
+            b.GetComponent<Rigidbody>().velocity = gun.forward *
+                                                   RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                                                       .VelocityLimit;
             // Destroy(b, 4);
         }
 
@@ -507,7 +520,9 @@ namespace Script.Controller
         private void Fire()
         {
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
+            b.GetComponent<Rigidbody>().velocity = gun.forward *
+                                                   RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                                                       .VelocityLimit;
             var bulletController = b.GetComponent<BulletController>();
             bulletController.owner = id;
             bulletController.isActive = true;
@@ -545,10 +560,26 @@ namespace Script.Controller
             {
                 if (Time.time - _reviveUpdate > 1)
                 {
-                    health += (int) (GetAttr().ReviveRate * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit);
+                    health += (int) (GetAttr().ReviveRate *
+                                     RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit);
                     if (health > RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit)
                         health = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit;
                     _reviveUpdate = Time.time;
+                }
+            }
+
+            if (isLocalRobot)
+            {
+                // 重置车辆位置、旋转
+                if (Input.GetKeyDown(KeyCode.R))
+                {
+                    if (FindObjectsOfType<RobotBase>().Length == 3)
+                    {
+                        var selfTransform = transform;
+                        selfTransform.position += Vector3.up;
+                        selfTransform.rotation = new Quaternion();
+                        health = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit;
+                    }
                 }
             }
 
@@ -557,7 +588,18 @@ namespace Script.Controller
                 // 车辆前后驱动
                 if (Cursor.lockState == CursorLockMode.Locked)
                 {
-                    var motor = _maxMotorTorque * Input.GetAxis("Vertical");
+                    var motor = _maxMotorTorque * 0.5f * Input.GetAxis("Vertical");
+                    if (Time.time - _startTime < 1.0f)
+                        motor *= 8;
+                    if (!_started && Math.Abs(Input.GetAxis("Vertical")) > 1e-1)
+                    {
+                        _started = true;
+                        _startTime = Time.time;
+                    }
+
+                    if (Math.Abs(Input.GetAxis("Vertical")) < 1e-1)
+                        _started = false;
+
 
                     foreach (var axleInfo in axleInfos)
                     {
@@ -565,15 +607,23 @@ namespace Script.Controller
                         {
                             axleInfo.leftWheel.motorTorque = motor;
                             axleInfo.rightWheel.motorTorque = motor;
+
                             // 刹车阻尼效果
-                            if (Input.GetKey(KeyCode.Space))
+                            if (Input.GetKey(KeyCode.Space) ||
+                                Math.Abs(Input.GetAxis("Vertical")) + Math.Abs(Input.GetAxis("Horizontal")) < 0.1f)
                             {
                                 _braking++;
-                                GetComponent<Rigidbody>().velocity /= 1.15f;
+                                var v = GetComponent<Rigidbody>().velocity;
+                                var y = v.y;
+                                v /= 1.15f;
+                                v.y = y;
                                 if (_braking > 30)
                                 {
-                                    GetComponent<Rigidbody>().velocity = Vector3.zero;
+                                    v = Vector3.zero;
+                                    v.y = y;
                                 }
+
+                                GetComponent<Rigidbody>().velocity = v;
                             }
                             else
                             {
@@ -616,7 +666,7 @@ namespace Script.Controller
                     if (pitchA < 0) pitch.transform.Rotate(Vector3.right, 1);
                 }
 
-                if (Input.GetKey(KeyCode.V) && role.Type != TypeT.Engineer)
+                if (Input.GetMouseButton(1) && role.Type != TypeT.Engineer)
                 {
                     var targets = FindObjectsOfType<ArmorController>()
                         .Where(a => a.GetColor() != this.armors[0].GetColor() && a.GetColor() != ColorT.Down)
@@ -656,8 +706,10 @@ namespace Script.Controller
                         const float g = -9.8f;
                         for (var i = 0; i < 100; i++)
                         {
-                            var vX0 = Mathf.Cos(theta) * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
-                            var vY0 = Mathf.Sin(theta) * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
+                            var vX0 = Mathf.Cos(theta) *
+                                      RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
+                            var vY0 = Mathf.Sin(theta) *
+                                      RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
                             var t = Mathf.Cos(alpha) * distance / vX0;
                             _flightTime = t;
                             var sY = vY0 * t + 0.5f * g * Mathf.Pow(t, 2);
@@ -690,13 +742,14 @@ namespace Script.Controller
                         delta *= 10;
                         delta.y /= Screen.height;
                         delta.x /= Screen.width;
-                        var noise = Random.Range(-0.16f, 0.16f);
+                        var noise = Random.Range(-0.3f, 0.3f);
                         delta += new Vector3(noise, noise, 0);
                         _pitchingSpeed -= (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f) * 1.5f;
                         _steeringSpeed += (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f) * 1.5f;
 
                         {
-                            var vY0 = Mathf.Sin(theta) * RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
+                            var vY0 = Mathf.Sin(theta) *
+                                      RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].VelocityLimit;
                             var xDir = new Vector3(targetPosition.x, 0, targetPosition.z) -
                                        new Vector3(position.x, 0, position.z);
                             var points = new List<Vector3>();
@@ -712,7 +765,6 @@ namespace Script.Controller
                             _visual.SetPositions(points.ToArray());
                             var gradient = _visual.colorGradient;
                             var colorKeys = gradient.colorKeys;
-                            Debug.Log(screenErr.magnitude);
                             colorKeys[0].color = screenErr.magnitude > 21.5f ? Color.red : Color.green;
                             gradient.colorKeys = colorKeys;
                             _visual.colorGradient = gradient;
@@ -753,36 +805,68 @@ namespace Script.Controller
                 // 车辆左右平移
                 if (Cursor.lockState == CursorLockMode.Locked)
                 {
-                    if (Math.Abs(_maxMotorTorque - RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit) < 1e-2)
+                    if (Math.Abs(_maxMotorTorque -
+                                 RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit) < 1e-2)
                     {
                         transform.Translate(
                             Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
-                                ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit
+                                ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2
                                 : _maxMotorTorque) * 2)
-                            / 10000);
+                            / 8000);
                     }
                     else
                     {
                         transform.Translate(
                             Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
-                                ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit
+                                ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2
                                 : _maxMotorTorque) * 2)
-                            / 20000);
+                            / 8000);
                     }
                 }
 
                 if (Cursor.lockState == CursorLockMode.Locked && isLocalRobot)
                 {
-                    if (Input.GetMouseButton(1))
+                    if (Input.GetKey(KeyCode.LeftShift))
                     {
                         SetSpin(true);
-                        _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit / 2.0f;
+                        _maxMotorTorque =
+                            RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit / 2.0f;
                     }
                     else
                     {
                         SetSpin(false);
-                        _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit;
+                        _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                            .PowerLimit;
                     }
+                }
+
+
+                // Boost效果
+                if (!_cDown && Input.GetKey(KeyCode.C) && !_isSpin || role.Type == TypeT.Engineer)
+                {
+                    con = !con;
+                    _cDown = true;
+                }
+
+                if (!Input.GetKey(KeyCode.C))
+                    _cDown = false;
+
+                if (con)
+                {
+                    _maxMotorTorque =
+                        RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit *
+                        2.2f;
+                    capability -= 0.006f;
+                    if (capability < 1e-2)
+                        con = false;
+                }
+                else
+                {
+                    _maxMotorTorque =
+                        RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit;
+                    capability += 0.002f;
+                    if (capability > 1)
+                        capability = 1;
                 }
 
                 var climb = transform.localRotation.eulerAngles.x;
@@ -790,18 +874,13 @@ namespace Script.Controller
                 if (climb < -2)
                 {
                     _climbing = true;
-                    _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * Mathf.Abs(climb);
+                    _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit *
+                                      Mathf.Abs(climb) * 4;
                 }
                 else
                 {
                     _climbing = false;
                     _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit;
-                }
-
-                // Boost效果
-                if (Input.GetKey(KeyCode.LeftShift) && !_isSpin || role.Type == TypeT.Engineer)
-                {
-                    _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 4;
                 }
 
                 // 射击
@@ -856,7 +935,8 @@ namespace Script.Controller
                 if (heat > heatLimit && heat < heatLimit * 2)
                 {
                     health -= (int) ((heat - heatLimit) / 250 * healthLimit * (Time.fixedDeltaTime / 1.0f));
-                    heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate * GetAttr().ColdDownRate *
+                    heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate *
+                            GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
                 }
                 else if (heat > heatLimit * 2)
@@ -865,7 +945,8 @@ namespace Script.Controller
                     heat = heatLimit * 2;
                 }
                 else if (heat > 0)
-                    heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate * GetAttr().ColdDownRate *
+                    heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate *
+                            GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
 
                 // 射速切换
@@ -921,14 +1002,6 @@ namespace Script.Controller
                 tpCam.SetActive(!_fpActive);
                 fpCam.SetActive(_fpActive);
                 // hud.SetActive(_fpActive);
-
-                // 重置车辆位置、旋转
-                if (Input.GetKeyDown(KeyCode.R))
-                {
-                    var selfTransform = transform;
-                    selfTransform.position += Vector3.up;
-                    selfTransform.rotation = new Quaternion();
-                }
             }
 
             // Spin效果

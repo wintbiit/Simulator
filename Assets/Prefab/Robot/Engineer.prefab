@@ -345,7 +345,7 @@ MonoBehaviour:
   - leftWheel: {fileID: 6009261709241288511}
     rightWheel: {fileID: 6009261710249941145}
     motor: 0
-  maxSteeringSpeed: 2.5
+  maxSteeringSpeed: 4
   pitch: {fileID: 6009261709017031260}
   maxPitchAngle: 60
   chassis: {fileID: 4903115676946126291}
@@ -366,6 +366,7 @@ MonoBehaviour:
   tpCam: {fileID: 5061006686159651247}
   fpCam: {fileID: 6009261709017031260}
   opProcess: 0
+  reviveTime: 0
 --- !u!1 &637891227767829832
 GameObject:
   m_ObjectHideFlags: 0
@@ -2521,7 +2522,7 @@ Camera:
   m_GameObject: {fileID: 6009261709017031260}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 0.2784314, g: 0.2784314, b: 0.2784314, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2

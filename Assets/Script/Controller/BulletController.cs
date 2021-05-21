@@ -47,7 +47,7 @@ namespace Script.Controller
 
             private IEnumerator RemoveRigid()
             {
-                yield return new WaitForSeconds(10);
+                yield return new WaitForSeconds(4);
                 Destroy(GetComponent<Rigidbody>());
             }
         }
