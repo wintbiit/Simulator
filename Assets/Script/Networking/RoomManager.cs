@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Mirror;
+using Script.Controller;
 using Script.JudgeSystem.Facility;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
@@ -295,8 +296,8 @@ namespace Script.Networking
                     c1.id = ++fid;
                     c1.role = new RoleT(CampT.Red, TypeT.Base);
                     c1.gameManager = _gameManager;
-                    c1.health = 5000;
-                    c1.healthLimit = 5000;
+                    c1.health = 5500;
+                    c1.healthLimit = 5500;
                     _gameManager.FacilityRegister(c1);
                     NetworkServer.Spawn(f1);
                 }
@@ -352,8 +353,13 @@ namespace Script.Networking
                 {
                     foreach (var m in _gameManager.silverStart)
                         NetworkServer.Spawn(Instantiate(silverPrefab, m.position, m.rotation));
-                    foreach (var m in _gameManager.goldStart)
-                        NetworkServer.Spawn(Instantiate(goldPrefab, m.position, m.rotation));
+                    for (var i = 0; i < _gameManager.goldStart.Count; i++)
+                    {
+                        var m = _gameManager.goldStart[i];
+                        var gold = Instantiate(goldPrefab, m.position, m.rotation);
+                        gold.GetComponent<MineController>().index = i + 1;
+                        NetworkServer.Spawn(gold);
+                    }
                 }
                 // 障碍块
                 {

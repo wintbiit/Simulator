@@ -20,6 +20,7 @@ using Script.JudgeSystem.Role;
 using Script.Networking.Lobby;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 using Random = System.Random;
@@ -187,8 +188,8 @@ namespace Script.Networking
                 new TimeEventTrigger {time = 0, e = JudgeSystem.Event.TypeT.GameOver}
             };
 
-            [SyncVar] private int _countDown;
-            [SyncVar] private bool _playing;
+            [SyncVar] public int countDown;
+            [SyncVar] public bool playing;
             [SyncVar] private bool _finished;
             [SyncVar] private int _startTime;
             [SyncVar] private int _finishTime;
@@ -277,7 +278,7 @@ namespace Script.Networking
             [Server]
             private void ServerStart()
             {
-                _countDown = gameTime;
+                countDown = gameTime;
             }
 
             [Server]
@@ -391,13 +392,13 @@ namespace Script.Networking
                 }
 
                 // 倒计时
-                if (_playing || _finished)
+                if (playing || _finished)
                 {
-                    _countDown = gameTime - ((int) Time.time - _startTime);
+                    countDown = gameTime - ((int) Time.time - _startTime);
                     // 时序事件
-                    if (_timeEventTriggers.Any(t => t.time == _countDown && !t.triggered))
+                    if (_timeEventTriggers.Any(t => t.time == countDown && !t.triggered))
                     {
-                        var trigger = _timeEventTriggers.First(t => t.time == _countDown);
+                        var trigger = _timeEventTriggers.First(t => t.time == countDown);
                         Emit(new TimeEvent(trigger.e));
                         trigger.triggered = true;
                     }
@@ -550,7 +551,7 @@ namespace Script.Networking
                         case JudgeSystem.Event.TypeT.GameStart:
                             Debug.Log("Confirmed:" + confirmedCount);
                             _startTime = (int) Time.time;
-                            _playing = true;
+                            playing = true;
                             _redMoney = 200;
                             _blueMoney = 200;
                             // 单机无限金钱
@@ -594,7 +595,7 @@ namespace Script.Networking
                             break;
                         case JudgeSystem.Event.TypeT.GameOver:
                             if (_finished) break;
-                            _playing = false;
+                            playing = false;
                             _finished = true;
                             _finishTime = (int) Time.time;
                             RpcOnClientGameOver(IsRedWin());
@@ -927,7 +928,7 @@ namespace Script.Networking
                                     FHP = _clientFacilityBases.First(f =>
                                         f.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Outpost))).health,
                                     inInvasion = 0,
-                                    RemainTime = _countDown,
+                                    RemainTime = countDown,
                                     SHP = _clientRobotBases.First(r =>
                                         r.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Guard))).health
                                 });
@@ -1021,15 +1022,15 @@ namespace Script.Networking
                     redMoneyDisplay.text = _redMoney.ToString();
                     blueMoneyDisplay.text = _blueMoney.ToString();
 
-                    var minute = (int) Math.Floor(_countDown / 60.0f);
-                    var second = _countDown % 60;
+                    var minute = (int) Math.Floor(countDown / 60.0f);
+                    var second = countDown % 60;
                     if (minute == 0 && second <= 10)
                         countDownDisplay.color = Color.red;
                     if (_finished)
                     {
                         countDownDisplay.color = Color.red;
                         minute = 0;
-                        second = 10 + (_countDown - (gameTime - (_finishTime - _startTime)));
+                        second = 10 + (countDown - (gameTime - (_finishTime - _startTime)));
                         if (second == 0)
                             CmdReset();
                     }
@@ -1143,6 +1144,7 @@ namespace Script.Networking
 
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.SmallEnergy)) extraDisplay.text += "小神符" + '\n';
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.LargeEnergy)) extraDisplay.text += "大神符" + '\n';
+                        if (_localRobot.Buffs.Any(b => b.type == BuffT.Jump)) extraDisplay.text += "飞坡增益" + "\n";
 
                         extraDisplay.text += "等级" + _localRobot.level + "\n";
 
@@ -1172,6 +1174,15 @@ namespace Script.Networking
                         Cursor.visible = false;
                     }
                 }
+            }
+
+            [Client]
+            public void Disconnect()
+            {
+                if (isServer)
+                    _roomManager.ResetServer();
+                FindObjectOfType<RoomManager>().StopClient();
+                SceneManager.LoadScene("Index");
             }
 
             #endregion

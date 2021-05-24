@@ -6,12 +6,19 @@ RoboMaster 比赛模拟器第三版。
 
 [第二版 Realive](https://github.com/scutbot/Realive)
 
-## 主要功能
+## Nightly 2021/5/25
+
+两次测试情况及修复情况
+
+![T2](Images/TestRecord052421.png)
+![T1](Images/TestRecord052321.png)
+
+## 主要功能（未更新进度）
 
 + 全兵种操控模拟
 + 赛制模拟，包括经济、经验、神符等
 
-![GUI](GUI.png)
+![GUI](Images/GUI.png)
 
 ## 开发进度
 

@@ -76,6 +76,27 @@ namespace Script.Controller
         }
     }
 
+    public class AidBuff : BuffBase
+    {
+        public AidBuff(float time)
+        {
+            type = BuffT.Revive;
+            reviveRate = 0.025f;
+            timeOut = Time.time + time;
+        }
+    }
+
+    public class JumpBuff : BuffBase
+    {
+        public JumpBuff()
+        {
+            type = BuffT.Jump;
+            armorRate = 0.5f;
+            coolDownRate = 3;
+            timeOut = Time.time + 20;
+        }
+    }
+
     /*
      * 地面车辆统一运动模型
      * + 前后驱动
@@ -239,6 +260,10 @@ namespace Script.Controller
                 case "High":
                     if (Buffs.All(b => b.type != BuffT.Vcd))
                         Buffs.Add(new VcdBuff());
+                    break;
+                case "Jump":
+                    if (Buffs.All(b => b.type != BuffT.Jump))
+                        Buffs.Add(new JumpBuff());
                     break;
             }
         }
@@ -562,12 +587,24 @@ namespace Script.Controller
                     health += (int) (GetAttr().ReviveRate *
                                      RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit);
                     if (role.Type == TypeT.Engineer && health > 0)
-                        health += (int) (0.02f *
+                        health += (int) (0.006f *
                                          RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
                                              .HealthLimit);
                     if (health > RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit)
                         health = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit;
                     _reviveUpdate = Time.time;
+                }
+
+                if (role.Type != TypeT.Engineer)
+                {
+                    var rb = FindObjectsOfType<RobotBase>();
+                    if (rb.Any(r => r.role.Equals(new RoleT(role.Camp, TypeT.Engineer))))
+                    {
+                        var eng = rb.First(r => r.role.Equals(new RoleT(role.Camp, TypeT.Engineer)));
+                        if ((eng.transform.position - transform.position).magnitude < 1.5f)
+                            if (Buffs.All(b => b.type != BuffT.Revive))
+                                Buffs.Add(new AidBuff(1.2f));
+                    }
                 }
             }
 
@@ -602,6 +639,9 @@ namespace Script.Controller
 
                     if (Math.Abs(Input.GetAxis("Vertical")) < 1e-1)
                         _started = false;
+
+                    if (role.Type == TypeT.Engineer)
+                        motor /= 3;
 
                     foreach (var axleInfo in axleInfos)
                     {
@@ -825,7 +865,7 @@ namespace Script.Controller
                             transform.Translate(
                                 Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
                                     ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2
-                                    : _maxMotorTorque) * 2)
+                                    : _maxMotorTorque))
                                 / 8000);
                         }
                 }
@@ -1062,12 +1102,12 @@ namespace Script.Controller
             }
         }
 
-        private void OnCollisionEnter(Collision other)
-        {
-            if (other.gameObject.name == "Arena21")
-            {
-                GetComponent<Rigidbody>().velocity = Vector3.zero;
-            }
-        }
+        // private void OnCollisionEnter(Collision other)
+        // {
+        //     if (other.gameObject.name == "Arena21")
+        //     {
+        //         GetComponent<Rigidbody>().velocity = Vector3.zero;
+        //     }
+        // }
     }
 }

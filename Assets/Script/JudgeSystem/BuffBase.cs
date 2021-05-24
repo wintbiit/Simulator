@@ -15,7 +15,8 @@ namespace Script.JudgeSystem
         Activator,
         EngineerRevive,
         ReviveProtect,
-        Revive
+        Revive,
+        Jump
     }
     
     [Serializable]
