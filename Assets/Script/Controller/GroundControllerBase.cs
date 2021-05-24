@@ -11,7 +11,6 @@ using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 using TypeT = Script.JudgeSystem.Role.TypeT;
 
@@ -303,7 +302,7 @@ namespace Script.Controller
             }
         }
 
-        public void Hit(int hitter, CaliberT caliber)
+        public void Hit(int hitter, CaliberT caliber, bool isTriangle)
         {
             if (isClient)
                 CmdHit(hitter, caliber);
@@ -562,6 +561,10 @@ namespace Script.Controller
                 {
                     health += (int) (GetAttr().ReviveRate *
                                      RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit);
+                    if (role.Type == TypeT.Engineer && health > 0)
+                        health += (int) (0.02f *
+                                         RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                                             .HealthLimit);
                     if (health > RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit)
                         health = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit;
                     _reviveUpdate = Time.time;
@@ -588,8 +591,8 @@ namespace Script.Controller
                 // 车辆前后驱动
                 if (Cursor.lockState == CursorLockMode.Locked)
                 {
-                    var motor = _maxMotorTorque * 0.5f * Input.GetAxis("Vertical");
-                    if (Time.time - _startTime < 1.0f)
+                    var motor = _maxMotorTorque * 0.45f * Input.GetAxis("Vertical");
+                    if (Time.time - _startTime < 0.65f)
                         motor *= 8;
                     if (!_started && Math.Abs(Input.GetAxis("Vertical")) > 1e-1)
                     {
@@ -599,7 +602,6 @@ namespace Script.Controller
 
                     if (Math.Abs(Input.GetAxis("Vertical")) < 1e-1)
                         _started = false;
-
 
                     foreach (var axleInfo in axleInfos)
                     {
@@ -805,23 +807,27 @@ namespace Script.Controller
                 // 车辆左右平移
                 if (Cursor.lockState == CursorLockMode.Locked)
                 {
-                    if (Math.Abs(_maxMotorTorque -
-                                 RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit) < 1e-2)
-                    {
-                        transform.Translate(
-                            Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
-                                ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2
-                                : _maxMotorTorque) * 2)
-                            / 8000);
-                    }
-                    else
-                    {
-                        transform.Translate(
-                            Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
-                                ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2
-                                : _maxMotorTorque) * 2)
-                            / 8000);
-                    }
+                    var angle = Math.Abs(transform.rotation.eulerAngles.z);
+                    if (angle > 180) angle = 360 - angle;
+                    if (angle < 15)
+                        if (Math.Abs(_maxMotorTorque -
+                                     RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit) <
+                            1e-2)
+                        {
+                            transform.Translate(
+                                Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
+                                    ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2
+                                    : _maxMotorTorque) * 2)
+                                / 8000);
+                        }
+                        else
+                        {
+                            transform.Translate(
+                                Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
+                                    ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2
+                                    : _maxMotorTorque) * 2)
+                                / 8000);
+                        }
                 }
 
                 if (Cursor.lockState == CursorLockMode.Locked && isLocalRobot)
@@ -854,8 +860,7 @@ namespace Script.Controller
                 if (con)
                 {
                     _maxMotorTorque =
-                        RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit *
-                        2.2f;
+                        RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 4;
                     capability -= 0.006f;
                     if (capability < 1e-2)
                         con = false;
@@ -869,18 +874,18 @@ namespace Script.Controller
                         capability = 1;
                 }
 
+                var oriMax = _maxMotorTorque;
                 var climb = transform.localRotation.eulerAngles.x;
                 if (climb > 180) climb -= 360;
-                if (climb < -2)
+                if (climb < -8)
                 {
                     _climbing = true;
-                    _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit *
-                                      Mathf.Abs(climb) * 4;
+                    _maxMotorTorque = oriMax * 8; // * (10/Math.Abs(GetComponent<Rigidbody>().velocity.z));
                 }
                 else
                 {
                     _climbing = false;
-                    _maxMotorTorque = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit;
+                    _maxMotorTorque = oriMax;
                 }
 
                 // 射击
@@ -1008,13 +1013,13 @@ namespace Script.Controller
             if (health > 0 && role.Type != TypeT.Engineer)
             {
                 if (_angleSpin == 0 && _isSpin) _angleSpin = 1;
-                if (_angleSpin > 0 && _angleSpin < 37)
+                if (_angleSpin > 0 && _angleSpin < 61)
                 {
                     ToggleMeshRenderer(chassis, false);
                     ToggleMeshRenderer(spinner, true);
-                    spinner.Rotate(Vector3.up, 10);
+                    spinner.Rotate(Vector3.up, 6);
                     _angleSpin++;
-                    if (_angleSpin == 37)
+                    if (_angleSpin == 61)
                     {
                         if (!_isSpin)
                         {
@@ -1054,6 +1059,14 @@ namespace Script.Controller
             else
             {
                 _lastAngle = this.transform.rotation.eulerAngles;
+            }
+        }
+
+        private void OnCollisionEnter(Collision other)
+        {
+            if (other.gameObject.name == "Arena21")
+            {
+                GetComponent<Rigidbody>().velocity = Vector3.zero;
             }
         }
     }

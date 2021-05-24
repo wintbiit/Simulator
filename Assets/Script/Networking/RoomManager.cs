@@ -199,6 +199,8 @@ namespace Script.Networking
                         robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
                         break;
                     case TypeT.Ptz:
+                        _gameManager.ptzCount++;
+                        Debug.Log("New ptz:" + _gameManager.ptzCount);
                         break;
                     case TypeT.Drone:
                         target = role.Camp == CampT.Blue

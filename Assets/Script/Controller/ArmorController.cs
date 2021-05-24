@@ -33,6 +33,7 @@ namespace Script.Controller
             public Material noLight;
 
             public TMP_Text label;
+            public bool IsTriangle;
 
             private IVulnerable _unit;
             private ColorT _color;
@@ -44,7 +45,7 @@ namespace Script.Controller
 
             public void Hit(int hitter, CaliberT caliber)
             {
-                _unit?.Hit(hitter, caliber);
+                _unit?.Hit(hitter, caliber, IsTriangle);
             }
 
             public void ChangeColor(ColorT color)

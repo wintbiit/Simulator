@@ -28,7 +28,7 @@ namespace Script.Controller
         public bool Ok;
         public bool Err;
 
-        public void Hit(int hitter, CaliberT caliber)
+        public void Hit(int hitter, CaliberT caliber, bool isTriangle)
         {
             if (Object.FindObjectsOfType<RobotBase>().First(r => r.id == hitter).Buffs
                 .Any(b => b.type != BuffT.Activator))

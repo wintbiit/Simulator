@@ -66,15 +66,16 @@ namespace Script.Controller
             ArmorSetup();
         }
 
-        public void Hit(int hitter, CaliberT caliber)
+        public void Hit(int hitter, CaliberT caliber, bool isTriangle)
         {
-            CmdHit(hitter, caliber);
+            CmdHit(hitter, caliber, isTriangle);
         }
 
         [Command(ignoreAuthority = true)]
-        private void CmdHit(int hitter, CaliberT caliber)
+        private void CmdHit(int hitter, CaliberT caliber, bool isTriangle)
         {
-            gameManager.Emit(new HitEvent(hitter, id, caliber));
+            var newEvent = new HitEvent(hitter, id, caliber) {IsTriangle = isTriangle};
+            gameManager.Emit(newEvent);
         }
     }
 }

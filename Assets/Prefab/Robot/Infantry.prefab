@@ -432,7 +432,7 @@ Transform:
   m_GameObject: {fileID: 2752303330134738270}
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: 0}
-  m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
+  m_LocalScale: {x: 0.04, y: 0.04, z: 0.04}
   m_Children:
   - {fileID: 3820204922257769334}
   - {fileID: 1238223572340822465}
@@ -557,6 +557,8 @@ MonoBehaviour:
   - {fileID: 2888407024346430114}
   tpCam: {fileID: 6138098553586302900}
   fpCam: {fileID: 6138098554603028440}
+  capability: 0
+  con: 0
   atSupply: 0
 --- !u!1 &2793038647711133839
 GameObject:

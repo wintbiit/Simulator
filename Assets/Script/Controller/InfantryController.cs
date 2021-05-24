@@ -36,7 +36,7 @@ namespace Script.Controller
                         if (!_oDown)
                         {
                             _oDown = true;
-                            FindObjectOfType<GameManager>().Supply(role);
+                            FindObjectOfType<GameManager>().Supply(role, smallAmmo);
                         }
                     }
 

@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Mirror;
 using Script.Controller;
+using Script.Controller.Armor;
 using Script.Controller.Bullet;
 using Script.Controller.Engineer;
 using Script.Controller.Hero;
@@ -18,6 +21,7 @@ using Script.Networking.Lobby;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 using Random = System.Random;
 using TypeT = Script.JudgeSystem.Role.TypeT;
 
@@ -64,6 +68,19 @@ namespace Script.Networking
             public bool em;
         }
 
+        [Serializable]
+        public class MapRobot
+        {
+            public TypeT type;
+            public RawImage image;
+
+            public void InitWithColor(Color col)
+            {
+                image.color = col;
+                image.gameObject.SetActive(true);
+            }
+        }
+
         /*
          * 比赛管理器
          * + 保存队伍出生点
@@ -84,6 +101,9 @@ namespace Script.Networking
             private readonly Queue<GameEventBase> _eventQueue = new Queue<GameEventBase>();
             private RobotBase _localRobot;
 
+            public int ptzCount;
+            public int confirmedCount;
+
             public int gameTime;
 
             public CampStart redStart;
@@ -93,6 +113,8 @@ namespace Script.Networking
             public List<Transform> goldStart = new List<Transform>();
 
             public List<Transform> blockStart = new List<Transform>();
+
+            private Decision _decider;
 
             public List<HealthDisplay> redHealthDisplays = new List<HealthDisplay>();
             public List<HealthDisplay> blueHealthDisplays = new List<HealthDisplay>();
@@ -106,6 +128,7 @@ namespace Script.Networking
             public TMP_Text blueOutpostHealthDisplay;
             public TMP_Text redMoneyDisplay;
             public TMP_Text blueMoneyDisplay;
+            public TMP_Text strategyDisplay;
 
             public Image superCDisplay;
             public Image healthDisplay;
@@ -119,6 +142,9 @@ namespace Script.Networking
             public TMP_Text extraDisplay;
             public GameObject infantrySupplyHint;
             public GameObject heroSupplyHint;
+
+            public RawImage mapBaseDisplay;
+            public List<MapRobot> mapRobots = new List<MapRobot>();
 
             public GameObject resultPanel;
             public TMP_Text resultTitle;
@@ -201,20 +227,32 @@ namespace Script.Networking
             }
 
             [Server]
+            public void PtzRegister()
+            {
+                ptzCount--;
+                // 判断满
+                // if (_roles.Where(
+                //         r => r.Camp != CampT.Judge && r.Camp != CampT.Unknown)
+                //     .Count(
+                //         r => r.Type != TypeT.Unknown && r.Type != TypeT.Ptz && r.Type <= TypeT.Drone) == 0)
+                //     Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameStart));
+            }
+
+            [Server]
             public void RobotRegister(RobotBase robotBase)
             {
-                _robotBases.Add(robotBase.id, robotBase);
+                if (!_robotBases.ContainsKey(robotBase.id))
+                    _robotBases.Add(robotBase.id, robotBase);
 
                 if (_roles.Contains((robotBase.role)))
                     _roles.Remove(robotBase.role);
+
                 // 判断满
-                if (_roles.Where(
-                        r => r.Camp != CampT.Judge
-                             && r.Camp != CampT.Unknown)
-                    .Count(
-                        r => r.Type != TypeT.Unknown
-                             && r.Type != TypeT.Ptz && r.Type <= TypeT.Drone) == 0)
-                    Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameStart));
+                // if (_roles.Where(
+                //         r => r.Camp != CampT.Judge && r.Camp != CampT.Unknown)
+                //     .Count(
+                //         r => r.Type != TypeT.Unknown && r.Type != TypeT.Ptz && r.Type <= TypeT.Drone) == 0)
+                //     Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameStart));
             }
 
             [Server]
@@ -298,7 +336,7 @@ namespace Script.Networking
             }
 
             [Command(ignoreAuthority = true)]
-            private void CmdSupply(RoleT role)
+            private void CmdSupply(RoleT role, int origin)
             {
                 if (role.IsInfantry())
                 {
@@ -309,13 +347,13 @@ namespace Script.Networking
                         {
                             _redMoney -= 50;
                             _redInfantrySupplyAmount += 50;
-                            i.smallAmmo += 50;
+                            i.smallAmmo = origin + 50;
                         }
                         else if (role.Camp == CampT.Blue && _blueInfantrySupplyAmount < 1500)
                         {
                             _blueMoney -= 50;
                             _blueInfantrySupplyAmount += 50;
-                            i.smallAmmo += 50;
+                            i.smallAmmo = origin + 50;
                         }
                     }
                 }
@@ -329,21 +367,29 @@ namespace Script.Networking
                         {
                             _redMoney -= 75;
                             _redHeroSupplyAmount += 5;
-                            h.largeAmmo += 5;
+                            h.largeAmmo = origin + 5;
                         }
                         else if (role.Camp == CampT.Blue && _blueHeroSupplyAmount < 100)
                         {
                             _blueMoney -= 75;
                             _blueHeroSupplyAmount += 5;
-                            h.largeAmmo += 5;
+                            h.largeAmmo = origin + 5;
                         }
                     }
                 }
             }
 
+            private bool _started;
+
             [Server]
             private void ServerFixedUpdate()
             {
+                if (!_started && confirmedCount == _roomManager.roomSlots.Count)
+                {
+                    _started = true;
+                    Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameStart));
+                }
+
                 // 倒计时
                 if (_playing || _finished)
                 {
@@ -379,6 +425,14 @@ namespace Script.Networking
                             if (_robotBases.Keys.Contains(hitEvent.Target))
                             {
                                 if (_robotBases[hitEvent.Target].health <= 0) break;
+                                if (_robotBases[hitEvent.Target].role.Type == TypeT.Guard)
+                                {
+                                    if (_facilityBases.First(f =>
+                                        f.Value.role.Equals(new RoleT(_robotBases[hitEvent.Target].role.Camp,
+                                            TypeT.Outpost))).Value.health > 0)
+                                        break;
+                                }
+
                                 var protect = damage * (1 - _robotBases[hitEvent.Target].GetAttr().ArmorRate);
                                 _robotBases[hitEvent.Target].health -= (int) protect;
                                 if (_robotBases[hitEvent.Target].health <= 0)
@@ -409,13 +463,20 @@ namespace Script.Networking
                                     {
                                         break;
                                     }
+                                    // if (_robotBases.First(r =>
+                                    //     r.Value.role.Equals(new RoleT(_facilityBases[hitEvent.Target].role.Camp,
+                                    //         TypeT.Guard))).Value.health > 0)
+                                    // {
+                                    //     break;
+                                    // }
                                 }
 
                                 float protect;
                                 if (hitEvent.Caliber != CaliberT.Dart)
                                 {
                                     if (hitEvent.Caliber == CaliberT.Large)
-                                        damage += _robotBases[hitEvent.Hitter].GetAttr().DamageRate * 100;
+                                        damage += _robotBases[hitEvent.Hitter].GetAttr().DamageRate *
+                                                  (hitEvent.IsTriangle ? 200 : 100);
                                     protect = damage * (1 - _facilityBases[hitEvent.Target].GetArmorRate());
                                 }
                                 else protect = new Random().Next(3) == 0 ? 0 : 1000;
@@ -487,6 +548,7 @@ namespace Script.Networking
 
                             break;
                         case JudgeSystem.Event.TypeT.GameStart:
+                            Debug.Log("Confirmed:" + confirmedCount);
                             _startTime = (int) Time.time;
                             _playing = true;
                             _redMoney = 200;
@@ -501,6 +563,7 @@ namespace Script.Networking
                             foreach (var player in _players)
                                 player.OnAllReady();
                             GameStartRpc();
+
                             break;
                         case JudgeSystem.Event.TypeT.SixMinute:
                             _redMoney += 100;
@@ -689,7 +752,6 @@ namespace Script.Networking
             public void LocalRobotRegister(RobotBase robot)
             {
                 _localRobot = robot;
-                StartCoroutine(HideLoading());
             }
 
             private IEnumerator HideLoading()
@@ -717,9 +779,9 @@ namespace Script.Networking
             }
 
             [Client]
-            public void Supply(RoleT role)
+            public void Supply(RoleT role, int origin)
             {
-                CmdSupply(role);
+                CmdSupply(role, origin);
             }
 
             [Client]
@@ -735,8 +797,46 @@ namespace Script.Networking
             }
 
             [Client]
+            private void StartDecisionSystem()
+            {
+#if UNITY_EDITOR
+                var curDir = Environment.CurrentDirectory + "\\Client\\Decision";
+                var exeFile = curDir + "\\SD.exe";
+#else
+                var curDir = Environment.CurrentDirectory + "\\..\\Decision";
+                var exeFile = curDir + "\\SD.exe";
+#endif
+                var process = new Process
+                {
+                    StartInfo =
+                    {
+                        FileName = exeFile,
+                        WorkingDirectory = curDir,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }
+                };
+                if (process.Start())
+                {
+                    _decider = new Decision();
+                    process.WaitForExit();
+                }
+            }
+
+            [Client]
             private void ClientStart()
             {
+                new Thread(StartDecisionSystem).Start();
+            }
+
+            [ClientRpc]
+            private void GameStartRpc()
+            {
+                _clientRobotBases = new List<RobotBase>(FindObjectsOfType<RobotBase>());
+                _clientFacilityBases = new List<FacilityBase>(FindObjectsOfType<FacilityBase>());
+
                 mineDisplay.text = "";
                 resultTitle.text = "";
                 resultPanel.SetActive(false);
@@ -750,25 +850,20 @@ namespace Script.Networking
                 var vertices = mesh.vertices;
                 var uvs = new Vector2[vertices.Length];
                 var normals = mesh.normals;
-
-                //Cubic Unfold
                 for (var i = 0; i < normals.Length; i++)
                 {
-                    //X-Plane
                     if (Mathf.Abs(normals[i].x) > Mathf.Abs(normals[i].y) &&
                         Mathf.Abs(normals[i].x) > Mathf.Abs(normals[i].z))
                     {
                         uvs[i] = new Vector2(vertices[i].y, vertices[i].z);
                     }
 
-                    //Y-Plane
                     if (Mathf.Abs(normals[i].y) > Mathf.Abs(normals[i].x) &&
                         Mathf.Abs(normals[i].y) > Mathf.Abs(normals[i].z))
                     {
                         uvs[i] = new Vector2(vertices[i].x, vertices[i].z);
                     }
 
-                    //Z-Plane
                     if (Mathf.Abs(normals[i].z) > Mathf.Abs(normals[i].x) &&
                         Mathf.Abs(normals[i].z) > Mathf.Abs(normals[i].y))
                     {
@@ -777,13 +872,6 @@ namespace Script.Networking
                 }
 
                 mesh.uv = uvs;
-            }
-
-            [ClientRpc]
-            private void GameStartRpc()
-            {
-                _clientRobotBases = new List<RobotBase>(FindObjectsOfType<RobotBase>());
-                _clientFacilityBases = new List<FacilityBase>(FindObjectsOfType<FacilityBase>());
                 if (_localRobot)
                 {
                     if (_localRobot.role.Type == TypeT.Hero || _localRobot.role.IsInfantry())
@@ -792,6 +880,7 @@ namespace Script.Networking
                         chassisTypeSelect.interactable = true;
                         gunTypeSelect.interactable = true;
                     }
+                    StartCoroutine(HideLoading());
                 }
             }
 
@@ -813,6 +902,8 @@ namespace Script.Networking
                 resultPanel.SetActive(true);
             }
 
+            private int _slowDecisionUpdate;
+
             [Client]
             private void ClientFixedUpdate()
             {
@@ -821,6 +912,36 @@ namespace Script.Networking
                     // 信息显示更新
                     if (_localRobot)
                     {
+                        _slowDecisionUpdate++;
+                        if (_slowDecisionUpdate > 20)
+                        {
+                            _slowDecisionUpdate = 0;
+                            if (_decider != null)
+                            {
+                                var em = (EnergyMechanismController) _clientFacilityBases
+                                    .FindAll(f => f.role.Type == TypeT.EnergyMechanism).First();
+                                _decider.Decide(new Situation
+                                {
+                                    AHP = 100,
+                                    BuffAvailable = em.branches[0].armor.GetColor() == ColorT.Down ? 0 : 1,
+                                    FHP = _clientFacilityBases.First(f =>
+                                        f.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Outpost))).health,
+                                    inInvasion = 0,
+                                    RemainTime = _countDown,
+                                    SHP = _clientRobotBases.First(r =>
+                                        r.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Guard))).health
+                                });
+                                if (_decider.Code != -1)
+                                {
+                                    var m = StrategyTable.Table[_decider.Code].Messages;
+                                    if (m.ContainsKey(TypeT.InfantryA) && _localRobot.role.IsInfantry())
+                                        strategyDisplay.text = m[TypeT.InfantryA];
+                                    if (m.ContainsKey(_localRobot.role.Type))
+                                        strategyDisplay.text = m[_localRobot.role.Type];
+                                }
+                            }
+                        }
+
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
                         deadHint.SetActive(_localRobot.health == 0);
                         if (_localRobot.role.Type != TypeT.Engineer)
@@ -867,6 +988,14 @@ namespace Script.Networking
                                              RobotPerformanceTable.Table[r.level][r.role.Type][r.chassisType][r.gunType]
                                                  .HealthLimit;
                             healthDisplay.bar.fillAmount = healthRate;
+                            if (_localRobot && r.role.Camp == _localRobot.role.Camp)
+                            {
+                                var mr = mapRobots.First(m => m.type == r.role.Type);
+                                mr.InitWithColor(_localRobot.role.Camp == CampT.Red ? Color.red : Color.blue);
+                                if (r.health == 0) mr.InitWithColor(Color.gray);
+                                mr.image.rectTransform.anchoredPosition = new Vector2(
+                                    r.transform.position.z * -1 * (83 / 13.6f), r.transform.position.x * (43 / 7.1f));
+                            }
                         }
                     }
 
@@ -942,7 +1071,7 @@ namespace Script.Networking
                             var ground = _localRobot.GetComponent<GroundControllerBase>();
                             superCDisplay.color = ground.con ? Color.red : Color.green;
                             superCDisplay.fillAmount = ground.capability;
-                            healthDisplay.fillAmount = (float)ground.health /
+                            healthDisplay.fillAmount = (float) ground.health /
                                                        RobotPerformanceTable.Table[ground.level][ground.role.Type][
                                                            ground.chassisType][
                                                            ground.gunType].HealthLimit;
@@ -1065,6 +1194,14 @@ namespace Script.Networking
             private void Update()
             {
                 if (isClient) ClientUpdate();
+            }
+
+            private void OnDestroy()
+            {
+                foreach (var p in Process.GetProcessesByName("SD"))
+                {
+                    p.Kill();
+                }
             }
         }
     }

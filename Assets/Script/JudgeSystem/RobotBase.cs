@@ -483,21 +483,21 @@ namespace Script.JudgeSystem
                                                     GunT.Burst, new RobotLevel(
                                                         0, 0, 300, 280,
                                                         50, 15, 25,
-                                                        5,6
+                                                        5, 6
                                                     )
                                                 },
                                                 {
                                                     GunT.ColdDown, new RobotLevel(
                                                         0, 0, 300, 100,
                                                         50, 18, 60,
-                                                        5,6
+                                                        5, 6
                                                     )
                                                 },
                                                 {
                                                     GunT.Velocity, new RobotLevel(
                                                         0, 0, 300, 100,
                                                         50, 30, 20,
-                                                        5,6
+                                                        5, 6
                                                     )
                                                 }
                                             }
@@ -540,21 +540,21 @@ namespace Script.JudgeSystem
                                                     GunT.Burst, new RobotLevel(
                                                         0, 0, 300, 280,
                                                         50, 15, 25,
-                                                        5,6
+                                                        5, 6
                                                     )
                                                 },
                                                 {
                                                     GunT.ColdDown, new RobotLevel(
                                                         0, 0, 300, 100,
                                                         50, 18, 60,
-                                                        5,6
+                                                        5, 6
                                                     )
                                                 },
                                                 {
                                                     GunT.Velocity, new RobotLevel(
                                                         0, 0, 300, 100,
                                                         50, 30, 20,
-                                                        5,6
+                                                        5, 6
                                                     )
                                                 }
                                             }
@@ -597,21 +597,21 @@ namespace Script.JudgeSystem
                                                     GunT.Burst, new RobotLevel(
                                                         0, 0, 300, 280,
                                                         50, 15, 25,
-                                                        5,6
+                                                        5, 6
                                                     )
                                                 },
                                                 {
                                                     GunT.ColdDown, new RobotLevel(
                                                         0, 0, 300, 100,
                                                         50, 18, 60,
-                                                        5,6
+                                                        5, 6
                                                     )
                                                 },
                                                 {
                                                     GunT.Velocity, new RobotLevel(
                                                         0, 0, 300, 100,
                                                         50, 30, 20,
-                                                        5,6
+                                                        5, 6
                                                     )
                                                 }
                                             }
@@ -892,7 +892,14 @@ namespace Script.JudgeSystem
             public bool isLocalRobot;
 
             [Client]
-            public virtual void ConfirmLocalRobot() => isLocalRobot = true;
+            public virtual void ConfirmLocalRobot()
+            {
+                isLocalRobot = true;
+                CmdConfirmed();
+            }
+
+            [Command(ignoreAuthority = true)]
+            public void CmdConfirmed() => gameManager.confirmedCount++;
 
             public Attr GetAttr()
             {
@@ -916,12 +923,18 @@ namespace Script.JudgeSystem
             }
 
             [SyncVar] public bool registered = true;
+            private bool _ptzRegistered = false;
 
             protected virtual void FixedUpdate()
             {
                 if (isClient)
                 {
                     if (!registered && isLocalRobot) CmdRegister();
+                    if (role.Type == TypeT.Ptz && !_ptzRegistered)
+                    {
+                        CmdPtzRegister();
+                        _ptzRegistered = true;
+                    }
                 }
 
                 if (isServer)
@@ -951,6 +964,12 @@ namespace Script.JudgeSystem
             {
                 if (!registered) gameManager.RobotRegister(this);
                 registered = true;
+            }
+
+            [Command(ignoreAuthority = true)]
+            private void CmdPtzRegister()
+            {
+                gameManager.PtzRegister();
             }
         }
     }

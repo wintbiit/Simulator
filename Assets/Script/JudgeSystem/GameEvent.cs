@@ -18,6 +18,7 @@ namespace Script.JudgeSystem
             public readonly int Hitter;
             public readonly int Target;
             public readonly CaliberT Caliber;
+            public bool IsTriangle;
 
             public HitEvent(int hitter, int target, CaliberT caliber)
             {
@@ -25,6 +26,7 @@ namespace Script.JudgeSystem
                 Hitter = hitter;
                 Target = target;
                 Caliber = caliber;
+                IsTriangle = false;
             }
         }
     }

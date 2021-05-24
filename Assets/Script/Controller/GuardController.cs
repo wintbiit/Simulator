@@ -216,7 +216,7 @@ namespace Script.Controller
             transform.localPosition += Vector3.right * ((_left ? -1 : 1) * 0.02f);
         }
 
-        public void Hit(int hitter, CaliberT caliber)
+        public void Hit(int hitter, CaliberT caliber, bool isTriangle)
         {
             CmdHit(hitter, caliber);
         }

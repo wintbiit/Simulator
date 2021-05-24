@@ -28,7 +28,7 @@ namespace Script.Controller
             protected override void OnTriggerEnter(Collider other)
             {
                 base.OnTriggerEnter(other);
-                if (!isServer) return;
+                // if (!isServer) return;
                 atSupply = other.name == (role.Camp == CampT.Red ? "RSZ" : "BSZ");
                 switch (other.name)
                 {
@@ -48,7 +48,7 @@ namespace Script.Controller
             protected override void OnTriggerExit(Collider other)
             {
                 base.OnTriggerExit(other);
-                if (!isServer) return;
+                // if (!isServer) return;
                 if (role.Camp == CampT.Red && other.name == "RSZ"
                     || role.Camp == CampT.Blue && other.name == "BSZ")
                     atSupply = false;
@@ -76,7 +76,7 @@ namespace Script.Controller
                         if (!_oDown)
                         {
                             _oDown = true;
-                            FindObjectOfType<GameManager>().Supply(role);
+                            FindObjectOfType<GameManager>().Supply(role, largeAmmo);
                         }
                     }
 

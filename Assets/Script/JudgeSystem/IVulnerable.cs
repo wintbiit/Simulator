@@ -10,6 +10,6 @@ namespace Script.JudgeSystem
      */
     public interface IVulnerable
     {
-        void Hit(int hitter, CaliberT caliber);
+        void Hit(int hitter, CaliberT caliber, bool isTriangle = false);
     }
 }

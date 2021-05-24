@@ -53,13 +53,12 @@ namespace Script.Networking
                             if (role.Type != TypeT.Ptz)
                             {
                                 foreach (var robot in FindObjectsOfType<RobotBase>())
-                                    if (!robot.registered)
-                                    {
-                                        if (robot.id != index) continue;
-                                        robot.ConfirmLocalRobot();
-                                        _localRobotConfirmed = true;
-                                        break;
-                                    }
+                                {
+                                    if (robot.id != index) continue;
+                                    robot.ConfirmLocalRobot();
+                                    _localRobotConfirmed = true;
+                                    break;
+                                }
                             }
                             else
                             {
