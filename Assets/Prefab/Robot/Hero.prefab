@@ -732,7 +732,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5408286814475020289}
   - component: {fileID: 4061695243533972917}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: frontLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1655,6 +1655,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 3113422611850573222}
+  IsTriangle: 0
 --- !u!1 &3824758814212177295
 GameObject:
   m_ObjectHideFlags: 0
@@ -1721,8 +1722,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.29099086, y: 0.10393441, z: 0.39108402}
-  m_Center: {x: -0.02525498, y: -0.13374895, z: -0.0032694936}
+  m_Size: {x: 0.28694707, y: 0.09063826, z: 0.38998294}
+  m_Center: {x: -0.02471665, y: -0.10743259, z: 0.00681594}
 --- !u!114 &7684190037055331100
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2190,6 +2191,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 4052364596368704067}
+  IsTriangle: 0
 --- !u!1 &4379869996527715787
 GameObject:
   m_ObjectHideFlags: 0
@@ -2543,6 +2545,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 4626528289088055267}
+  IsTriangle: 0
 --- !u!1 &4969391446071074092
 GameObject:
   m_ObjectHideFlags: 0
@@ -2693,7 +2696,7 @@ GameObject:
   m_Component:
   - component: {fileID: 958069772456651655}
   - component: {fileID: 8545225068481997831}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: backRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2834,7 +2837,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5398980958300716441}
   - component: {fileID: 2473238839439928132}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: backLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3421,7 +3424,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3809326866512197737}
   - component: {fileID: 3237360049631878984}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: frontRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3608,6 +3611,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 6595699056648737791}
+  IsTriangle: 0
 --- !u!1 &6863491374032046926
 GameObject:
   m_ObjectHideFlags: 0

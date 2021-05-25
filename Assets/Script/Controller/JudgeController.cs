@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using System;
+using Mirror;
 using Script.Networking.Game;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ namespace Script.Controller
 
         private void FixedUpdate()
         {
-            if (_isLocal)
+            if (_isLocal && Cursor.lockState == CursorLockMode.Locked)
             {
                 foreach (var c in FindObjectsOfType<Camera>())
                     c.enabled = false;
@@ -35,7 +36,9 @@ namespace Script.Controller
                 var rot = new Vector3(Input.GetAxis("Mouse Y") * -1, Input.GetAxis("Mouse X"), 0);
                 rot *= FindObjectOfType<GameManager>().GetSensitivity() * 5;
                 transform.Rotate(rot);
-                transform.Rotate(Vector3.back * transform.rotation.eulerAngles.z);
+                var x = transform.localEulerAngles.x;
+                if (90 - Math.Abs(x) > 10)
+                    transform.Rotate(Vector3.back * transform.rotation.eulerAngles.z);
             }
         }
     }
