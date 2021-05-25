@@ -71,7 +71,7 @@ namespace Script.Controller
             {
                 if (isLocalRobot && health > 0)
                 {
-                    if (Input.GetKeyDown(KeyCode.O) && atSupply)
+                    if (Input.GetKeyDown(KeyCode.I) && atSupply)
                     {
                         if (!_oDown)
                         {
@@ -80,7 +80,7 @@ namespace Script.Controller
                         }
                     }
 
-                    if (Input.GetKeyUp(KeyCode.O))
+                    if (Input.GetKeyUp(KeyCode.I))
                         _oDown = false;
                 }
             }

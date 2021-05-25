@@ -323,8 +323,8 @@ namespace Script.Networking
                     c.id = ++fid;
                     c.role = new RoleT(CampT.Blue, TypeT.Outpost);
                     c.gameManager = _gameManager;
-                    c.health = 2000;
-                    c.healthLimit = 2000;
+                    c.health = 1000;
+                    c.healthLimit = 1000;
                     _gameManager.FacilityRegister(c);
                     NetworkServer.Spawn(f);
 
@@ -334,8 +334,8 @@ namespace Script.Networking
                     c1.id = ++fid;
                     c1.role = new RoleT(CampT.Red, TypeT.Outpost);
                     c1.gameManager = _gameManager;
-                    c1.health = 2000;
-                    c1.healthLimit = 2000;
+                    c1.health = 1000;
+                    c1.healthLimit = 1000;
                     _gameManager.FacilityRegister(c1);
                     NetworkServer.Spawn(f1);
                 }

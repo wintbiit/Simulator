@@ -437,20 +437,23 @@ namespace Script.Networking
                                 }
 
                                 var protect = damage * (1 - _robotBases[hitEvent.Target].GetAttr().ArmorRate);
-                                _robotBases[hitEvent.Target].health -= (int) protect;
-                                if (_robotBases[hitEvent.Target].health <= 0)
+                                if (_robotBases[hitEvent.Target].health > 0)
                                 {
-                                    _robotBases[hitEvent.Target].health = 0;
-                                    _robotBases[hitEvent.Hitter].experience +=
-                                        RobotPerformanceTable.Table[_robotBases[hitEvent.Target].level][
-                                            _robotBases[hitEvent.Target].role.Type][
-                                            _robotBases[hitEvent.Target].chassisType][
-                                            _robotBases[hitEvent.Target].gunType].ExpValue;
-                                    if (_robotBases[hitEvent.Target].role.Type == TypeT.Engineer)
+                                    _robotBases[hitEvent.Target].health -= (int) protect;
+                                    if (_robotBases[hitEvent.Target].health <= 0)
                                     {
-                                        var engineer = _robotBases[hitEvent.Target];
-                                        if (engineer.Buffs.All(b => b.type != BuffT.EngineerRevive))
-                                            engineer.Buffs.Add(new EngineerReviveBuff());
+                                        _robotBases[hitEvent.Target].health = 0;
+                                        _robotBases[hitEvent.Hitter].experience +=
+                                            RobotPerformanceTable.Table[_robotBases[hitEvent.Target].level][
+                                                _robotBases[hitEvent.Target].role.Type][
+                                                _robotBases[hitEvent.Target].chassisType][
+                                                _robotBases[hitEvent.Target].gunType].ExpValue;
+                                        if (_robotBases[hitEvent.Target].role.Type == TypeT.Engineer)
+                                        {
+                                            var engineer = _robotBases[hitEvent.Target];
+                                            if (engineer.Buffs.All(b => b.type != BuffT.EngineerRevive))
+                                                engineer.Buffs.Add(new EngineerReviveBuff());
+                                        }
                                     }
                                 }
                             }
@@ -484,66 +487,69 @@ namespace Script.Networking
                                 }
                                 else protect = new Random().Next(3) == 0 ? 0 : 1000;
 
-                                _facilityBases[hitEvent.Target].health -= (int) protect;
-                                if (_facilityBases[hitEvent.Target].health <= 0)
+                                if (_facilityBases[hitEvent.Target].health > 0)
                                 {
-                                    _facilityBases[hitEvent.Target].health = 0;
-                                    if (_facilityBases[hitEvent.Target].role.Type == TypeT.Base)
-                                        Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameOver));
-                                    if (_facilityBases[hitEvent.Target].role.Type == TypeT.Outpost)
+                                    _facilityBases[hitEvent.Target].health -= (int) protect;
+                                    if (_facilityBases[hitEvent.Target].health <= 0)
                                     {
-                                        if (hitEvent.Caliber != CaliberT.Dart)
-                                            _robotBases[hitEvent.Hitter].experience += 5;
-                                        if (_robotBases.First(rb =>
-                                            rb.Value.role.Type == TypeT.Guard && rb.Value.role.Camp ==
-                                            _facilityBases[hitEvent.Target].role.Camp).Value.health <= 0)
+                                        _facilityBases[hitEvent.Target].health = 0;
+                                        if (_facilityBases[hitEvent.Target].role.Type == TypeT.Base)
+                                            Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameOver));
+                                        if (_facilityBases[hitEvent.Target].role.Type == TypeT.Outpost)
                                         {
-                                            if (_facilityBases[hitEvent.Target].role.Camp == CampT.Red &&
-                                                _redVirtualShield
-                                                || _facilityBases[hitEvent.Target].role.Camp == CampT.Blue &&
-                                                _blueVirtualShield)
+                                            if (hitEvent.Caliber != CaliberT.Dart)
+                                                _robotBases[hitEvent.Hitter].experience += 5;
+                                            if (_robotBases.First(rb =>
+                                                rb.Value.role.Type == TypeT.Guard && rb.Value.role.Camp ==
+                                                _facilityBases[hitEvent.Target].role.Camp).Value.health <= 0)
                                             {
-                                                _facilityBases.First(fb =>
-                                                    fb.Value.role.Type == TypeT.Base && fb.Value.role.Camp ==
-                                                    _facilityBases[hitEvent.Target].role.Camp).Value.health -= 500;
-                                                switch (_facilityBases[hitEvent.Target].role.Camp)
+                                                if (_facilityBases[hitEvent.Target].role.Camp == CampT.Red &&
+                                                    _redVirtualShield
+                                                    || _facilityBases[hitEvent.Target].role.Camp == CampT.Blue &&
+                                                    _blueVirtualShield)
                                                 {
-                                                    case CampT.Unknown:
-                                                        break;
-                                                    case CampT.Red:
-                                                        _redVirtualShield = false;
-                                                        break;
-                                                    case CampT.Blue:
-                                                        _blueVirtualShield = false;
-                                                        break;
-                                                    case CampT.Judge:
-                                                        break;
-                                                    default:
-                                                        throw new ArgumentOutOfRangeException();
+                                                    _facilityBases.First(fb =>
+                                                        fb.Value.role.Type == TypeT.Base && fb.Value.role.Camp ==
+                                                        _facilityBases[hitEvent.Target].role.Camp).Value.health -= 500;
+                                                    switch (_facilityBases[hitEvent.Target].role.Camp)
+                                                    {
+                                                        case CampT.Unknown:
+                                                            break;
+                                                        case CampT.Red:
+                                                            _redVirtualShield = false;
+                                                            break;
+                                                        case CampT.Blue:
+                                                            _blueVirtualShield = false;
+                                                            break;
+                                                        case CampT.Judge:
+                                                            break;
+                                                        default:
+                                                            throw new ArgumentOutOfRangeException();
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-                                }
-                                else
-                                {
-                                    if (hitEvent.Caliber == CaliberT.Large && _robotBases[hitEvent.Hitter].Buffs
-                                        .Any(b => b.type == BuffT.HeroSnipe))
+                                    else
                                     {
-                                        switch (_facilityBases[hitEvent.Target].role.Type)
+                                        if (hitEvent.Caliber == CaliberT.Large && _robotBases[hitEvent.Hitter].Buffs
+                                            .Any(b => b.type == BuffT.HeroSnipe))
                                         {
-                                            case TypeT.Base:
-                                                if (_facilityBases[hitEvent.Target].Buffs
-                                                    .All(b => b.type != BuffT.OutpostBaseSnipe))
-                                                    _facilityBases[hitEvent.Target].Buffs
-                                                        .Add(new OutpostBaseSnipeBuff());
-                                                break;
-                                            case TypeT.Outpost:
-                                                if (_facilityBases[hitEvent.Target].Buffs
-                                                    .All(b => b.type != BuffT.OutpostBaseSnipe))
-                                                    _facilityBases[hitEvent.Target].Buffs
-                                                        .Add(new OutpostBaseSnipeBuff());
-                                                break;
+                                            switch (_facilityBases[hitEvent.Target].role.Type)
+                                            {
+                                                case TypeT.Base:
+                                                    if (_facilityBases[hitEvent.Target].Buffs
+                                                        .All(b => b.type != BuffT.OutpostBaseSnipe))
+                                                        _facilityBases[hitEvent.Target].Buffs
+                                                            .Add(new OutpostBaseSnipeBuff());
+                                                    break;
+                                                case TypeT.Outpost:
+                                                    if (_facilityBases[hitEvent.Target].Buffs
+                                                        .All(b => b.type != BuffT.OutpostBaseSnipe))
+                                                        _facilityBases[hitEvent.Target].Buffs
+                                                            .Add(new OutpostBaseSnipeBuff());
+                                                    break;
+                                            }
                                         }
                                     }
                                 }
