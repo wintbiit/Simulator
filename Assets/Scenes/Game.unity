@@ -12230,7 +12230,7 @@ Transform:
   - {fileID: 1367945034}
   - {fileID: 2120938773}
   m_Father: {fileID: 1057486386}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1 &776075587
 GameObject:
@@ -15624,7 +15624,7 @@ Transform:
   - {fileID: 1561729263}
   - {fileID: 745256429}
   m_Father: {fileID: 1057486386}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &991520862
 GameObject:
@@ -17098,6 +17098,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 2106677363}
   - {fileID: 1897638522}
   - {fileID: 770604587}
   - {fileID: 982850307}
@@ -18011,7 +18012,7 @@ Transform:
   - {fileID: 289237821}
   - {fileID: 953337038}
   m_Father: {fileID: 1057486386}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1111982131
 GameObject:
@@ -21559,7 +21560,7 @@ Transform:
   - {fileID: 1676612768}
   - {fileID: 1568941743}
   m_Father: {fileID: 1057486386}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1288010556
 GameObject:
@@ -22422,6 +22423,7 @@ MonoBehaviour:
     campBase: {fileID: 1065272524}
     campOutpost: {fileID: 1561729263}
     campBuff: {fileID: 745256429}
+  judgeStart: {fileID: 2106677363}
   silverStart:
   - {fileID: 1215896314}
   - {fileID: 3756113980728848054}
@@ -22496,7 +22498,6 @@ MonoBehaviour:
   extraDisplay: {fileID: 1804498292}
   infantrySupplyHint: {fileID: 1990797635}
   heroSupplyHint: {fileID: 2109927353}
-  mapBaseDisplay: {fileID: 594902221}
   mapRobots:
   - type: 0
     image: {fileID: 194904878}
@@ -32234,7 +32235,7 @@ Transform:
   - {fileID: 1906354898308734050}
   - {fileID: 7578827256774228849}
   m_Father: {fileID: 1057486386}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1900770899
 GameObject:
@@ -34471,7 +34472,7 @@ Transform:
   - {fileID: 693235201}
   - {fileID: 1282355771}
   m_Father: {fileID: 1057486386}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2057396296
 GameObject:
@@ -35483,6 +35484,36 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2105862650}
   m_CullTransparentMesh: 0
+--- !u!1 &2106677362
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2106677363}
+  m_Layer: 0
+  m_Name: JudgeStart
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2106677363
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2106677362}
+  m_LocalRotation: {x: 0.27059805, y: -0.6532815, z: 0.27059805, w: 0.6532815}
+  m_LocalPosition: {x: 11.23, y: 9.85, z: -0.26}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1057486386}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2107665784
 GameObject:
   m_ObjectHideFlags: 0

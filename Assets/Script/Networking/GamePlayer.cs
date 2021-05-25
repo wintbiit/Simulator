@@ -50,7 +50,16 @@ namespace Script.Networking
                     {
                         if (!_localRobotConfirmed)
                         {
-                            if (role.Type != TypeT.Ptz)
+                            if (role.Camp == CampT.Judge)
+                            {
+                                var j = FindObjectOfType<JudgeController>();
+                                if (j)
+                                {
+                                    j.ConfirmLocal();
+                                    _localRobotConfirmed = true;
+                                }
+                            }
+                            else if (role.Type != TypeT.Ptz)
                             {
                                 foreach (var robot in FindObjectsOfType<RobotBase>())
                                 {

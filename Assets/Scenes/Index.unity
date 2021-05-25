@@ -2475,6 +2475,7 @@ MonoBehaviour:
   - {fileID: 2952865584694654478, guid: e06bfba8bcecb454180a727716dd2023, type: 3}
   - {fileID: 8917421230969620978, guid: 99d999cae0706d344b1c93c3210f352a, type: 3}
   - {fileID: 3822625620459524467, guid: 125f21dfe6cbac14b8d08e9773399d57, type: 3}
+  - {fileID: 3274032826758959520, guid: d2746286d6628c34d8ff6d1e81dd2daf, type: 3}
   showRoomGUI: 1
   minPlayers: 1
   roomPlayerPrefab: {fileID: 6607923051405549651, guid: e25bed0265c491741a4eb99ac76c4899,
@@ -2505,6 +2506,8 @@ MonoBehaviour:
   goldPrefab: {fileID: 2852261129448000238, guid: afb433e29bd807243b2d9d06aeebcc3b,
     type: 3}
   blockPrefab: {fileID: 3822625620459524467, guid: 125f21dfe6cbac14b8d08e9773399d57,
+    type: 3}
+  judgePrefab: {fileID: 3274032826758959520, guid: d2746286d6628c34d8ff6d1e81dd2daf,
     type: 3}
 --- !u!4 &1514517855
 Transform:

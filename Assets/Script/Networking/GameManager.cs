@@ -23,6 +23,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
+using Object = System.Object;
 using Random = System.Random;
 using TypeT = Script.JudgeSystem.Role.TypeT;
 
@@ -101,6 +102,7 @@ namespace Script.Networking
             private readonly List<GamePlayer> _players = new List<GamePlayer>();
             private readonly Queue<GameEventBase> _eventQueue = new Queue<GameEventBase>();
             private RobotBase _localRobot;
+            private JudgeController _judge;
 
             public int ptzCount;
             public int confirmedCount;
@@ -109,6 +111,7 @@ namespace Script.Networking
 
             public CampStart redStart;
             public CampStart blueStart;
+            public Transform judgeStart;
 
             public List<Transform> silverStart = new List<Transform>();
             public List<Transform> goldStart = new List<Transform>();
@@ -144,7 +147,6 @@ namespace Script.Networking
             public GameObject infantrySupplyHint;
             public GameObject heroSupplyHint;
 
-            public RawImage mapBaseDisplay;
             public List<MapRobot> mapRobots = new List<MapRobot>();
 
             public GameObject resultPanel;
@@ -755,6 +757,12 @@ namespace Script.Networking
                 _localRobot = robot;
             }
 
+            [Client]
+            public void LocalJudgeRegister()
+            {
+                _judge = FindObjectOfType<JudgeController>();
+            }
+
             private IEnumerator HideLoading()
             {
                 yield return new WaitForSeconds(0.5f);
@@ -847,6 +855,11 @@ namespace Script.Networking
                 chassisTypeSelect.interactable = false;
                 gunTypeSelect.interactable = false;
 
+                if (_judge)
+                {
+                    GameObject.Find("Player").SetActive(false);
+                }
+
                 var mesh = GameObject.Find("Arena21").GetComponent<MeshFilter>().sharedMesh;
                 var vertices = mesh.vertices;
                 var uvs = new Vector2[vertices.Length];
@@ -873,14 +886,15 @@ namespace Script.Networking
                 }
 
                 mesh.uv = uvs;
-                if (_localRobot)
+                if (_localRobot || _judge)
                 {
-                    if (_localRobot.role.Type == TypeT.Hero || _localRobot.role.IsInfantry())
+                    if (_localRobot && (_localRobot.role.Type == TypeT.Hero || _localRobot.role.IsInfantry()))
                     {
                         typeConfirm.interactable = true;
                         chassisTypeSelect.interactable = true;
                         gunTypeSelect.interactable = true;
                     }
+
                     StartCoroutine(HideLoading());
                 }
             }
@@ -910,6 +924,8 @@ namespace Script.Networking
             {
                 if (_clientFacilityBases.Count > 0)
                 {
+                    if (_judge)
+                        optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
                     // 信息显示更新
                     if (_localRobot)
                     {

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Script.Networking.Lobby;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Script.Networking
@@ -16,7 +17,11 @@ namespace Script.Networking
         {
 #if UNITY_EDITOR
             if (Time.time - _startTime > 0.3 && FindObjectsOfType<Camera>().Length == 0)
-                SceneManager.LoadScene("Index");
+            {
+                var r = FindObjectOfType<RoomManager>();
+                if (!r || r.roomSlots.Count == 0)
+                    SceneManager.LoadScene("Index");
+            }
 #endif
         }
     }

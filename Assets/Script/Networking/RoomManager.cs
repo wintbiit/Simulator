@@ -35,6 +35,7 @@ namespace Script.Networking
             public GameObject silverPrefab;
             public GameObject goldPrefab;
             public GameObject blockPrefab;
+            public GameObject judgePrefab;
 
             // 客户端侧成员
             // 在客户端侧将本地用户名从登陆页面传递给本地大厅玩家
@@ -158,81 +159,94 @@ namespace Script.Networking
                 gamePlayer.role = _roles[roomPlayerComponent.id];
                 Debug.Log("Creating Game Player:" + gamePlayer.displayName);
 
-                // 创建 Robot
-                GameObject robotInstance = null;
-                Transform target;
-                var role = _roles[roomPlayerComponent.id];
-                switch (role.Type)
+                // 创建裁判
+                if (_roles[roomPlayerComponent.id].Camp == CampT.Judge)
                 {
-                    case TypeT.Unknown:
-                        if (role.Camp != CampT.Judge)
-                            throw new ArgumentOutOfRangeException();
-                        break;
-                    case TypeT.Hero:
-                        // 根据阵营与角色信息确定使用的预制件和出生点
-                        target = role.Camp == CampT.Blue
-                            ? _gameManager.blueStart.hero
-                            : _gameManager.redStart.hero;
-                        robotInstance = Instantiate(heroPrefab, target.position, target.rotation);
-                        break;
-                    case TypeT.Engineer:
-                        target = role.Camp == CampT.Blue
-                            ? _gameManager.blueStart.engineer
-                            : _gameManager.redStart.engineer;
-                        robotInstance = Instantiate(engineerPrefab, target.position, target.rotation);
-                        break;
-                    case TypeT.InfantryA:
-                        target = role.Camp == CampT.Blue
-                            ? _gameManager.blueStart.infantryA
-                            : _gameManager.redStart.infantryA;
-                        robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
-                        break;
-                    case TypeT.InfantryB:
-                        target = role.Camp == CampT.Blue
-                            ? _gameManager.blueStart.infantryB
-                            : _gameManager.redStart.infantryB;
-                        robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
-                        break;
-                    case TypeT.InfantryC:
-                        target = role.Camp == CampT.Blue
-                            ? _gameManager.blueStart.infantryC
-                            : _gameManager.redStart.infantryC;
-                        robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
-                        break;
-                    case TypeT.Ptz:
-                        _gameManager.ptzCount++;
-                        Debug.Log("New ptz:" + _gameManager.ptzCount);
-                        break;
-                    case TypeT.Drone:
-                        target = role.Camp == CampT.Blue
-                            ? _gameManager.blueStart.drone
-                            : _gameManager.redStart.drone;
-                        robotInstance = Instantiate(dronePrefab, target.position, target.rotation);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    var t = _gameManager.judgeStart;
+                    var judgeInstance = Instantiate(judgePrefab, t.position, t.rotation);
+                    NetworkServer.Spawn(judgeInstance);
                 }
-
-                if (robotInstance)
+                else
                 {
-                    var robotComponent = robotInstance.GetComponent<RobotBase>();
-                    robotComponent.role = role;
-                    robotComponent.id = roomPlayerComponent.id;
-                    robotComponent.level = 1;
-                    robotComponent.chassisType = ChassisT.Default;
-                    robotComponent.gunType = GunT.Default;
-                    robotComponent.health = RobotPerformanceTable.Table[1][role.Type][ChassisT.Default][GunT.Default]
-                        .HealthLimit;
-                    robotComponent.experience = 0;
-                    robotComponent.smallAmmo = RobotPerformanceTable.Table[1][role.Type][ChassisT.Default][GunT.Default]
-                        .SmallAmmo;
-                    robotComponent.largeAmmo = RobotPerformanceTable.Table[1][role.Type][ChassisT.Default][GunT.Default]
-                        .LargeAmmo;
+                    // 创建 Robot
+                    GameObject robotInstance = null;
+                    Transform target;
+                    var role = _roles[roomPlayerComponent.id];
+                    switch (role.Type)
+                    {
+                        case TypeT.Unknown:
+                            if (role.Camp != CampT.Judge)
+                                throw new ArgumentOutOfRangeException();
+                            break;
+                        case TypeT.Hero:
+                            // 根据阵营与角色信息确定使用的预制件和出生点
+                            target = role.Camp == CampT.Blue
+                                ? _gameManager.blueStart.hero
+                                : _gameManager.redStart.hero;
+                            robotInstance = Instantiate(heroPrefab, target.position, target.rotation);
+                            break;
+                        case TypeT.Engineer:
+                            target = role.Camp == CampT.Blue
+                                ? _gameManager.blueStart.engineer
+                                : _gameManager.redStart.engineer;
+                            robotInstance = Instantiate(engineerPrefab, target.position, target.rotation);
+                            break;
+                        case TypeT.InfantryA:
+                            target = role.Camp == CampT.Blue
+                                ? _gameManager.blueStart.infantryA
+                                : _gameManager.redStart.infantryA;
+                            robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
+                            break;
+                        case TypeT.InfantryB:
+                            target = role.Camp == CampT.Blue
+                                ? _gameManager.blueStart.infantryB
+                                : _gameManager.redStart.infantryB;
+                            robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
+                            break;
+                        case TypeT.InfantryC:
+                            target = role.Camp == CampT.Blue
+                                ? _gameManager.blueStart.infantryC
+                                : _gameManager.redStart.infantryC;
+                            robotInstance = Instantiate(infantryPrefab, target.position, target.rotation);
+                            break;
+                        case TypeT.Ptz:
+                            _gameManager.ptzCount++;
+                            Debug.Log("New ptz:" + _gameManager.ptzCount);
+                            break;
+                        case TypeT.Drone:
+                            target = role.Camp == CampT.Blue
+                                ? _gameManager.blueStart.drone
+                                : _gameManager.redStart.drone;
+                            robotInstance = Instantiate(dronePrefab, target.position, target.rotation);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
 
-                    robotComponent.gameManager = _gameManager;
-                    robotComponent.registered = false;
-                    // 将生成的机器人对象同步生成到所有客户端中
-                    NetworkServer.Spawn(robotInstance, conn);
+                    if (robotInstance)
+                    {
+                        var robotComponent = robotInstance.GetComponent<RobotBase>();
+                        robotComponent.role = role;
+                        robotComponent.id = roomPlayerComponent.id;
+                        robotComponent.level = 1;
+                        robotComponent.chassisType = ChassisT.Default;
+                        robotComponent.gunType = GunT.Default;
+                        robotComponent.health =
+                            RobotPerformanceTable.Table[1][role.Type][ChassisT.Default][GunT.Default]
+                                .HealthLimit;
+                        robotComponent.experience = 0;
+                        robotComponent.smallAmmo =
+                            RobotPerformanceTable.Table[1][role.Type][ChassisT.Default][GunT.Default]
+                                .SmallAmmo;
+                        robotComponent.largeAmmo =
+                            RobotPerformanceTable.Table[1][role.Type][ChassisT.Default][GunT.Default]
+                                .LargeAmmo;
+
+                        robotComponent.gameManager = _gameManager;
+                        robotComponent.registered = false;
+                        // 将生成的机器人对象同步生成到所有客户端中
+                        NetworkServer.Spawn(robotInstance, conn);
+                    }
                 }
 
                 // 自动化机器人、建筑等初始化
