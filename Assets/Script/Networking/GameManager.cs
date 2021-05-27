@@ -79,7 +79,7 @@ namespace Script.Networking
         public class CampStatus
         {
             public int money;
-            public bool virtualShield;
+            public bool virtualShield = true;
             public int infantrySupplyAmount;
             public int heroSupplyAmount;
             public int airRaidAmount;
@@ -204,6 +204,15 @@ namespace Script.Networking
             private List<RobotBase> _clientRobotBases = new List<RobotBase>();
             private List<FacilityBase> _clientFacilityBases = new List<FacilityBase>();
             private int _slowDecisionUpdate;
+            
+            // Data Refactor
+            [SyncVar] public GlobalStatus globalStatus = new GlobalStatus();
+
+            public SyncDictionary<CampT, CampStatus> CampStatus = new SyncDictionary<CampT, CampStatus>
+            {
+                {CampT.Red, new CampStatus()},
+                {CampT.Blue,new CampStatus()}
+            };
             
             // Data
             [SyncVar] public int countDown;
