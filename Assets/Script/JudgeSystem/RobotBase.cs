@@ -851,6 +851,21 @@ namespace Script.JudgeSystem
             public float ReviveRate;
         }
 
+        public class RobotBaseRecord
+        {
+            public int Id;
+            public RoleT Role;
+            public int Level;
+            public int Health;
+            public int SmallAmmo;
+            public int LargeAmmo;
+            public float Experience;
+            public float Heat;
+            public Vector3 Position;
+            public Quaternion Rotation;
+            public List<BuffBase> Buffs = new List<BuffBase>();
+        }
+
 /*
  * 所有 RobotController 的基类，包含了机器人的基本信息
  * 
@@ -890,6 +905,24 @@ namespace Script.JudgeSystem
 
             public GameManager gameManager;
             public bool isLocalRobot;
+
+            [Server]
+            protected void RecordFrame(RobotBaseRecord record)
+            {
+                record.Id = id;
+                record.Role = role;
+                record.Level = level;
+                record.Health = health;
+                record.SmallAmmo = smallAmmo;
+                record.LargeAmmo = largeAmmo;
+                record.Experience = experience;
+                record.Heat = heat;
+                var t = transform;
+                record.Position = t.position;
+                record.Rotation = t.rotation;
+                foreach (var buff in Buffs)
+                    record.Buffs.Add(buff);
+            }
 
             [Client]
             public virtual void ConfirmLocalRobot()

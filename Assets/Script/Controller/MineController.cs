@@ -10,11 +10,31 @@ namespace Script.Controller
         Gold = 1
     }
 
+    public class MineControllerRecord
+    {
+        public MineType Type;
+        public int Index;
+        public Vector3 Position;
+        public Quaternion Rotation;
+    }
+
     public class MineController : NetworkBehaviour
     {
         public MineType type;
         public int index;
         private GameManager _gameManager;
+
+        public MineControllerRecord RecordFrame()
+        {
+            var t = transform;
+            return new MineControllerRecord
+            {
+                Type = type,
+                Index = index,
+                Position = t.position,
+                Rotation = t.rotation
+            };
+        }
 
         private void Start()
         {

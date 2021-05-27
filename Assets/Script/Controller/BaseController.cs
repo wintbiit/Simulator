@@ -10,10 +10,21 @@ using Script.JudgeSystem.Role;
 
 namespace Script.Controller
 {
+    public class BaseControllerRecord : FacilityBaseRecord
+    {
+        
+    }
     public class BaseController : FacilityBase, IVulnerable
     {
         public List<ArmorController> armors = new List<ArmorController>();
 
+        public BaseControllerRecord RecordFrame()
+        {
+            var record = new BaseControllerRecord();
+            base.RecordFrame(record);
+            return record;
+        }
+        
         private void ArmorSetup()
         {
             foreach (var armor in armors)

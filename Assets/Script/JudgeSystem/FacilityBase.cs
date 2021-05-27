@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Mirror;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
@@ -8,6 +9,15 @@ namespace Script.JudgeSystem
 {
     namespace Facility
     {
+        public class FacilityBaseRecord
+        {
+            public int Id;
+            public RoleT Role;
+            public int Health;
+            public int HealthLimit;
+            public List<BuffBase> Buffs = new List<BuffBase>();
+        }
+        
         public abstract class FacilityBase : NetworkBehaviour
         {
             [SyncVar] public int id;
@@ -19,6 +29,14 @@ namespace Script.JudgeSystem
             public readonly SyncList<BuffBase> Buffs = new SyncList<BuffBase>();
 
             public GameManager gameManager;
+
+            protected void RecordFrame(FacilityBaseRecord record)
+            {
+                record.Id = id;
+                record.Role = role;
+                record.Health = health;
+                record.HealthLimit = healthLimit;
+            }
 
             public float GetArmorRate()
             {

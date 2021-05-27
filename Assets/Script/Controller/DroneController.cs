@@ -37,6 +37,14 @@ namespace Script.Controller
         }
     }
 
+    public class DroneControllerRecord : RobotBaseRecord
+    {
+        public float RaidTill;
+        public bool Raiding;
+        public float DartTill;
+        public int DartCount;
+    }
+
     public class DroneController : RobotBase
     {
         public GameObject cam;
@@ -78,6 +86,20 @@ namespace Script.Controller
         private float _xOffset;
         private float _yOffset;
         private float _zOffset;
+
+        [Server]
+        public DroneControllerRecord RecordFrame()
+        {
+            var record = new DroneControllerRecord
+            {
+                RaidTill = raidTill,
+                Raiding = raiding,
+                DartTill = dartTill,
+                DartCount = dartCount
+            };
+            base.RecordFrame(record);
+            return record;
+        }
 
         [Command(ignoreAuthority = true)]
         private void CmdFire(float realSpeed)

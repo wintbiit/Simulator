@@ -7,9 +7,20 @@ namespace Script.Controller
 {
     namespace Infantry
     {
+        public class InfantryControllerRecord : GroundControllerBaseRecord
+        {
+        }
+        
         public class InfantryController : GroundControllerBase
         {
             public bool atSupply;
+
+            public InfantryControllerRecord RecordFrame()
+            {
+                var record = new InfantryControllerRecord();
+                base.RecordFrame(record);
+                return record;
+            }
 
             protected override void OnTriggerEnter(Collider other)
             {

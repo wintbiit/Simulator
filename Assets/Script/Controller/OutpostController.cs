@@ -23,10 +23,22 @@ namespace Script.Controller
             timeOut = Time.time + 10;
         }
     }
+
+    public class OutpostControllerRecord:FacilityBaseRecord
+    {
+        
+    }
     public class OutpostController : FacilityBase, IVulnerable
     {
         public List<ArmorController> armors = new List<ArmorController>();
 
+
+        public OutpostControllerRecord RecordFrame()
+        {
+            var record = new OutpostControllerRecord();
+            base.RecordFrame(record);
+            return record;
+        }
         private void ArmorSetup()
         {
             foreach (var armor in armors)

@@ -22,6 +22,11 @@ namespace Script.Controller
         public Camera aim;
     }
 
+    public class GuardControllerRecord:RobotBaseRecord
+    {
+        
+    }
+
     public class GuardController : RobotBase, IVulnerable
     {
         [Header("Fire")] public float speed;
@@ -43,6 +48,13 @@ namespace Script.Controller
         private Vector3 _prediction;
         private float _lastPredictTime;
         private float _predictInterval;
+
+        public GuardControllerRecord RecordFrame()
+        {
+            var record = new GuardControllerRecord();
+            base.RecordFrame(record);
+            return record;
+        }
 
         private void ArmorSetup()
         {
@@ -116,7 +128,7 @@ namespace Script.Controller
                         sp -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
                         var distance = sp.sqrMagnitude;
                         if (!(distance < minDistance)) continue;
-                        if ((t.transform.position - fpCam.transform.position).magnitude > 8) continue;
+                        if ((t.transform.position - fpCam.transform.position).magnitude > 6.5f) continue;
                         minDistance = distance;
                         target = t;
                     }

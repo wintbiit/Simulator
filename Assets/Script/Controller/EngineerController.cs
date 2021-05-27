@@ -22,6 +22,11 @@ namespace Script.Controller
             }
         }
 
+        public class EngineerControllerRecord : GroundControllerBaseRecord
+        {
+            public int ReviveTime;
+        }
+
         public class EngineerController : GroundControllerBase
         {
             private readonly List<int> _mine = new List<int>();
@@ -37,6 +42,15 @@ namespace Script.Controller
             public float opProcess;
 
             [SyncVar] public int reviveTime;
+
+            [Server]
+            public EngineerControllerRecord RecordFrame()
+            {
+                var record = new EngineerControllerRecord();
+                base.RecordFrame(record);
+                record.ReviveTime = reviveTime;
+                return record;
+            }
 
             protected override void UnFireOperation()
             {

@@ -97,6 +97,11 @@ namespace Script.Controller
         }
     }
 
+    public class GroundControllerBaseRecord : RobotBaseRecord
+    {
+        public bool IsSpin;
+    }
+
     /*
      * 地面车辆统一运动模型
      * + 前后驱动
@@ -174,9 +179,13 @@ namespace Script.Controller
         private int _fireCd;
         private int _angleSpin;
         [SyncVar] private bool _isSpin;
-        [SyncVar] private Quaternion _pitchRot;
         private bool _climbing;
 
+        protected void RecordFrame(GroundControllerBaseRecord record)
+        {
+            base.RecordFrame(record);
+            record.IsSpin = _isSpin;
+        }
 
         protected virtual void OnTriggerStay(Collider other)
         {
@@ -811,7 +820,7 @@ namespace Script.Controller
 
                         var delta = fpCamera.WorldToScreenPoint(vTargetPos);
                         delta -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
-                        var screenErr = delta;
+                        // var screenErr = delta;
                         delta *= 10;
                         delta.y /= Screen.height;
                         delta.x /= Screen.width;
@@ -891,7 +900,7 @@ namespace Script.Controller
                             transform.Translate(
                                 Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
                                     ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2
-                                    : _maxMotorTorque) * 2)
+                                    : _maxMotorTorque) * 1.5f)
                                 / 8000);
                         }
                         else
@@ -899,7 +908,7 @@ namespace Script.Controller
                             transform.Translate(
                                 Vector3.right * (Input.GetAxis("Horizontal") * (_climbing
                                     ? RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2
-                                    : _maxMotorTorque))
+                                    : _maxMotorTorque) * 0.8f)
                                 / 8000);
                         }
                 }

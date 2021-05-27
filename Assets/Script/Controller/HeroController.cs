@@ -19,10 +19,21 @@ namespace Script.Controller
             }
         }
 
+        public class HeroControllerRecord : GroundControllerBaseRecord
+        {
+        }
+
         public class HeroController : GroundControllerBase
         {
             [SyncVar] public bool atSupply;
             private int _fired;
+
+            public HeroControllerRecord RecordFrame()
+            {
+                var record = new HeroControllerRecord();
+                base.RecordFrame(record);
+                return record;
+            }
 
             protected override void OnTriggerEnter(Collider other)
             {

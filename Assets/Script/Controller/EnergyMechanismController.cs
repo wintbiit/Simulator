@@ -80,6 +80,15 @@ namespace Script.Controller
         }
     }
 
+    public class EnergyMechanismControllerRecord : FacilityBaseRecord
+    {
+        public bool Enable;
+        public bool Large;
+        public bool Activated;
+        public int Current;
+        public float LastCheck;
+    }
+
     public class EnergyMechanismController : FacilityBase
     {
         public Material red;
@@ -89,9 +98,21 @@ namespace Script.Controller
 
         [SyncVar] private bool _enable;
         [SyncVar] private bool _large;
-        [SyncVar] private bool _activated;
         [SyncVar] private int _current;
         [SyncVar] private float _lastCheck;
+
+        public EnergyMechanismControllerRecord RecordFrame()
+        {
+            var record = new EnergyMechanismControllerRecord
+            {
+                Enable = _enable,
+                Large = _large,
+                Current = _current,
+                LastCheck = _lastCheck
+            };
+            base.RecordFrame(record);
+            return record;
+        }
 
         private void Start()
         {

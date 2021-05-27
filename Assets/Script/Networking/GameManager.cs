@@ -136,6 +136,10 @@ namespace Script.Networking
             public GlobalStatus GlobalStatus;
             public CampStatus RedStatus;
             public CampStatus BlueStatus;
+            public readonly List<RobotBaseRecord> RobotBaseRecords = new List<RobotBaseRecord>();
+            public readonly List<FacilityBaseRecord> FacilityBaseRecords = new List<FacilityBaseRecord>();
+            public readonly List<BlockControllerRecord> BlockControllerRecords = new List<BlockControllerRecord>();
+            public readonly List<MineControllerRecord> MineControllers = new List<MineControllerRecord>();
         }
 
         /*
@@ -422,6 +426,7 @@ namespace Script.Networking
                 {
                     if (frame < _recordFrames.Count - 1)
                         _recordFrames.RemoveRange(frame + 1, _recordFrames.Count - frame - 1);
+                    // Resume Global & Camp
                     globalStatus = _recordFrames[frame].GlobalStatus;
                     _campStatus[CampT.Red] = _recordFrames[frame].RedStatus;
                     _campStatus[CampT.Blue] = _recordFrames[frame].BlueStatus;
@@ -430,47 +435,101 @@ namespace Script.Networking
                     globalStatus.startTime = (int) Time.time - (gameTime - globalStatus.countDown);
                     globalStatus.smallBuffColdDown = globalStatus.startTime + smallBuffCdOffset;
                     globalStatus.largeBuffColdDown = globalStatus.startTime + largeBuffCdOffset;
+                    // Resume Robots
+                    // Resume Facilities
+                    // Resume Mine & Blocks
+                    // Other status
+                    // TimeEvents
                 }
             }
 
             [Server]
             private void RecordFrame()
             {
-                // 强制数据同步
                 var newRecord = new RecordFrame
                 {
                     GlobalStatus = globalStatus.DeepCopy(),
                     RedStatus = _campStatus[CampT.Red].DeepCopy(),
                     BlueStatus = _campStatus[CampT.Blue].DeepCopy(),
                 };
+                // 强制数据同步   
                 globalStatus = newRecord.GlobalStatus;
                 _campStatus[CampT.Red] = newRecord.RedStatus;
                 _campStatus[CampT.Blue] = newRecord.BlueStatus;
-                if (_started && !globalStatus.finished)
+                foreach (var rb in FindObjectsOfType<RobotBase>())
                 {
-                    _recordFrames.Add(newRecord);
-                    Debug.Log(_recordFrames.Count);
+                    if (rb.role.IsInfantry())
+                        newRecord.RobotBaseRecords.Add(((InfantryController) rb).RecordFrame());
+                    else
+                        switch (rb.role.Type)
+                        {
+                            case TypeT.Engineer:
+                                newRecord.RobotBaseRecords.Add(((EngineerController) rb).RecordFrame());
+                                break;
+                            case TypeT.Hero:
+                                newRecord.RobotBaseRecords.Add(((HeroController) rb).RecordFrame());
+                                break;
+                            case TypeT.Drone:
+                                newRecord.RobotBaseRecords.Add(((DroneController) rb).RecordFrame());
+                                break;
+                            case TypeT.Guard:
+                                newRecord.RobotBaseRecords.Add(((GuardController) rb).RecordFrame());
+                                break;
+                        }
                 }
-                // FacilityBase
-                //  BaseController
-                //  EnergyMechanismController
-                //  OutpostController
-                // RobotBase
-                //  GroundControllerBase
-                //      EngineerController
-                //      HeroController
-                //      InfantryController
-                //  DroneController
-                //  GuardController
-                // BlockController
-                // GoldIndicatorController
-                // MineController
+
+                foreach (var fb in FindObjectsOfType<FacilityBase>())
+                {
+                    switch (fb.role.Type)
+                    {
+                        case TypeT.Base:
+                            newRecord.FacilityBaseRecords.Add(((BaseController) fb).RecordFrame());
+                            break;
+                        case TypeT.EnergyMechanism:
+                            newRecord.FacilityBaseRecords.Add(((EnergyMechanismController) fb).RecordFrame());
+                            break;
+                        case TypeT.Outpost:
+                            newRecord.FacilityBaseRecords.Add(((OutpostController) fb).RecordFrame());
+                            break;
+                    }
+                }
+
+                foreach (var bc in FindObjectsOfType<BlockController>())
+                {
+                    newRecord.BlockControllerRecords.Add(bc.RecordFrame());
+                }
+
+                foreach (var mc in FindObjectsOfType<MineController>())
+                {
+                    newRecord.MineControllers.Add(mc.RecordFrame());
+                }
+
+                _recordFrames.Add(newRecord);
+                Debug.Log(_recordFrames.Count);
+                // FacilityBase ok
+                //  BaseController ok
+                //  EnergyMechanismController ok
+                //  OutpostController ok
+                // RobotBase ok
+                //  GroundControllerBase ok
+                //      EngineerController ok
+                //      HeroController ok
+                //      InfantryController ok
+                //  DroneController ok
+                //  GuardController ok
+                // BlockController ok
+                // GoldIndicatorController skip?
+                // MineController ok
             }
 
             [Server]
             private void ServerFixedUpdate()
             {
-                RecordFrame();
+                if (_started && !globalStatus.finished)
+                {
+                    RecordFrame();
+                }
+
                 if (Input.GetKeyDown(KeyCode.P))
                 {
                     ResumeRecord(300);
