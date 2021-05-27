@@ -2,6 +2,7 @@
 using Mirror;
 using UnityEngine;
 using Script.Networking.Lobby;
+using UnityEditor;
 
 namespace Script.Networking
 {
@@ -136,7 +137,13 @@ namespace Script.Networking
                 }
 
                 if (Input.GetKey(KeyCode.Escape))
+                {
+#if UNITY_EDITOR
+                    EditorApplication.isPlaying = false;
+#else
                     Application.Quit();
+#endif
+                }
             }
 
             #endregion

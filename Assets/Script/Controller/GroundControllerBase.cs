@@ -432,8 +432,6 @@ namespace Script.Controller
 
         private void Start()
         {
-            ScalableBufferManager.ResizeBuffers(0.2f, 0.2f);
-            Debug.Log(ScalableBufferManager.heightScaleFactor);
             tpCam.SetActive(false);
             fpCam.SetActive(false);
             ToggleMeshRenderer(chassis, true);
@@ -1017,6 +1015,9 @@ namespace Script.Controller
                             GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
 
+                if (health < 0)
+                    health = 0;
+
                 // 射速切换
                 if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.C))
                 {
@@ -1027,7 +1028,7 @@ namespace Script.Controller
                 {
                     highFreq = true;
                 }
-                
+
                 // 经验自然增长
                 if (role.IsInfantry())
                     experience += (0.2f / 12) * Time.fixedDeltaTime;

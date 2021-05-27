@@ -6,6 +6,33 @@ RoboMaster 比赛模拟器第三版。
 
 [第二版 Realive](https://github.com/scutbot/Realive)
 
+![Editor](Images/Editor.png)
+
+## Work In Progress
+
+- [x] 矿物掉落指示灯
+- [x] 机器人救援穿模
+- [x] 经验自然增长
+- [x] 弹丸伤害修正
+- [x] 超热量死亡提示问题
+- [ ] 裁判功能：控制比赛进程，判罚
+- [ ] 工程取矿过程
+- [ ] 矿物随机落下
+- [ ] 比赛结算页面
+- [ ] 机器人移动不连续、穿模
+- [ ] 修改天空盒
+- [ ] 摄像头拟真效果
+- [ ] 前哨站、基地灯条
+- [ ] 装甲板击中效果
+- [ ] 检查神符激活BUG
+
+## Nightly 2021/5/26
+
+两次修复情况
+
+![V1](Images/Version052621.png)
+![V2](Images/Version052521.png)
+
 ## Nightly 2021/5/25
 
 两次测试情况及修复情况

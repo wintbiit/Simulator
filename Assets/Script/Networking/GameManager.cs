@@ -63,13 +63,6 @@ namespace Script.Networking
         }
 
         [Serializable]
-        public class CampStatus
-        {
-            public int money;
-            public bool em;
-        }
-
-        [Serializable]
         public class MapRobot
         {
             public TypeT type;
@@ -82,11 +75,36 @@ namespace Script.Networking
             }
         }
 
+        [Serializable]
+        public class CampStatus
+        {
+            public int money;
+            public bool virtualShield;
+            public int infantrySupplyAmount;
+            public int heroSupplyAmount;
+            public int airRaidAmount;
+        }
+
+        [Serializable]
+        public class GlobalStatus
+        {
+            public int countDown;
+            public bool playing;
+            public bool finished;
+            public int startTime;
+            public int finishTIme;
+            public bool smallBuffStart;
+            public bool smallBuffEnable;
+            public bool largeBuffStart;
+            public bool largeBuffEnable;
+            public float smallBuffColdDown;
+            public float largeBuffColdDown;
+        }
+
         /*
          * 比赛管理器
          * + 保存队伍出生点
          * + 倒计时
-         * （以下待实现）
          * + 表驱动的赛场事件
          * + 比赛状态记录
          * + 比赛中可能需要的服务器调用等
@@ -171,13 +189,6 @@ namespace Script.Networking
             [Header("Drone Camera")] public GameObject redDCam;
             public GameObject blueDCam;
 
-            private int _redInfantrySupplyAmount;
-            private int _blueInfantrySupplyAmount;
-            private int _redHeroSupplyAmount;
-            private int _blueHeroSupplyAmount;
-            private int _redAirRaidAmount;
-            private int _blueAirRaidAmount;
-
             private readonly List<TimeEventTrigger> _timeEventTriggers = new List<TimeEventTrigger>
             {
                 new TimeEventTrigger {time = 6 * 60, e = JudgeSystem.Event.TypeT.SixMinute},
@@ -188,12 +199,25 @@ namespace Script.Networking
                 new TimeEventTrigger {time = 1 * 60, e = JudgeSystem.Event.TypeT.OneMinute},
                 new TimeEventTrigger {time = 0, e = JudgeSystem.Event.TypeT.GameOver}
             };
-
+            
+            private bool _started;
+            private List<RobotBase> _clientRobotBases = new List<RobotBase>();
+            private List<FacilityBase> _clientFacilityBases = new List<FacilityBase>();
+            private int _slowDecisionUpdate;
+            
+            // Data
             [SyncVar] public int countDown;
             [SyncVar] public bool playing;
             [SyncVar] private bool _finished;
             [SyncVar] private int _startTime;
             [SyncVar] private int _finishTime;
+            
+            private int _redInfantrySupplyAmount;
+            private int _blueInfantrySupplyAmount;
+            private int _redHeroSupplyAmount;
+            private int _blueHeroSupplyAmount;
+            private int _redAirRaidAmount;
+            private int _blueAirRaidAmount;
 
             [SyncVar] private int _redMoney;
             [SyncVar] private int _blueMoney;
@@ -232,12 +256,6 @@ namespace Script.Networking
             public void PtzRegister()
             {
                 ptzCount--;
-                // 判断满
-                // if (_roles.Where(
-                //         r => r.Camp != CampT.Judge && r.Camp != CampT.Unknown)
-                //     .Count(
-                //         r => r.Type != TypeT.Unknown && r.Type != TypeT.Ptz && r.Type <= TypeT.Drone) == 0)
-                //     Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameStart));
             }
 
             [Server]
@@ -248,13 +266,6 @@ namespace Script.Networking
 
                 if (_roles.Contains((robotBase.role)))
                     _roles.Remove(robotBase.role);
-
-                // 判断满
-                // if (_roles.Where(
-                //         r => r.Camp != CampT.Judge && r.Camp != CampT.Unknown)
-                //     .Count(
-                //         r => r.Type != TypeT.Unknown && r.Type != TypeT.Ptz && r.Type <= TypeT.Drone) == 0)
-                //     Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameStart));
             }
 
             [Server]
@@ -380,8 +391,6 @@ namespace Script.Networking
                     }
                 }
             }
-
-            private bool _started;
 
             [Server]
             private void ServerFixedUpdate()
@@ -552,7 +561,7 @@ namespace Script.Networking
 
                             break;
                         case JudgeSystem.Event.TypeT.GameStart:
-                            Debug.Log("Confirmed:" + confirmedCount);
+                            Debug.Log("Starting game with " + confirmedCount + " players.");
                             _startTime = (int) Time.time;
                             playing = true;
                             _redMoney = 200;
@@ -770,9 +779,6 @@ namespace Script.Networking
                 loadingHint.SetActive(false);
             }
 
-            private List<RobotBase> _clientRobotBases = new List<RobotBase>();
-            private List<FacilityBase> _clientFacilityBases = new List<FacilityBase>();
-
             [Client]
             public float GetSensitivity()
             {
@@ -917,8 +923,6 @@ namespace Script.Networking
 
                 resultPanel.SetActive(true);
             }
-
-            private int _slowDecisionUpdate;
 
             [Client]
             private void ClientFixedUpdate()

@@ -157,7 +157,6 @@ namespace Script.Networking
                 gamePlayer.index = roomPlayerComponent.id;
                 gamePlayer.displayName = roomPlayerComponent.displayName;
                 gamePlayer.role = _roles[roomPlayerComponent.id];
-                Debug.Log("Creating Game Player:" + gamePlayer.displayName);
 
                 // 创建裁判
                 if (_roles[roomPlayerComponent.id].Camp == CampT.Judge)
