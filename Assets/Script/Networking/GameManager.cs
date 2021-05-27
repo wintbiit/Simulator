@@ -83,6 +83,18 @@ namespace Script.Networking
             public int infantrySupplyAmount;
             public int heroSupplyAmount;
             public int airRaidAmount;
+
+            public CampStatus DeepCopy()
+            {
+                return new CampStatus
+                {
+                    money = money,
+                    virtualShield = virtualShield,
+                    infantrySupplyAmount = infantrySupplyAmount,
+                    heroSupplyAmount = heroSupplyAmount,
+                    airRaidAmount = airRaidAmount
+                };
+            }
         }
 
         [Serializable]
@@ -92,13 +104,31 @@ namespace Script.Networking
             public bool playing;
             public bool finished;
             public int startTime;
-            public int finishTIme;
+            public int finishTime;
             public bool smallBuffStart;
             public bool smallBuffEnable;
             public bool largeBuffStart;
             public bool largeBuffEnable;
             public float smallBuffColdDown;
             public float largeBuffColdDown;
+
+            public GlobalStatus DeepCopy()
+            {
+                return new GlobalStatus
+                {
+                    countDown = countDown,
+                    playing = playing,
+                    finished = finished,
+                    startTime = startTime,
+                    finishTime = finishTime,
+                    smallBuffStart = smallBuffStart,
+                    smallBuffEnable = smallBuffEnable,
+                    largeBuffStart = largeBuffStart,
+                    largeBuffEnable = largeBuffEnable,
+                    smallBuffColdDown = smallBuffColdDown,
+                    largeBuffColdDown = largeBuffColdDown
+                };
+            }
         }
 
         /*
@@ -199,47 +229,20 @@ namespace Script.Networking
                 new TimeEventTrigger {time = 1 * 60, e = JudgeSystem.Event.TypeT.OneMinute},
                 new TimeEventTrigger {time = 0, e = JudgeSystem.Event.TypeT.GameOver}
             };
-            
+
             private bool _started;
             private List<RobotBase> _clientRobotBases = new List<RobotBase>();
             private List<FacilityBase> _clientFacilityBases = new List<FacilityBase>();
             private int _slowDecisionUpdate;
-            
+
             // Data Refactor
             [SyncVar] public GlobalStatus globalStatus = new GlobalStatus();
 
-            public SyncDictionary<CampT, CampStatus> CampStatus = new SyncDictionary<CampT, CampStatus>
+            private SyncDictionary<CampT, CampStatus> _campStatus = new SyncDictionary<CampT, CampStatus>
             {
                 {CampT.Red, new CampStatus()},
-                {CampT.Blue,new CampStatus()}
+                {CampT.Blue, new CampStatus()}
             };
-            
-            // Data
-            [SyncVar] public int countDown;
-            [SyncVar] public bool playing;
-            [SyncVar] private bool _finished;
-            [SyncVar] private int _startTime;
-            [SyncVar] private int _finishTime;
-            
-            private int _redInfantrySupplyAmount;
-            private int _blueInfantrySupplyAmount;
-            private int _redHeroSupplyAmount;
-            private int _blueHeroSupplyAmount;
-            private int _redAirRaidAmount;
-            private int _blueAirRaidAmount;
-
-            [SyncVar] private int _redMoney;
-            [SyncVar] private int _blueMoney;
-
-            [SyncVar] private bool _redVirtualShield = true;
-            [SyncVar] private bool _blueVirtualShield = true;
-
-            [SyncVar] private bool _smallBuffStart;
-            [SyncVar] private bool _smallBuffEnable;
-            [SyncVar] private bool _largeBuffStart;
-            [SyncVar] private bool _largeBuffEnable;
-            [SyncVar] private float _smallBuffColdDown;
-            [SyncVar] private float _largeBuffColdDown;
 
             #region Server
 
@@ -299,7 +302,7 @@ namespace Script.Networking
             [Server]
             private void ServerStart()
             {
-                countDown = gameTime;
+                globalStatus.countDown = gameTime;
             }
 
             [Server]
@@ -345,10 +348,10 @@ namespace Script.Networking
                     case CampT.Unknown:
                         break;
                     case CampT.Red:
-                        _redMoney += value;
+                        _campStatus[CampT.Red].money += value;
                         break;
                     case CampT.Blue:
-                        _blueMoney += value;
+                        _campStatus[CampT.Blue].money += value;
                         break;
                     case CampT.Judge:
                         break;
@@ -363,18 +366,19 @@ namespace Script.Networking
                 if (role.IsInfantry())
                 {
                     var i = _robotBases.First(r => r.Value.role.Equals(role)).Value;
-                    if (role.Camp == CampT.Red && _redMoney >= 50 || role.Camp == CampT.Blue && _blueMoney >= 50)
+                    if (role.Camp == CampT.Red && _campStatus[CampT.Red].money >= 50 ||
+                        role.Camp == CampT.Blue && _campStatus[CampT.Blue].money >= 50)
                     {
-                        if (role.Camp == CampT.Red && _redInfantrySupplyAmount < 1500)
+                        if (role.Camp == CampT.Red && _campStatus[CampT.Red].infantrySupplyAmount < 1500)
                         {
-                            _redMoney -= 50;
-                            _redInfantrySupplyAmount += 50;
+                            _campStatus[CampT.Red].money -= 50;
+                            _campStatus[CampT.Red].infantrySupplyAmount += 50;
                             i.smallAmmo = origin + 50;
                         }
-                        else if (role.Camp == CampT.Blue && _blueInfantrySupplyAmount < 1500)
+                        else if (role.Camp == CampT.Blue && _campStatus[CampT.Blue].infantrySupplyAmount < 1500)
                         {
-                            _blueMoney -= 50;
-                            _blueInfantrySupplyAmount += 50;
+                            _campStatus[CampT.Blue].money -= 50;
+                            _campStatus[CampT.Blue].infantrySupplyAmount += 50;
                             i.smallAmmo = origin + 50;
                         }
                     }
@@ -383,18 +387,19 @@ namespace Script.Networking
                 if (role.Type == TypeT.Hero)
                 {
                     var h = _robotBases.First(r => r.Value.role.Equals(role)).Value;
-                    if (role.Camp == CampT.Red && _redMoney >= 75 || role.Camp == CampT.Blue && _blueMoney >= 75)
+                    if (role.Camp == CampT.Red && _campStatus[CampT.Red].money >= 75 ||
+                        role.Camp == CampT.Blue && _campStatus[CampT.Blue].money >= 75)
                     {
-                        if (role.Camp == CampT.Red && _redHeroSupplyAmount < 100)
+                        if (role.Camp == CampT.Red && _campStatus[CampT.Red].heroSupplyAmount < 100)
                         {
-                            _redMoney -= 75;
-                            _redHeroSupplyAmount += 5;
+                            _campStatus[CampT.Red].money -= 75;
+                            _campStatus[CampT.Red].heroSupplyAmount += 5;
                             h.largeAmmo = origin + 5;
                         }
-                        else if (role.Camp == CampT.Blue && _blueHeroSupplyAmount < 100)
+                        else if (role.Camp == CampT.Blue && _campStatus[CampT.Blue].heroSupplyAmount < 100)
                         {
-                            _blueMoney -= 75;
-                            _blueHeroSupplyAmount += 5;
+                            _campStatus[CampT.Blue].money -= 75;
+                            _campStatus[CampT.Blue].heroSupplyAmount += 5;
                             h.largeAmmo = origin + 5;
                         }
                     }
@@ -404,6 +409,11 @@ namespace Script.Networking
             [Server]
             private void ServerFixedUpdate()
             {
+                // 强制数据同步
+                globalStatus = globalStatus.DeepCopy();
+                _campStatus[CampT.Red] = _campStatus[CampT.Red].DeepCopy();
+                _campStatus[CampT.Blue] = _campStatus[CampT.Blue].DeepCopy();
+
                 if (!_started && confirmedCount == _roomManager.roomSlots.Count)
                 {
                     _started = true;
@@ -411,13 +421,13 @@ namespace Script.Networking
                 }
 
                 // 倒计时
-                if (playing || _finished)
+                if (globalStatus.playing || globalStatus.finished)
                 {
-                    countDown = gameTime - ((int) Time.time - _startTime);
+                    globalStatus.countDown = gameTime - ((int) Time.time - globalStatus.startTime);
                     // 时序事件
-                    if (_timeEventTriggers.Any(t => t.time == countDown && !t.triggered))
+                    if (_timeEventTriggers.Any(t => t.time == globalStatus.countDown && !t.triggered))
                     {
-                        var trigger = _timeEventTriggers.First(t => t.time == countDown);
+                        var trigger = _timeEventTriggers.First(t => t.time == globalStatus.countDown);
                         Emit(new TimeEvent(trigger.e));
                         trigger.triggered = true;
                     }
@@ -454,6 +464,9 @@ namespace Script.Networking
                                 }
 
                                 var protect = damage * (1 - _robotBases[hitEvent.Target].GetAttr().ArmorRate);
+                                if (_robotBases.ContainsKey(hitEvent.Hitter) &&
+                                    _robotBases[hitEvent.Hitter].role.Type == TypeT.Guard)
+                                    _robotBases[hitEvent.Hitter].health += (int) protect / 5;
                                 if (_robotBases[hitEvent.Target].health > 0)
                                 {
                                     _robotBases[hitEvent.Target].health -= (int) protect;
@@ -492,8 +505,8 @@ namespace Script.Networking
                                 if (hitEvent.Caliber != CaliberT.Dart)
                                 {
                                     if (hitEvent.Caliber == CaliberT.Large)
-                                        damage += _robotBases[hitEvent.Hitter].GetAttr().DamageRate *
-                                                  (hitEvent.IsTriangle ? 200 : 100);
+                                        damage = _robotBases[hitEvent.Hitter].GetAttr().DamageRate *
+                                                 (hitEvent.IsTriangle ? 300 : 200);
                                     else
                                         damage = 5 * _robotBases[hitEvent.Hitter].GetAttr().DamageRate;
                                     protect = damage * (1 - _facilityBases[hitEvent.Target].GetArmorRate());
@@ -502,7 +515,11 @@ namespace Script.Networking
 
                                 if (_facilityBases[hitEvent.Target].health > 0)
                                 {
-                                    _facilityBases[hitEvent.Target].health -= (int) protect;
+                                    if (_facilityBases[hitEvent.Target].role.Type == TypeT.Outpost &&
+                                        hitEvent.Caliber == CaliberT.Dart)
+                                        _facilityBases[hitEvent.Target].health -= (int) protect / 2;
+                                    else
+                                        _facilityBases[hitEvent.Target].health -= (int) protect;
                                     if (_facilityBases[hitEvent.Target].health <= 0)
                                     {
                                         _facilityBases[hitEvent.Target].health = 0;
@@ -517,9 +534,9 @@ namespace Script.Networking
                                                 _facilityBases[hitEvent.Target].role.Camp).Value.health <= 0)
                                             {
                                                 if (_facilityBases[hitEvent.Target].role.Camp == CampT.Red &&
-                                                    _redVirtualShield
+                                                    _campStatus[CampT.Red].virtualShield
                                                     || _facilityBases[hitEvent.Target].role.Camp == CampT.Blue &&
-                                                    _blueVirtualShield)
+                                                    _campStatus[CampT.Blue].virtualShield)
                                                 {
                                                     _facilityBases.First(fb =>
                                                         fb.Value.role.Type == TypeT.Base && fb.Value.role.Camp ==
@@ -529,10 +546,10 @@ namespace Script.Networking
                                                         case CampT.Unknown:
                                                             break;
                                                         case CampT.Red:
-                                                            _redVirtualShield = false;
+                                                            _campStatus[CampT.Red].virtualShield = false;
                                                             break;
                                                         case CampT.Blue:
-                                                            _blueVirtualShield = false;
+                                                            _campStatus[CampT.Blue].virtualShield = false;
                                                             break;
                                                         case CampT.Judge:
                                                             break;
@@ -571,15 +588,15 @@ namespace Script.Networking
                             break;
                         case JudgeSystem.Event.TypeT.GameStart:
                             Debug.Log("Starting game with " + confirmedCount + " players.");
-                            _startTime = (int) Time.time;
-                            playing = true;
-                            _redMoney = 200;
-                            _blueMoney = 200;
+                            globalStatus.startTime = (int) Time.time;
+                            globalStatus.playing = true;
+                            _campStatus[CampT.Red].money = 200;
+                            _campStatus[CampT.Blue].money = 200;
                             // 单机无限金钱
                             if (_roomManager.IsHost && _roomManager.roomSlots.Count == 1)
                             {
-                                _redMoney = 10000;
-                                _blueMoney = 10000;
+                                _campStatus[CampT.Red].money = 10000;
+                                _campStatus[CampT.Blue].money = 10000;
                             }
 
                             foreach (var player in _players)
@@ -588,37 +605,37 @@ namespace Script.Networking
 
                             break;
                         case JudgeSystem.Event.TypeT.SixMinute:
-                            _redMoney += 100;
-                            _blueMoney += 100;
-                            _smallBuffStart = true;
+                            _campStatus[CampT.Red].money += 100;
+                            _campStatus[CampT.Blue].money += 100;
+                            globalStatus.smallBuffStart = true;
                             break;
                         case JudgeSystem.Event.TypeT.FiveMinute:
-                            _redMoney += 100;
-                            _blueMoney += 100;
+                            _campStatus[CampT.Red].money += 100;
+                            _campStatus[CampT.Blue].money += 100;
                             break;
                         case JudgeSystem.Event.TypeT.FourMinute:
-                            _redMoney += 100;
-                            _blueMoney += 100;
+                            _campStatus[CampT.Red].money += 100;
+                            _campStatus[CampT.Blue].money += 100;
                             foreach (var r in _robotBases)
                                 r.Value.Buffs.RemoveAll(b => b.type == BuffT.SmallEnergy);
-                            _smallBuffStart = false;
+                            globalStatus.smallBuffStart = false;
                             break;
                         case JudgeSystem.Event.TypeT.ThreeMinute:
-                            _redMoney += 100;
-                            _blueMoney += 100;
-                            _largeBuffStart = true;
+                            _campStatus[CampT.Red].money += 100;
+                            _campStatus[CampT.Blue].money += 100;
+                            globalStatus.largeBuffStart = true;
                             break;
                         case JudgeSystem.Event.TypeT.TwoMinute:
                             break;
                         case JudgeSystem.Event.TypeT.OneMinute:
-                            _redMoney += 200;
-                            _blueMoney += 200;
+                            _campStatus[CampT.Red].money += 200;
+                            _campStatus[CampT.Blue].money += 200;
                             break;
                         case JudgeSystem.Event.TypeT.GameOver:
-                            if (_finished) break;
-                            playing = false;
-                            _finished = true;
-                            _finishTime = (int) Time.time;
+                            if (globalStatus.finished) break;
+                            globalStatus.playing = false;
+                            globalStatus.finished = true;
+                            globalStatus.finishTime = (int) Time.time;
                             RpcOnClientGameOver(IsRedWin());
                             break;
                         case JudgeSystem.Event.TypeT.BuffActivate:
@@ -630,22 +647,22 @@ namespace Script.Networking
 
                             var buffEvent = (BuffActivateEvent) e;
 
-                            if (buffEvent.Large && _largeBuffEnable)
+                            if (buffEvent.Large && globalStatus.largeBuffEnable)
                             {
                                 foreach (var r in _robotBases.Where(r => r.Value.role.Camp == buffEvent.Camp))
                                     if (r.Value.Buffs.All(b => b.type != BuffT.LargeEnergy))
                                         r.Value.Buffs.Add(new LargeEnergyBuff());
-                                _largeBuffEnable = false;
-                                _largeBuffColdDown = Time.time + 75;
+                                globalStatus.largeBuffEnable = false;
+                                globalStatus.largeBuffColdDown = Time.time + 75;
                             }
 
-                            if (!buffEvent.Large && _smallBuffEnable)
+                            if (!buffEvent.Large && globalStatus.smallBuffEnable)
                             {
                                 foreach (var r in _robotBases.Where(r => r.Value.role.Camp == buffEvent.Camp))
                                     if (r.Value.Buffs.All(b => b.type != BuffT.SmallEnergy))
                                         r.Value.Buffs.Add(new SmallEnergyBuff());
-                                _smallBuffEnable = false;
-                                _smallBuffColdDown = Time.time + 75;
+                                globalStatus.smallBuffEnable = false;
+                                globalStatus.smallBuffColdDown = Time.time + 75;
                             }
 
                             break;
@@ -654,28 +671,29 @@ namespace Script.Networking
                             switch (aR.Camp)
                             {
                                 case CampT.Red:
-                                    if (_redMoney >= 400 && _redAirRaidAmount < 3)
+                                    if (_campStatus[CampT.Red].money >= 400 && _campStatus[CampT.Red].airRaidAmount < 3)
                                     {
-                                        _redMoney -= 400;
+                                        _campStatus[CampT.Red].money -= 400;
                                         var d = (DroneController) _robotBases.First(r =>
                                                 r.Value.role.Equals(new RoleT(CampT.Red, TypeT.Drone)))
                                             .Value;
                                         d.raidTill = Time.time + 30;
                                         d.smallAmmo = 500;
-                                        _redAirRaidAmount++;
+                                        _campStatus[CampT.Red].airRaidAmount++;
                                     }
 
                                     break;
                                 case CampT.Blue:
-                                    if (_blueMoney >= 400 && _blueAirRaidAmount < 3)
+                                    if (_campStatus[CampT.Blue].money >= 400 &&
+                                        _campStatus[CampT.Blue].airRaidAmount < 3)
                                     {
-                                        _blueMoney -= 400;
+                                        _campStatus[CampT.Blue].money -= 400;
                                         var d = (DroneController) _robotBases.First(r =>
                                                 r.Value.role.Equals(new RoleT(CampT.Blue, TypeT.Drone)))
                                             .Value;
                                         d.raidTill = Time.time + 30;
                                         d.smallAmmo = 500;
-                                        _blueAirRaidAmount++;
+                                        _campStatus[CampT.Blue].airRaidAmount++;
                                     }
 
                                     break;
@@ -703,9 +721,9 @@ namespace Script.Networking
                 }
 
                 // 神符
-                if (_smallBuffStart)
+                if (globalStatus.smallBuffStart)
                 {
-                    if (!_smallBuffEnable && Time.time > _smallBuffColdDown)
+                    if (!globalStatus.smallBuffEnable && Time.time > globalStatus.smallBuffColdDown)
                     {
                         foreach (var f in _facilityBases.Where(f => f.Value.role.Type == TypeT.EnergyMechanism))
                         {
@@ -713,12 +731,12 @@ namespace Script.Networking
                             b.Enable(false);
                         }
 
-                        _smallBuffEnable = true;
+                        globalStatus.smallBuffEnable = true;
                     }
                 }
-                else if (_largeBuffStart)
+                else if (globalStatus.largeBuffStart)
                 {
-                    if (!_largeBuffEnable && Time.time > _largeBuffColdDown)
+                    if (!globalStatus.largeBuffEnable && Time.time > globalStatus.largeBuffColdDown)
                     {
                         foreach (var f in _facilityBases.Where(f => f.Value.role.Type == TypeT.EnergyMechanism))
                         {
@@ -726,7 +744,7 @@ namespace Script.Networking
                             b.Enable(true);
                         }
 
-                        _largeBuffEnable = true;
+                        globalStatus.largeBuffEnable = true;
                     }
                 }
                 else
@@ -958,7 +976,7 @@ namespace Script.Networking
                                     FHP = _clientFacilityBases.First(f =>
                                         f.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Outpost))).health,
                                     inInvasion = 0,
-                                    RemainTime = countDown,
+                                    RemainTime = globalStatus.countDown,
                                     SHP = _clientRobotBases.First(r =>
                                         r.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Guard))).health
                                 });
@@ -1050,18 +1068,19 @@ namespace Script.Networking
                         }
                     }
 
-                    redMoneyDisplay.text = _redMoney.ToString();
-                    blueMoneyDisplay.text = _blueMoney.ToString();
+                    redMoneyDisplay.text = _campStatus[CampT.Red].money.ToString();
+                    blueMoneyDisplay.text = _campStatus[CampT.Blue].money.ToString();
 
-                    var minute = (int) Math.Floor(countDown / 60.0f);
-                    var second = countDown % 60;
+                    var minute = (int) Math.Floor(globalStatus.countDown / 60.0f);
+                    var second = globalStatus.countDown % 60;
                     if (minute == 0 && second <= 10)
                         countDownDisplay.color = Color.red;
-                    if (_finished)
+                    if (globalStatus.finished)
                     {
                         countDownDisplay.color = Color.red;
                         minute = 0;
-                        second = 10 + (countDown - (gameTime - (_finishTime - _startTime)));
+                        second = 10 + (globalStatus.countDown -
+                                       (gameTime - (globalStatus.finishTime - globalStatus.startTime)));
                         if (second == 0)
                             CmdReset();
                     }
@@ -1079,8 +1098,8 @@ namespace Script.Networking
                                              fb.role.Equals(new RoleT(CampT.Red, TypeT.Outpost))).health > 0
                                              ? "是"
                                              : "否") + '\n';
-                    extraDisplay.text += "蓝方虚拟护盾：" + (_blueVirtualShield ? "是" : "否") + '\n';
-                    extraDisplay.text += "红方虚拟护盾：" + (_redVirtualShield ? "是" : "否") + '\n';
+                    extraDisplay.text += "蓝方虚拟护盾：" + (_campStatus[CampT.Blue].virtualShield ? "是" : "否") + '\n';
+                    extraDisplay.text += "红方虚拟护盾：" + (_campStatus[CampT.Red].virtualShield ? "是" : "否") + '\n';
 
                     if (_localRobot == null)
                     {
@@ -1096,7 +1115,9 @@ namespace Script.Networking
                         largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
                         expDisplay.text = "经验值：" + Math.Round(_localRobot.experience, 1);
                         moneyDisplay.text =
-                            "团队金钱：" + (_localRobot.role.Camp == CampT.Red ? _redMoney : _blueMoney);
+                            "团队金钱：" + (_localRobot.role.Camp == CampT.Red
+                                ? _campStatus[CampT.Red].money
+                                : _campStatus[CampT.Blue].money);
                         operationProcess.fillAmount = 0;
                         if (_localRobot is GroundControllerBase)
                         {
@@ -1141,8 +1162,8 @@ namespace Script.Networking
                                 if (drone.raidStart > 0)
                                     extraDisplay.text +=
                                         "空中支援剩余" + Mathf.RoundToInt(30 - (Time.time - drone.raidStart)) + "秒\n";
-                                else if (drone.role.Camp == CampT.Red && _redMoney >= 400 ||
-                                         drone.role.Camp == CampT.Blue && _blueMoney >= 400)
+                                else if (drone.role.Camp == CampT.Red && _campStatus[CampT.Red].money >= 400 ||
+                                         drone.role.Camp == CampT.Blue && _campStatus[CampT.Blue].money >= 400)
                                     extraDisplay.text += "按H兑换空中支援\n";
                                 extraDisplay.text += "导弹剩余" + (4 - drone.dartCount) + "次\n";
                                 if (drone.dartCount < 4)

@@ -25,15 +25,15 @@ namespace Script.Controller
         {
             if (type == MineType.Gold)
             {
-                if (_gameManager.playing)
+                if (_gameManager.globalStatus.playing)
                 {
-                    if (_gameManager.countDown <= 405)
+                    if (_gameManager.globalStatus.countDown <= 405)
                     {
                         if (index == 2 || index == 4)
                             GetComponent<Rigidbody>().isKinematic = false;
                     }
 
-                    if (_gameManager.countDown <= 240)
+                    if (_gameManager.globalStatus.countDown <= 240)
                     {
                         if (index == 1 || index == 3 || index == 5)
                             GetComponent<Rigidbody>().isKinematic = false;

@@ -17,9 +17,9 @@ namespace Script.Controller
         {
             if (_gm)
             {
-                if (_gm.playing)
+                if (_gm.globalStatus.playing)
                 {
-                    if (_gm.countDown <= 408 && _gm.countDown >= 406)
+                    if (_gm.globalStatus.countDown <= 408 && _gm.globalStatus.countDown >= 406)
                     {
                         if (index == 2 || index == 4)
                         {
@@ -35,7 +35,7 @@ namespace Script.Controller
                         }
                     }
 
-                    if (_gm.countDown <= 243 && _gm.countDown >= 241)
+                    if (_gm.globalStatus.countDown <= 243 && _gm.globalStatus.countDown >= 241)
                     {
                         if (index == 1 || index == 3 || index == 5)
                         {

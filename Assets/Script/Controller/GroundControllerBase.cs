@@ -626,6 +626,12 @@ namespace Script.Controller
                                 Buffs.Add(new AidBuff(1.2f));
                     }
                 }
+
+                // 经验自然增长
+                if (role.IsInfantry())
+                    experience += (0.2f / 12) * Time.fixedDeltaTime;
+                if (role.Type == TypeT.Hero)
+                    experience += (0.4f / 12) * Time.fixedDeltaTime;
             }
 
             if (isLocalRobot)
@@ -1029,12 +1035,6 @@ namespace Script.Controller
                     highFreq = true;
                 }
 
-                // 经验自然增长
-                if (role.IsInfantry())
-                    experience += (0.2f / 12) * Time.fixedDeltaTime;
-                if (role.Type == TypeT.Hero)
-                    experience += (0.4f / 12) * Time.fixedDeltaTime;
-
                 // 特殊角度导航
                 if (Input.GetKey(KeyCode.Q) && !_isNav)
                 {
@@ -1131,13 +1131,5 @@ namespace Script.Controller
                 _lastAngle = this.transform.rotation.eulerAngles;
             }
         }
-
-        // private void OnCollisionEnter(Collision other)
-        // {
-        //     if (other.gameObject.name == "Arena21")
-        //     {
-        //         GetComponent<Rigidbody>().velocity = Vector3.zero;
-        //     }
-        // }
     }
 }

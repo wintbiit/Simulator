@@ -262,6 +262,11 @@ PrefabInstance:
       propertyPath: IsTriangle
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7689317982515293378, guid: 4e1d5caa80035d44eaa92a5ab65e48c3,
+        type: 3}
+      propertyPath: isTriangle
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4e1d5caa80035d44eaa92a5ab65e48c3, type: 3}
 --- !u!4 &1453395482657791829 stripped
