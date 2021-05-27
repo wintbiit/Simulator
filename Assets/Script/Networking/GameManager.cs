@@ -23,7 +23,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
-using Object = System.Object;
 using Random = System.Random;
 using TypeT = Script.JudgeSystem.Role.TypeT;
 
@@ -469,12 +468,6 @@ namespace Script.Networking
                                     {
                                         break;
                                     }
-                                    // if (_robotBases.First(r =>
-                                    //     r.Value.role.Equals(new RoleT(_facilityBases[hitEvent.Target].role.Camp,
-                                    //         TypeT.Guard))).Value.health > 0)
-                                    // {
-                                    //     break;
-                                    // }
                                 }
 
                                 float protect;
@@ -483,6 +476,8 @@ namespace Script.Networking
                                     if (hitEvent.Caliber == CaliberT.Large)
                                         damage += _robotBases[hitEvent.Hitter].GetAttr().DamageRate *
                                                   (hitEvent.IsTriangle ? 200 : 100);
+                                    else
+                                        damage = 5 * _robotBases[hitEvent.Hitter].GetAttr().DamageRate;
                                     protect = damage * (1 - _facilityBases[hitEvent.Target].GetArmorRate());
                                 }
                                 else protect = new Random().Next(3) == 0 ? 0 : 1000;
@@ -1004,20 +999,21 @@ namespace Script.Networking
                         }
                         else
                         {
-                            var healthDisplay = r.role.Camp == CampT.Red
+                            var display = r.role.Camp == CampT.Red
                                 ? redHealthDisplays.First(hd => hd.type == r.role.Type)
                                 : blueHealthDisplays.First(hd => hd.type == r.role.Type);
                             var healthRate = (float) r.health /
                                              RobotPerformanceTable.Table[r.level][r.role.Type][r.chassisType][r.gunType]
                                                  .HealthLimit;
-                            healthDisplay.bar.fillAmount = healthRate;
+                            display.bar.fillAmount = healthRate;
                             if (_localRobot && r.role.Camp == _localRobot.role.Camp)
                             {
                                 var mr = mapRobots.First(m => m.type == r.role.Type);
                                 mr.InitWithColor(_localRobot.role.Camp == CampT.Red ? Color.red : Color.blue);
                                 if (r.health == 0) mr.InitWithColor(Color.gray);
+                                var p = r.transform.position;
                                 mr.image.rectTransform.anchoredPosition = new Vector2(
-                                    r.transform.position.z * -1 * (83 / 13.6f), r.transform.position.x * (43 / 7.1f));
+                                    p.z * -1 * (83 / 13.6f), p.x * (43 / 7.1f));
                             }
                         }
                     }
@@ -1035,9 +1031,9 @@ namespace Script.Networking
                         {
                             var hd = f.role.Camp == CampT.Red ? redBaseHealthDisplay : blueBaseHealthDisplay;
                             hd.text = f.health.ToString();
-                            var healthDisplay = f.role.Camp == CampT.Red ? redBaseHealthBar : blueBaseHealthBar;
+                            var display = f.role.Camp == CampT.Red ? redBaseHealthBar : blueBaseHealthBar;
                             var healthRate = (float) f.health / f.healthLimit;
-                            healthDisplay.fillAmount = healthRate;
+                            display.fillAmount = healthRate;
                         }
                     }
 
@@ -1085,7 +1081,7 @@ namespace Script.Networking
                     {
                         smallAmmoDisplay.text = "17mm: " + _localRobot.smallAmmo;
                         largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
-                        expDisplay.text = "经验值：" + _localRobot.experience;
+                        expDisplay.text = "经验值：" + Math.Round(_localRobot.experience, 1);
                         moneyDisplay.text =
                             "团队金钱：" + (_localRobot.role.Camp == CampT.Red ? _redMoney : _blueMoney);
                         operationProcess.fillAmount = 0;

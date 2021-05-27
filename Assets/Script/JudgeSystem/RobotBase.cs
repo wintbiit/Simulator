@@ -899,7 +899,7 @@ namespace Script.JudgeSystem
             }
 
             [Command(ignoreAuthority = true)]
-            public void CmdConfirmed() => gameManager.confirmedCount++;
+            private void CmdConfirmed() => gameManager.confirmedCount++;
 
             public Attr GetAttr()
             {
@@ -923,7 +923,7 @@ namespace Script.JudgeSystem
             }
 
             [SyncVar] public bool registered = true;
-            private bool _ptzRegistered = false;
+            private bool _ptzRegistered;
 
             protected virtual void FixedUpdate()
             {

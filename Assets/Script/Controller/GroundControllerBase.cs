@@ -432,6 +432,8 @@ namespace Script.Controller
 
         private void Start()
         {
+            ScalableBufferManager.ResizeBuffers(0.2f, 0.2f);
+            Debug.Log(ScalableBufferManager.heightScaleFactor);
             tpCam.SetActive(false);
             fpCam.SetActive(false);
             ToggleMeshRenderer(chassis, true);
@@ -514,11 +516,26 @@ namespace Script.Controller
             RpcDrag(position);
         }
 
+        [Command(ignoreAuthority = true)]
+        private void CmdEndDrag()
+        {
+            RpcEndDrag();
+        }
+
         [ClientRpc]
         private void RpcDrag(Vector3 position)
         {
             if (isLocalRobot)
+            {
+                GetComponent<Rigidbody>().isKinematic = true;
                 transform.position = position;
+            }
+        }
+
+        [ClientRpc]
+        private void RpcEndDrag()
+        {
+            GetComponent<Rigidbody>().isKinematic = false;
         }
 
         [ClientRpc]
@@ -557,6 +574,11 @@ namespace Script.Controller
         public void Drag(Vector3 position)
         {
             CmdDrag(position);
+        }
+
+        public void EndDrag()
+        {
+            CmdEndDrag();
         }
 
         [ClientRpc]
@@ -920,7 +942,8 @@ namespace Script.Controller
                 if (climb < -8)
                 {
                     _climbing = true;
-                    _maxMotorTorque = oriMax * 8; // * (10/Math.Abs(GetComponent<Rigidbody>().velocity.z));
+                    _maxMotorTorque =
+                        oriMax * 8 * (-8 - climb); // * (10/Math.Abs(GetComponent<Rigidbody>().velocity.z));
                 }
                 else
                 {
@@ -1004,6 +1027,12 @@ namespace Script.Controller
                 {
                     highFreq = true;
                 }
+                
+                // 经验自然增长
+                if (role.IsInfantry())
+                    experience += (0.2f / 12) * Time.fixedDeltaTime;
+                if (role.Type == TypeT.Hero)
+                    experience += (0.4f / 12) * Time.fixedDeltaTime;
 
                 // 特殊角度导航
                 if (Input.GetKey(KeyCode.Q) && !_isNav)

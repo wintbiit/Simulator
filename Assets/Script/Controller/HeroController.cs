@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Mirror;
 using Script.JudgeSystem;
 using Script.JudgeSystem.Role;

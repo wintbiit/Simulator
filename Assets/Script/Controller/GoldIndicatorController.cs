@@ -11,15 +11,15 @@ namespace Script.Controller
 
         private bool _activated;
         private float _startTime;
+        private GameManager _gm;
 
         private void FixedUpdate()
         {
-            var gm = FindObjectOfType<GameManager>();
-            if (gm)
+            if (_gm)
             {
-                if (gm.playing)
+                if (_gm.playing)
                 {
-                    if (gm.countDown <= 408 && gm.countDown >= 406)
+                    if (_gm.countDown <= 408 && _gm.countDown >= 406)
                     {
                         if (index == 2 || index == 4)
                         {
@@ -35,7 +35,7 @@ namespace Script.Controller
                         }
                     }
 
-                    if (gm.countDown <= 243 && gm.countDown >= 241)
+                    if (_gm.countDown <= 243 && _gm.countDown >= 241)
                     {
                         if (index == 1 || index == 3 || index == 5)
                         {
@@ -51,7 +51,7 @@ namespace Script.Controller
                         }
                     }
                 }
-            }
+            } else _gm = FindObjectOfType<GameManager>();
         }
     }
 }

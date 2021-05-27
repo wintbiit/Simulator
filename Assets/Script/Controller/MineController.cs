@@ -1,5 +1,4 @@
-﻿using System;
-using Mirror;
+﻿using Mirror;
 using Script.Networking.Game;
 using UnityEngine;
 

@@ -170,13 +170,6 @@ namespace Script.Networking
                 }
             }
 
-
-            [Command(ignoreAuthority = true)]
-            private void CmdChangeReadyState(int index, bool state)
-            {
-                _readyStatus[index] = state;
-            }
-
             #endregion
 
             #region Client

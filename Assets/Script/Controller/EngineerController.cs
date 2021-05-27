@@ -121,7 +121,7 @@ namespace Script.Controller
                         else if (_drag)
                         {
                             _drag = false;
-                            _dragObject.GetComponent<Rigidbody>().isKinematic = false;
+                            _dragObject.GetComponent<GroundControllerBase>().EndDrag();
                         }
                         else if (bc != null && !_grab)
                         {
