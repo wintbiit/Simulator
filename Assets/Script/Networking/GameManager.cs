@@ -131,6 +131,13 @@ namespace Script.Networking
             }
         }
 
+        public class RecordFrame
+        {
+            public GlobalStatus GlobalStatus;
+            public CampStatus RedStatus;
+            public CampStatus BlueStatus;
+        }
+
         /*
          * 比赛管理器
          * + 保存队伍出生点
@@ -238,11 +245,13 @@ namespace Script.Networking
             // Data Refactor
             [SyncVar] public GlobalStatus globalStatus = new GlobalStatus();
 
-            private SyncDictionary<CampT, CampStatus> _campStatus = new SyncDictionary<CampT, CampStatus>
+            private readonly SyncDictionary<CampT, CampStatus> _campStatus = new SyncDictionary<CampT, CampStatus>
             {
                 {CampT.Red, new CampStatus()},
                 {CampT.Blue, new CampStatus()}
             };
+
+            private readonly List<RecordFrame> _recordFrames = new List<RecordFrame>();
 
             #region Server
 
@@ -407,12 +416,65 @@ namespace Script.Networking
             }
 
             [Server]
-            private void ServerFixedUpdate()
+            private void ResumeRecord(int frame)
+            {
+                if (frame >= 0 && frame < _recordFrames.Count)
+                {
+                    if (frame < _recordFrames.Count - 1)
+                        _recordFrames.RemoveRange(frame + 1, _recordFrames.Count - frame - 1);
+                    globalStatus = _recordFrames[frame].GlobalStatus;
+                    _campStatus[CampT.Red] = _recordFrames[frame].RedStatus;
+                    _campStatus[CampT.Blue] = _recordFrames[frame].BlueStatus;
+                    var smallBuffCdOffset = globalStatus.smallBuffColdDown - globalStatus.startTime;
+                    var largeBuffCdOffset = globalStatus.largeBuffColdDown - globalStatus.startTime;
+                    globalStatus.startTime = (int) Time.time - (gameTime - globalStatus.countDown);
+                    globalStatus.smallBuffColdDown = globalStatus.startTime + smallBuffCdOffset;
+                    globalStatus.largeBuffColdDown = globalStatus.startTime + largeBuffCdOffset;
+                }
+            }
+
+            [Server]
+            private void RecordFrame()
             {
                 // 强制数据同步
-                globalStatus = globalStatus.DeepCopy();
-                _campStatus[CampT.Red] = _campStatus[CampT.Red].DeepCopy();
-                _campStatus[CampT.Blue] = _campStatus[CampT.Blue].DeepCopy();
+                var newRecord = new RecordFrame
+                {
+                    GlobalStatus = globalStatus.DeepCopy(),
+                    RedStatus = _campStatus[CampT.Red].DeepCopy(),
+                    BlueStatus = _campStatus[CampT.Blue].DeepCopy(),
+                };
+                globalStatus = newRecord.GlobalStatus;
+                _campStatus[CampT.Red] = newRecord.RedStatus;
+                _campStatus[CampT.Blue] = newRecord.BlueStatus;
+                if (_started && !globalStatus.finished)
+                {
+                    _recordFrames.Add(newRecord);
+                    Debug.Log(_recordFrames.Count);
+                }
+                // FacilityBase
+                //  BaseController
+                //  EnergyMechanismController
+                //  OutpostController
+                // RobotBase
+                //  GroundControllerBase
+                //      EngineerController
+                //      HeroController
+                //      InfantryController
+                //  DroneController
+                //  GuardController
+                // BlockController
+                // GoldIndicatorController
+                // MineController
+            }
+
+            [Server]
+            private void ServerFixedUpdate()
+            {
+                RecordFrame();
+                if (Input.GetKeyDown(KeyCode.P))
+                {
+                    ResumeRecord(300);
+                }
 
                 if (!_started && confirmedCount == _roomManager.roomSlots.Count)
                 {

@@ -116,7 +116,7 @@ namespace Script.Controller
                         sp -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
                         var distance = sp.sqrMagnitude;
                         if (!(distance < minDistance)) continue;
-                        if ((t.transform.position - fpCam.transform.position).magnitude > 6.5f) continue;
+                        if ((t.transform.position - fpCam.transform.position).magnitude > 8) continue;
                         minDistance = distance;
                         target = t;
                     }
@@ -151,12 +151,7 @@ namespace Script.Controller
                         {
                             _predictInterval = Time.time - _lastPredictTime;
                             _lastPredictTime = Time.time;
-                            if (target == _lastTarget)
-                            {
-                                _prediction = targetPosition - _lastPosition;
-                                _prediction += Vector3.right * (flightTime * (0.02f * (_left ? 1 : -1)));
-                            }
-
+                            if (target == _lastTarget) _prediction = targetPosition - _lastPosition;
                             _lastTarget = target;
                             _lastPosition = targetPosition;
                         }
@@ -175,12 +170,10 @@ namespace Script.Controller
                         delta *= 10;
                         delta.y /= Screen.height;
                         delta.x /= Screen.width;
-                        var noise = Random.Range(-0.05f, 0.05f);
-                        delta += new Vector3(noise, noise, 0);
                         _pitchingSpeed -= 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f;
                         _steeringSpeed += 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f;
 
-                        if (_fireCd <= 0 && smallAmmo > 0)
+                        if (_fireCd <= 0 && smallAmmo > 0 && delta.magnitude < 65)
                         {
                             smallAmmo--;
                             Fire(0);
@@ -203,8 +196,8 @@ namespace Script.Controller
                     _steeringSpeed *= 0.9f;
                     _pitchingSpeed *= 0.9f;
 
-                    head.yaw.transform.Rotate(Vector3.up, _steeringSpeed);
-                    head.pitch.transform.Rotate(Vector3.forward, _pitchingSpeed);
+                    head.yaw.transform.Rotate(Vector3.up, _steeringSpeed * 2);
+                    head.pitch.transform.Rotate(Vector3.forward, _pitchingSpeed * 2);
                     SyncPtz(0, head.yaw.transform.rotation, head.pitch.transform.rotation);
                 }
             }
@@ -248,20 +241,21 @@ namespace Script.Controller
         {
             var gun = ptz[index].gun.transform;
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward * speed;
+            var realSpeed = speed * Random.Range(0.9f, 1.1f);
+            b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
             var bulletController = b.GetComponent<BulletController>();
             bulletController.owner = id;
             bulletController.isActive = true;
             // Destroy(b, 4);
-            FireRpc(index);
+            FireRpc(index, realSpeed);
         }
 
         [ClientRpc]
-        private void FireRpc(int index)
+        private void FireRpc(int index, float realSpeed)
         {
             var gun = ptz[index].gun.transform;
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward * speed;
+            b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
             // Destroy(b, 4);
         }
     }

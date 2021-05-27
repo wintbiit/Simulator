@@ -1655,7 +1655,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 3113422611850573222}
-  IsTriangle: 0
+  isTriangle: 0
 --- !u!1 &3824758814212177295
 GameObject:
   m_ObjectHideFlags: 0
@@ -2191,7 +2191,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 4052364596368704067}
-  IsTriangle: 0
+  isTriangle: 0
 --- !u!1 &4379869996527715787
 GameObject:
   m_ObjectHideFlags: 0
@@ -2545,7 +2545,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 4626528289088055267}
-  IsTriangle: 0
+  isTriangle: 0
 --- !u!1 &4969391446071074092
 GameObject:
   m_ObjectHideFlags: 0
@@ -3611,7 +3611,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 6595699056648737791}
-  IsTriangle: 0
+  isTriangle: 0
 --- !u!1 &6863491374032046926
 GameObject:
   m_ObjectHideFlags: 0
@@ -4898,6 +4898,11 @@ PrefabInstance:
       propertyPath: camera
       value: 
       objectReference: {fileID: 6768382220527965463}
+    - target: {fileID: 5306809395526194156, guid: a56223a923f96a9469a3fb17991320d2,
+        type: 3}
+      propertyPath: LaserOn
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_RootOrder
@@ -4906,17 +4911,17 @@ PrefabInstance:
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.0312
+      value: 0.025
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.0472
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.1283
+      value: 0.0942
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
@@ -4958,6 +4963,11 @@ PrefabInstance:
       propertyPath: camera
       value: 
       objectReference: {fileID: 6768382220527965463}
+    - target: {fileID: 8771704512621858865, guid: a56223a923f96a9469a3fb17991320d2,
+        type: 3}
+      propertyPath: LaserOn
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a56223a923f96a9469a3fb17991320d2, type: 3}
 --- !u!4 &933555781276822061 stripped

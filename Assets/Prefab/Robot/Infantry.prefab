@@ -402,7 +402,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 1102129739221381476}
-  IsTriangle: 0
+  isTriangle: 0
 --- !u!1 &2752303330134738270
 GameObject:
   m_ObjectHideFlags: 0
@@ -948,7 +948,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 4737290863926589826}
-  IsTriangle: 0
+  isTriangle: 0
 --- !u!1 &5713828992854330304
 GameObject:
   m_ObjectHideFlags: 0
@@ -2760,7 +2760,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 7327693399084656423}
-  IsTriangle: 0
+  isTriangle: 0
 --- !u!1 &7485096958754023062
 GameObject:
   m_ObjectHideFlags: 0
@@ -2862,7 +2862,7 @@ MonoBehaviour:
   blueLight: {fileID: 2100000, guid: 634da55eed14cdb4e8cb996c5ca4e17b, type: 2}
   noLight: {fileID: 0}
   label: {fileID: 7162447360272902088}
-  IsTriangle: 0
+  isTriangle: 0
 --- !u!1 &7497157465682700112
 GameObject:
   m_ObjectHideFlags: 0
@@ -3774,6 +3774,11 @@ PrefabInstance:
       propertyPath: camera
       value: 
       objectReference: {fileID: 6138098554603028437}
+    - target: {fileID: 5306809395526194156, guid: a56223a923f96a9469a3fb17991320d2,
+        type: 3}
+      propertyPath: LaserOn
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_RootOrder
@@ -3782,32 +3787,32 @@ PrefabInstance:
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 20
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 20
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 20
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.03
+      value: 0.68
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.03
+      value: 0.755
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.61
+      value: 4.23
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
@@ -3817,17 +3822,17 @@ PrefabInstance:
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
@@ -3849,6 +3854,11 @@ PrefabInstance:
       propertyPath: camera
       value: 
       objectReference: {fileID: 6138098554603028437}
+    - target: {fileID: 8771704512621858865, guid: a56223a923f96a9469a3fb17991320d2,
+        type: 3}
+      propertyPath: LaserOn
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a56223a923f96a9469a3fb17991320d2, type: 3}
 --- !u!4 &4373861198167262589 stripped

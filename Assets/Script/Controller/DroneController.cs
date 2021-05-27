@@ -68,6 +68,7 @@ namespace Script.Controller
         private float _predictInterval;
         private float _flightTime;
         private LineRenderer _visual;
+        private GameObject _target;
 
         [SyncVar] public float dartTill;
         [SyncVar] public int dartCount;
@@ -79,33 +80,29 @@ namespace Script.Controller
         private float _zOffset;
 
         [Command(ignoreAuthority = true)]
-        private void CmdFire()
+        private void CmdFire(float realSpeed)
         {
-            FireRpc();
+            FireRpc(realSpeed);
         }
 
         [ClientRpc]
-        private void FireRpc()
+        private void FireRpc(float realSpeed)
         {
             if (isLocalRobot && isPtz) return;
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward *
-                                                   RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
-                                                       .VelocityLimit;
-            // Destroy(b, 4);
+            b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
         }
 
         private void Fire()
         {
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            b.GetComponent<Rigidbody>().velocity = gun.forward *
-                                                   RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
-                                                       .VelocityLimit;
+            var realSpeed = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                .VelocityLimit * Random.Range(0.9f, 1.1f);
+            b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
             var bulletController = b.GetComponent<BulletController>();
             bulletController.owner = id;
             bulletController.isActive = true;
-            // Destroy(b, 4);
-            CmdFire();
+            CmdFire(realSpeed);
         }
 
         private bool IsGameObjectInCameraView(GameObject targetObj)
@@ -212,6 +209,7 @@ namespace Script.Controller
                                 _yOffset -= moveSpeed;
                             }
                         }
+
                         if (Input.GetKey(KeyCode.W))
                         {
                             if (_zOffset < 12)
@@ -225,8 +223,8 @@ namespace Script.Controller
                         {
                             if (_xOffset > -0.5)
                             {
-                               transform.Translate(Vector3.left * moveSpeed);
-                               _xOffset -= moveSpeed;
+                                transform.Translate(Vector3.left * moveSpeed);
+                                _xOffset -= moveSpeed;
                             }
                         }
 
@@ -346,21 +344,29 @@ namespace Script.Controller
 
                         if (Input.GetKey(KeyCode.V))
                         {
-                            var targets = FindObjectsOfType<ArmorController>()
-                                .Where(a => a.GetColor() != (role.Camp == CampT.Red ? ColorT.Red : ColorT.Blue) &&
-                                            a.GetColor() != ColorT.Down)
-                                .Where(a => IsGameObjectInCameraView(a.gameObject));
-                            var minDistance = float.MaxValue;
                             ArmorController target = null;
                             var fpCamera = cam.GetComponent<Camera>();
-                            foreach (var t in targets)
+                            if (!_target)
                             {
-                                var sp = fpCamera.WorldToScreenPoint(t.transform.position);
-                                sp -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
-                                var distance = sp.sqrMagnitude;
-                                if (!(distance < minDistance)) continue;
-                                minDistance = distance;
-                                target = t;
+                                var targets = FindObjectsOfType<ArmorController>()
+                                    .Where(a => a.GetColor() != (role.Camp == CampT.Red ? ColorT.Red : ColorT.Blue) &&
+                                                a.GetColor() != ColorT.Down)
+                                    .Where(a => IsGameObjectInCameraView(a.gameObject));
+                                var minDistance = float.MaxValue;
+                                foreach (var t in targets)
+                                {
+                                    var sp = fpCamera.WorldToScreenPoint(t.transform.position);
+                                    sp -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
+                                    var distance = sp.sqrMagnitude;
+                                    if (!(distance < minDistance)) continue;
+                                    minDistance = distance;
+                                    target = t;
+                                    _target = t.gameObject;
+                                }
+                            }
+                            else
+                            {
+                                target = _target.GetComponent<ArmorController>();
                             }
 
                             if (target != null)
@@ -417,34 +423,35 @@ namespace Script.Controller
                                 delta *= 10;
                                 delta.y /= Screen.height;
                                 delta.x /= Screen.width;
-                                var noise = Random.Range(-0.16f, 0.16f);
-                                delta += new Vector3(noise, noise, 0);
+                                // var noise = Random.Range(-0.16f, 0.16f);
+                                // delta += new Vector3(noise, noise, 0);
                                 _pitchingSpeed -= 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f;
                                 _steeringSpeed += 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f;
 
-                                {
-                                    var vY0 = Mathf.Sin(theta) *
-                                              RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
-                                                  .VelocityLimit;
-                                    var xDir = new Vector3(targetPosition.x, 0, targetPosition.z) -
-                                               new Vector3(position.x, 0, position.z);
-                                    var points = new List<Vector3>();
-                                    for (float t = 0; t < _flightTime; t += 0.02f)
-                                    {
-                                        var sY = vY0 * t + 0.5f * g * Mathf.Pow(t, 2);
-                                        var point = position + xDir * (t / _flightTime) + Vector3.up * sY +
-                                                    Vector3.up * 0.05f;
-                                        points.Add(point);
-                                    }
-
-                                    _visual.positionCount = points.Count;
-                                    _visual.SetPositions(points.ToArray());
-                                    var gradient = _visual.colorGradient;
-                                    var colorKeys = gradient.colorKeys;
-                                    colorKeys[0].color = screenErr.magnitude > 25 ? Color.red : Color.green;
-                                    gradient.colorKeys = colorKeys;
-                                    _visual.colorGradient = gradient;
-                                }
+                                // {
+                                //     var vY0 = Mathf.Sin(theta) *
+                                //               RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                                //                   .VelocityLimit;
+                                //     var xDir = new Vector3(targetPosition.x, 0, targetPosition.z) -
+                                //                new Vector3(position.x, 0, position.z);
+                                //     var points = new List<Vector3>();
+                                //     for (float t = 0; t < _flightTime; t += 0.02f)
+                                //     {
+                                //         var sY = vY0 * t + 0.5f * g * Mathf.Pow(t, 2);
+                                //         var point = position + xDir * (t / _flightTime) + Vector3.up * sY +
+                                //                     Vector3.up * 0.05f;
+                                //         points.Add(point);
+                                //     }
+                                //
+                                //     _visual.positionCount = points.Count;
+                                //     _visual.SetPositions(points.ToArray());
+                                //     var gradient = _visual.colorGradient;
+                                //     var colorKeys = gradient.colorKeys;
+                                //     colorKeys[0].color = screenErr.magnitude > 25 ? Color.red : Color.green;
+                                //     gradient.colorKeys = colorKeys;
+                                //     _visual.colorGradient = gradient;
+                                // }
+                                _visual.positionCount = 0;
                                 Debug.DrawRay(position, vTargetPos + _prediction - position, Color.magenta);
                                 Debug.DrawRay(position, targetPosition - position, Color.red);
                                 Debug.DrawRay(position, vTargetPos - position, Color.yellow);
@@ -463,6 +470,7 @@ namespace Script.Controller
                         else
                         {
                             _visual.positionCount = 0;
+                            _target = null;
                         }
                     }
 
