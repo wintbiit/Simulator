@@ -236,7 +236,9 @@ namespace Script.Controller
             {
                 if (_enable)
                 {
-                    transform.Rotate(Vector3.forward, role.Camp == CampT.Red ? 1 : -1);
+                    var speed = 1.0f;
+                    if (_large) speed = 0.785f * Mathf.Sin(1.884f * Time.time) + 1.305f;
+                    transform.Rotate(Vector3.forward, role.Camp == CampT.Red ? speed : -speed);
                     if (branches.Any(b => b.Marker.Ok))
                         if (Time.time - _lastCheck > 2.5f)
                         {

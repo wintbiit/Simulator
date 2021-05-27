@@ -567,7 +567,7 @@ namespace Script.Controller
         {
             var b = Instantiate(bullet, gun.position, gun.rotation);
             var realSpeed = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
-                .VelocityLimit * Random.Range(0.9f, 1.1f);
+                .VelocityLimit * Random.Range(0.95f, 1.05f);
             b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
             var bulletController = b.GetComponent<BulletController>();
             bulletController.owner = id;

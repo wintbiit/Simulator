@@ -26,6 +26,10 @@ RoboMaster 比赛模拟器第三版。
 - [ ] 装甲板击中效果
 - [ ] 检查神符激活BUG
 
+## Nightly 2021/5/28
+
+![V1](Images/Version052821.png)
+
 ## Nightly 2021/5/26
 
 两次修复情况

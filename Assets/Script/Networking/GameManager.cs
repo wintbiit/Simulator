@@ -529,11 +529,11 @@ namespace Script.Networking
                 {
                     RecordFrame();
                 }
-
-                if (Input.GetKeyDown(KeyCode.P))
-                {
-                    ResumeRecord(300);
-                }
+                //
+                // if (Input.GetKeyDown(KeyCode.P))
+                // {
+                //     ResumeRecord(300);
+                // }
 
                 if (!_started && confirmedCount == _roomManager.roomSlots.Count)
                 {
@@ -588,6 +588,12 @@ namespace Script.Networking
                                 if (_robotBases.ContainsKey(hitEvent.Hitter) &&
                                     _robotBases[hitEvent.Hitter].role.Type == TypeT.Guard)
                                     _robotBases[hitEvent.Hitter].health += (int) protect / 5;
+                                if (_robotBases[hitEvent.Hitter].health >
+                                    RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
+                                        .HealthLimit)
+                                    _robotBases[hitEvent.Hitter].health =
+                                        RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
+                                            .HealthLimit;
                                 if (_robotBases[hitEvent.Target].health > 0)
                                 {
                                     _robotBases[hitEvent.Target].health -= (int) protect;
@@ -1320,6 +1326,14 @@ namespace Script.Networking
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.Jump)) extraDisplay.text += "飞坡增益" + "\n";
 
                         extraDisplay.text += "等级" + _localRobot.level + "\n";
+
+                        if (_localRobot.role.IsInfantry() || _localRobot.role.Type == TypeT.Hero)
+                        {
+                            var pitch = _localRobot.GetComponent<GroundControllerBase>().pitch
+                                .transform.localEulerAngles.x * -1;
+                            if (pitch < -180) pitch += 360;
+                            extraDisplay.text += "Pitch: " + Math.Round(pitch, 2) + "\n";
+                        }
 
                         extraDisplay.text += "己方备弹情况\n";
                         foreach (var r in _clientRobotBases.Where(r => r.role.Camp == _localRobot.role.Camp))
