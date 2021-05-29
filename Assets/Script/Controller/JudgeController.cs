@@ -17,7 +17,7 @@ namespace Script.Controller
             _isLocal = true;
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdConfirmLocal()
         {
             FindObjectOfType<GameManager>().confirmedCount++;
@@ -37,9 +37,12 @@ namespace Script.Controller
                 var rot = new Vector3(Input.GetAxis("Mouse Y") * -1, Input.GetAxis("Mouse X"), 0);
                 rot *= FindObjectOfType<GameManager>().GetSensitivity() * 5;
                 transform.Rotate(rot);
-                var x = t.localEulerAngles.x;
-                if (90 - Math.Abs(x) > 10)
-                    transform.Rotate(Vector3.back * t.rotation.eulerAngles.z);
+                transform.Rotate(Vector3.back * t.rotation.eulerAngles.z);
+                var up = Vector3.zero;
+                if (Input.GetKey(KeyCode.Space)) up += Vector3.up * 0.05f;
+                if (Input.GetKey(KeyCode.LeftControl)) up += Vector3.down * 0.05f;
+                if (Input.GetKey(KeyCode.LeftShift)) up *= 4;
+                transform.position += up;
             }
         }
     }

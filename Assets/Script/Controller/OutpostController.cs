@@ -83,7 +83,7 @@ namespace Script.Controller
             CmdHit(hitter, caliber, isTriangle);
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdHit(int hitter, CaliberT caliber, bool isTriangle)
         {
             var newEvent = new HitEvent(hitter, id, caliber) {IsTriangle = isTriangle};

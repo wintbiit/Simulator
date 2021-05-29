@@ -82,14 +82,14 @@ namespace Script.Networking
                 return new RoleT(CampT.Unknown, TypeT.Unknown);
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdStartGame()
             {
                 _roomManager.StartGame(_roles);
             }
 
             // 登记客户端信息
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdPlayerRegister(int connectionId, int index, string displayName)
             {
                 // 如果有重名玩家，先使用 ClientRpc 发送通知，延迟一秒等待通知送达，然后断开连接
@@ -115,7 +115,7 @@ namespace Script.Networking
                 _roomManager.Disconnect(connectionId);
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdDisconnect(int connectionId)
             {
                 _roomManager.Disconnect(connectionId);
@@ -141,7 +141,7 @@ namespace Script.Networking
                 }
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdSelectRole(int index, RoleT target)
             {
                 // 如果点击了当前已选角色的按钮，则取消选择

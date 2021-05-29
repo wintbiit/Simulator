@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3274032826758959522}
   - component: {fileID: 3274032826758959535}
   - component: {fileID: 3274032826758959532}
+  - component: {fileID: 3360871626448239252}
   m_Layer: 0
   m_Name: Judge
   m_TagString: Untagged
@@ -42,7 +43,7 @@ Camera:
   m_GameObject: {fileID: 3274032826758959520}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -106,3 +107,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+--- !u!124 &3360871626448239252
+Behaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3274032826758959520}
+  m_Enabled: 1

@@ -21,7 +21,8 @@ namespace Script.Controller
     public class MineController : NetworkBehaviour
     {
         public MineType type;
-        public int index;
+        [SyncVar] public int index;
+        [SyncVar] public int dropTime;
         private GameManager _gameManager;
 
         public MineControllerRecord RecordFrame()
@@ -39,6 +40,18 @@ namespace Script.Controller
         private void Start()
         {
             _gameManager = FindObjectOfType<GameManager>();
+            if (!isServer) return;
+            if (type == MineType.Gold)
+            {
+                if (index == 2 || index == 4)
+                {
+                    dropTime = 405 - Random.Range(3, 10);
+                }
+                else
+                {
+                    dropTime = 240 - Random.Range(3, 10);
+                }
+            }
         }
 
         private void FixedUpdate()
@@ -47,16 +60,9 @@ namespace Script.Controller
             {
                 if (_gameManager.globalStatus.playing)
                 {
-                    if (_gameManager.globalStatus.countDown <= 405)
+                    if (_gameManager.globalStatus.countDown <= dropTime)
                     {
-                        if (index == 2 || index == 4)
-                            GetComponent<Rigidbody>().isKinematic = false;
-                    }
-
-                    if (_gameManager.globalStatus.countDown <= 240)
-                    {
-                        if (index == 1 || index == 3 || index == 5)
-                            GetComponent<Rigidbody>().isKinematic = false;
+                        GetComponent<Rigidbody>().isKinematic = false;
                     }
                 }
             }
@@ -67,7 +73,7 @@ namespace Script.Controller
             CmdCollect();
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdCollect()
         {
             NetworkServer.Destroy(transform.gameObject);

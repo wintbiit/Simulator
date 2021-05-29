@@ -162,7 +162,7 @@ namespace Script.Controller
             }
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdSelect(int index)
         {
             Select(index);
@@ -183,7 +183,7 @@ namespace Script.Controller
             branches[index].light.material = down;
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdActive(int index)
         {
             branches[index].armor.ChangeColor(ColorT.Down);
@@ -201,7 +201,7 @@ namespace Script.Controller
             branches[index].Marker.Ok = true;
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdActivate()
         {
             if (isServer)
@@ -236,8 +236,7 @@ namespace Script.Controller
             {
                 if (_enable)
                 {
-                    var speed = 1.0f;
-                    if (_large) speed = 0.785f * Mathf.Sin(1.884f * Time.time) + 1.305f;
+                    var speed = _large ? 0.785f * Mathf.Sin(1.884f * Time.time) + 1.305f : 1;
                     transform.Rotate(Vector3.forward, role.Camp == CampT.Red ? speed : -speed);
                     if (branches.Any(b => b.Marker.Ok))
                         if (Time.time - _lastCheck > 2.5f)

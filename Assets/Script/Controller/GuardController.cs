@@ -22,9 +22,8 @@ namespace Script.Controller
         public Camera aim;
     }
 
-    public class GuardControllerRecord:RobotBaseRecord
+    public class GuardControllerRecord : RobotBaseRecord
     {
-        
     }
 
     public class GuardController : RobotBase, IVulnerable
@@ -128,7 +127,7 @@ namespace Script.Controller
                         sp -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
                         var distance = sp.sqrMagnitude;
                         if (!(distance < minDistance)) continue;
-                        if ((t.transform.position - fpCam.transform.position).magnitude > 6.5f) continue;
+                        if ((t.transform.position - fpCam.transform.position).magnitude > 7) continue;
                         minDistance = distance;
                         target = t;
                     }
@@ -218,7 +217,8 @@ namespace Script.Controller
                 _left = true;
             if (transform.position.x < XMin)
                 _left = false;
-            transform.localPosition += Vector3.right * ((_left ? -1 : 1) * 0.02f);
+            if (Random.Range(0, 40) == 20) _left = !_left;
+            transform.localPosition += Vector3.right * ((_left ? -1 : 1) * 0.015f);
         }
 
         public void Hit(int hitter, CaliberT caliber, bool isTriangle)
@@ -226,7 +226,7 @@ namespace Script.Controller
             CmdHit(hitter, caliber);
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdHit(int hitter, CaliberT caliber)
         {
             gameManager.Emit(new HitEvent(hitter, id, caliber));

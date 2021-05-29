@@ -28,7 +28,7 @@ namespace Script.Networking
                 GameObject.Find("Main Camera").GetComponent<LobbyManager>().PlayerRegister(this);
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void UpdateDisplayName(string n)
             {
                 displayName = n;

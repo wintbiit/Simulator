@@ -101,7 +101,7 @@ namespace Script.Controller
             return record;
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdFire(float realSpeed)
         {
             FireRpc(realSpeed);
@@ -152,7 +152,7 @@ namespace Script.Controller
             dartTill = Time.time + 60;
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdSyncPtz(Quaternion y, Quaternion p)
         {
             yaw.transform.rotation = y;
@@ -168,14 +168,14 @@ namespace Script.Controller
             pitch.transform.rotation = p;
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdAirRaid()
         {
             if (Time.time > raidTill)
                 gameManager.Emit(new AirRaidEvent(role.Camp));
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdDart()
         {
             gameManager.Emit(new DartEvent(role.Camp));

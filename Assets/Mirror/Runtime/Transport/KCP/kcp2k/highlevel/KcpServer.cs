@@ -36,10 +36,17 @@ namespace kcp2k
         //  8192, 8192 for 20k monsters
         public uint SendWindowSize;
         public uint ReceiveWindowSize;
+        // timeout in milliseconds
+        public int Timeout;
 
         // state
         Socket socket;
+#if UNITY_SWITCH
+        // switch does not support ipv6
+        EndPoint newClientEP = new IPEndPoint(IPAddress.Any, 0);
+#else
         EndPoint newClientEP = new IPEndPoint(IPAddress.IPv6Any, 0);
+#endif
         // IMPORTANT: raw receive buffer always needs to be of 'MTU' size, even
         //            if MaxMessageSize is larger. kcp always sends in MTU
         //            segments and having a buffer smaller than MTU would
@@ -58,7 +65,8 @@ namespace kcp2k
                          int FastResend = 0,
                          bool CongestionWindow = true,
                          uint SendWindowSize = Kcp.WND_SND,
-                         uint ReceiveWindowSize = Kcp.WND_RCV)
+                         uint ReceiveWindowSize = Kcp.WND_RCV,
+                         int Timeout = KcpConnection.DEFAULT_TIMEOUT)
         {
             this.OnConnected = OnConnected;
             this.OnData = OnData;
@@ -69,6 +77,7 @@ namespace kcp2k
             this.CongestionWindow = CongestionWindow;
             this.SendWindowSize = SendWindowSize;
             this.ReceiveWindowSize = ReceiveWindowSize;
+            this.Timeout = Timeout;
         }
 
         public bool IsActive() => socket != null;
@@ -82,9 +91,15 @@ namespace kcp2k
             }
 
             // listen
+#if UNITY_SWITCH
+            // Switch does not support ipv6
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket.Bind(new IPEndPoint(IPAddress.Any, port));
+#else
             socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp);
             socket.DualMode = true;
             socket.Bind(new IPEndPoint(IPAddress.IPv6Any, port));
+#endif
         }
 
         public void Send(int connectionId, ArraySegment<byte> segment, KcpChannel channel)
@@ -112,17 +127,31 @@ namespace kcp2k
             return "";
         }
 
+        // process incoming messages. should be called before updating the world.
         HashSet<int> connectionsToRemove = new HashSet<int>();
-        public void Tick()
+        public void TickIncoming()
         {
             while (socket != null && socket.Poll(0, SelectMode.SelectRead))
             {
                 try
                 {
+                    // NOTE: ReceiveFrom allocates.
+                    //   we pass our IPEndPoint to ReceiveFrom.
+                    //   receive from calls newClientEP.Create(socketAddr).
+                    //   IPEndPoint.Create always returns a new IPEndPoint.
+                    //   https://github.com/mono/mono/blob/f74eed4b09790a0929889ad7fc2cf96c9b6e3757/mcs/class/System/System.Net.Sockets/Socket.cs#L1761
                     int msgLength = socket.ReceiveFrom(rawReceiveBuffer, 0, rawReceiveBuffer.Length, SocketFlags.None, ref newClientEP);
                     //Log.Info($"KCP: server raw recv {msgLength} bytes = {BitConverter.ToString(buffer, 0, msgLength)}");
 
                     // calculate connectionId from endpoint
+                    // NOTE: IPEndPoint.GetHashCode() allocates.
+                    //  it calls m_Address.GetHashCode().
+                    //  m_Address is an IPAddress.
+                    //  GetHashCode() allocates for IPv6:
+                    //  https://github.com/mono/mono/blob/bdd772531d379b4e78593587d15113c37edd4a64/mcs/class/referencesource/System/net/System/Net/IPAddress.cs#L699
+                    //
+                    // => using only newClientEP.Port wouldn't work, because
+                    //    different connections can have the same port.
                     int connectionId = newClientEP.GetHashCode();
 
                     // IMPORTANT: detect if buffer was too small for the received
@@ -135,7 +164,7 @@ namespace kcp2k
                         if (!connections.TryGetValue(connectionId, out KcpServerConnection connection))
                         {
                             // create a new KcpConnection
-                            connection = new KcpServerConnection(socket, newClientEP, NoDelay, Interval, FastResend, CongestionWindow, SendWindowSize, ReceiveWindowSize);
+                            connection = new KcpServerConnection(socket, newClientEP, NoDelay, Interval, FastResend, CongestionWindow, SendWindowSize, ReceiveWindowSize, Timeout);
 
                             // DO NOT add to connections yet. only if the first message
                             // is actually the kcp handshake. otherwise it's either:
@@ -199,12 +228,12 @@ namespace kcp2k
                                 OnConnected.Invoke(connectionId);
                             };
 
-                            // now input the message & tick
+                            // now input the message & process received ones
                             // connected event was set up.
                             // tick will process the first message and adds the
                             // connection if it was the handshake.
                             connection.RawInput(rawReceiveBuffer, msgLength);
-                            connection.Tick();
+                            connection.TickIncoming();
 
                             // again, do not add to connections.
                             // if the first message wasn't the kcp handshake then
@@ -226,10 +255,11 @@ namespace kcp2k
                 catch (SocketException) {}
             }
 
-            // tick all server connections
+            // process inputs for all server connections
+            // (even if we didn't receive anything. need to tick ping etc.)
             foreach (KcpServerConnection connection in connections.Values)
             {
-                connection.Tick();
+                connection.TickIncoming();
             }
 
             // remove disconnected connections
@@ -240,6 +270,25 @@ namespace kcp2k
                 connections.Remove(connectionId);
             }
             connectionsToRemove.Clear();
+        }
+
+        // process outgoing messages. should be called after updating the world.
+        public void TickOutgoing()
+        {
+            // flush all server connections
+            foreach (KcpServerConnection connection in connections.Values)
+            {
+                connection.TickOutgoing();
+            }
+        }
+
+        // process incoming and outgoing for convenience.
+        // => ideally call ProcessIncoming() before updating the world and
+        //    ProcessOutgoing() after updating the world for minimum latency
+        public void Tick()
+        {
+            TickIncoming();
+            TickOutgoing();
         }
 
         public void Stop()

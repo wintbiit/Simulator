@@ -227,6 +227,8 @@ namespace Script.Networking
 
             public Image operationProcess;
 
+            public GameObject blurLayer;
+
             [Header("Drone Camera")] public GameObject redDCam;
             public GameObject blueDCam;
 
@@ -353,7 +355,7 @@ namespace Script.Networking
                 return true;
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdExchange(CampT camp, int value)
             {
                 switch (camp)
@@ -373,7 +375,7 @@ namespace Script.Networking
                 }
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdSupply(RoleT role, int origin)
             {
                 if (role.IsInfantry())
@@ -505,7 +507,7 @@ namespace Script.Networking
                 }
 
                 _recordFrames.Add(newRecord);
-                Debug.Log(_recordFrames.Count);
+                // Debug.Log(_recordFrames.Count);
                 // FacilityBase ok
                 //  BaseController ok
                 //  EnergyMechanismController ok
@@ -884,7 +886,7 @@ namespace Script.Networking
                 }
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdConfirmType(int id, ChassisT c, GunT g)
             {
                 var robot = _robotBases[id];
@@ -905,7 +907,7 @@ namespace Script.Networking
                 }
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdReset()
             {
                 Emit(new TimeEvent(JudgeSystem.Event.TypeT.Reset));
@@ -1019,6 +1021,7 @@ namespace Script.Networking
                 if (_judge)
                 {
                     GameObject.Find("Player").SetActive(false);
+                    blurLayer.SetActive(false);
                 }
 
                 var mesh = GameObject.Find("Arena21").GetComponent<MeshFilter>().sharedMesh;

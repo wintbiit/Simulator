@@ -340,15 +340,48 @@ namespace Script.Controller
         public void Hit(int hitter, CaliberT caliber, bool isTriangle)
         {
             if (isClient)
-                CmdHit(hitter, caliber);
+                if (_isSpin)
+                {
+                    if (level == 1)
+                    {
+                        if (Random.Range(0, 1) == 0) CmdHit(hitter, caliber);
+                    }
+                    else
+                    {
+                        if (Random.Range(0, 2) == 0) CmdHit(hitter, caliber);
+                    }
+                }
+                else CmdHit(hitter, caliber);
             else
             {
-                gameManager.Emit(new HitEvent(hitter, id, caliber));
-                HitRpc();
+                if (_isSpin)
+                {
+                    if (level == 1)
+                    {
+                        if (Random.Range(0, 1) == 0)
+                        {
+                            gameManager.Emit(new HitEvent(hitter, id, caliber));
+                            HitRpc();
+                        }
+                    }
+                    else
+                    {
+                        if (Random.Range(0, 2) == 0)
+                        {
+                            gameManager.Emit(new HitEvent(hitter, id, caliber));
+                            HitRpc();
+                        }
+                    }
+                }
+                else
+                {
+                    gameManager.Emit(new HitEvent(hitter, id, caliber));
+                    HitRpc();
+                }
             }
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdHit(int hitter, CaliberT caliber)
         {
             gameManager.Emit(new HitEvent(hitter, id, caliber));
@@ -500,31 +533,31 @@ namespace Script.Controller
             visualWheel.rotation = rotation;
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void SetSpin(bool spin)
         {
             _isSpin = spin;
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void SyncPitch(Quaternion rot)
         {
             SyncPitchRpc(rot);
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdFire(float realSpeed)
         {
             FireRpc(realSpeed);
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdDrag(Vector3 position)
         {
             RpcDrag(position);
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdEndDrag()
         {
             RpcEndDrag();
@@ -675,6 +708,9 @@ namespace Script.Controller
                     if (role.Type == TypeT.Engineer)
                         motor /= 3;
 
+                    if (Input.GetAxis("Mouse X") > 0.2f)
+                        motor /= 1.5f;
+
                     foreach (var axleInfo in axleInfos)
                     {
                         if (axleInfo.motor)
@@ -766,6 +802,11 @@ namespace Script.Controller
                     else
                     {
                         target = _target.GetComponent<ArmorController>();
+                        if (target.GetColor() == ColorT.Down)
+                        {
+                            _target = null;
+                            target = null;
+                        }
                     }
 
                     if (target != null)
@@ -888,6 +929,9 @@ namespace Script.Controller
                 _pitchingSpeed *= 0.9f;
 
                 // 车辆左右平移
+                var oriMax = _maxMotorTorque;
+                if (role.Type == TypeT.Engineer)
+                    _maxMotorTorque = oriMax / 2;
                 if (Cursor.lockState == CursorLockMode.Locked)
                 {
                     var angle = Math.Abs(transform.rotation.eulerAngles.z);
@@ -912,6 +956,8 @@ namespace Script.Controller
                                 / 8000);
                         }
                 }
+
+                _maxMotorTorque = oriMax;
 
                 if (Cursor.lockState == CursorLockMode.Locked && isLocalRobot)
                 {
@@ -943,8 +989,8 @@ namespace Script.Controller
                 if (con)
                 {
                     _maxMotorTorque =
-                        RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 4;
-                    capability -= 0.006f;
+                        RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2.5f;
+                    capability -= 0.0015f;
                     if (capability < 1e-2)
                         con = false;
                 }
@@ -957,7 +1003,7 @@ namespace Script.Controller
                         capability = 1;
                 }
 
-                var oriMax = _maxMotorTorque;
+                oriMax = _maxMotorTorque;
                 var climb = transform.localRotation.eulerAngles.x;
                 if (climb > 180) climb -= 360;
                 if (climb < -8)
@@ -971,6 +1017,11 @@ namespace Script.Controller
                     _climbing = false;
                     _maxMotorTorque = oriMax;
                 }
+
+                // 自旋减速
+                oriMax = _maxMotorTorque;
+                if (_isSpin) _maxMotorTorque = oriMax / 2;
+
 
                 // 射击
                 if (Cursor.lockState == CursorLockMode.Locked && Input.GetMouseButton(0))
@@ -1097,16 +1148,18 @@ namespace Script.Controller
             }
 
             // Spin效果
+            var maxAngleSpin = level > 1 ? 41 : 61;
+            var rotateAngle = level > 1 ? 9 : 6;
             if (health > 0 && role.Type != TypeT.Engineer)
             {
                 if (_angleSpin == 0 && _isSpin) _angleSpin = 1;
-                if (_angleSpin > 0 && _angleSpin < 61)
+                if (_angleSpin > 0 && _angleSpin < maxAngleSpin)
                 {
                     ToggleMeshRenderer(chassis, false);
                     ToggleMeshRenderer(spinner, true);
-                    spinner.Rotate(Vector3.up, 6);
+                    spinner.Rotate(Vector3.up, rotateAngle);
                     _angleSpin++;
-                    if (_angleSpin == 61)
+                    if (_angleSpin == maxAngleSpin)
                     {
                         if (!_isSpin)
                         {
@@ -1133,8 +1186,8 @@ namespace Script.Controller
             {
                 if (_antiCarCrash == 0)
                 {
-                    this.transform.rotation = Quaternion.Euler(_lastAngle);
-                    this.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                    transform.rotation = Quaternion.Euler(_lastAngle);
+                    GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
                 }
 
                 _antiCarCrash++;
@@ -1145,7 +1198,16 @@ namespace Script.Controller
             }
             else
             {
-                _lastAngle = this.transform.rotation.eulerAngles;
+                _lastAngle = transform.rotation.eulerAngles;
+            }
+        }
+
+        private void OnCollisionStay(Collision other)
+        {
+            if (other.gameObject.GetComponent<GroundControllerBase>())
+            {
+                var v = GetComponent<Rigidbody>().velocity;
+                GetComponent<Rigidbody>().velocity = new Vector3(v.x, v.y * 0.2f, v.z);
             }
         }
     }

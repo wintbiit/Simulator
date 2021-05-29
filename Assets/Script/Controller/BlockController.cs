@@ -37,7 +37,7 @@ namespace Script.Controller
             t.Rotate(Vector3.up * 90);
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdDrag(Vector3 p, Quaternion r)
         {
             var t = transform;

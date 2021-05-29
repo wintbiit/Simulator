@@ -931,7 +931,7 @@ namespace Script.JudgeSystem
                 CmdConfirmed();
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdConfirmed() => gameManager.confirmedCount++;
 
             public Attr GetAttr()
@@ -992,14 +992,14 @@ namespace Script.JudgeSystem
                 }
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdRegister()
             {
                 if (!registered) gameManager.RobotRegister(this);
                 registered = true;
             }
 
-            [Command(ignoreAuthority = true)]
+            [Command(requiresAuthority = false)]
             private void CmdPtzRegister()
             {
                 gameManager.PtzRegister();
