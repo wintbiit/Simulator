@@ -207,8 +207,8 @@ namespace Script.Controller
                     _steeringSpeed *= 0.9f;
                     _pitchingSpeed *= 0.9f;
 
-                    head.yaw.transform.Rotate(Vector3.up, _steeringSpeed * 2);
-                    head.pitch.transform.Rotate(Vector3.forward, _pitchingSpeed * 2);
+                    head.yaw.transform.Rotate(Vector3.up, _steeringSpeed * 1.6f);
+                    head.pitch.transform.Rotate(Vector3.forward, _pitchingSpeed * 1.6f);
                     SyncPtz(0, head.yaw.transform.rotation, head.pitch.transform.rotation);
                 }
             }

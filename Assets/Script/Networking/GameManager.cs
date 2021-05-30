@@ -333,7 +333,7 @@ namespace Script.Networking
                 for (var i = 0; i < 3; i++)
                 {
                     var order = i - seed;
-                    if (order < 0) order = 2 - order;
+                    if (order < 0) order = 2 + order + 1;
                     mineDropTimes[i + 2] -= 5 * order;
                 }
 
@@ -403,20 +403,14 @@ namespace Script.Networking
                 if (role.IsInfantry())
                 {
                     var i = _robotBases.First(r => r.Value.role.Equals(role)).Value;
-                    if (role.Camp == CampT.Red && _campStatus[CampT.Red].money >= 50 ||
-                        role.Camp == CampT.Blue && _campStatus[CampT.Blue].money >= 50)
+                    if (_campStatus[role.Camp].money >= 50)
                     {
-                        if (role.Camp == CampT.Red && _campStatus[CampT.Red].infantrySupplyAmount < 1500)
+                        if (_campStatus[role.Camp].infantrySupplyAmount < 1500)
                         {
-                            _campStatus[CampT.Red].money -= 50;
-                            _campStatus[CampT.Red].infantrySupplyAmount += 50;
+                            _campStatus[role.Camp].money -= 50;
+                            _campStatus[role.Camp].infantrySupplyAmount += 50;
                             i.smallAmmo = origin + 50;
-                        }
-                        else if (role.Camp == CampT.Blue && _campStatus[CampT.Blue].infantrySupplyAmount < 1500)
-                        {
-                            _campStatus[CampT.Blue].money -= 50;
-                            _campStatus[CampT.Blue].infantrySupplyAmount += 50;
-                            i.smallAmmo = origin + 50;
+                            ((InfantryController) i).Supply(origin + 50);
                         }
                     }
                 }
@@ -424,20 +418,14 @@ namespace Script.Networking
                 if (role.Type == TypeT.Hero)
                 {
                     var h = _robotBases.First(r => r.Value.role.Equals(role)).Value;
-                    if (role.Camp == CampT.Red && _campStatus[CampT.Red].money >= 75 ||
-                        role.Camp == CampT.Blue && _campStatus[CampT.Blue].money >= 75)
+                    if (_campStatus[role.Camp].money >= 75)
                     {
-                        if (role.Camp == CampT.Red && _campStatus[CampT.Red].heroSupplyAmount < 100)
+                        if (_campStatus[role.Camp].heroSupplyAmount < 100)
                         {
-                            _campStatus[CampT.Red].money -= 75;
-                            _campStatus[CampT.Red].heroSupplyAmount += 5;
+                            _campStatus[role.Camp].money -= 75;
+                            _campStatus[role.Camp].heroSupplyAmount += 5;
                             h.largeAmmo = origin + 5;
-                        }
-                        else if (role.Camp == CampT.Blue && _campStatus[CampT.Blue].heroSupplyAmount < 100)
-                        {
-                            _campStatus[CampT.Blue].money -= 75;
-                            _campStatus[CampT.Blue].heroSupplyAmount += 5;
-                            h.largeAmmo = origin + 5;
+                            ((HeroController) h).Supply(origin + 5);
                         }
                     }
                 }
@@ -1350,7 +1338,6 @@ namespace Script.Networking
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.SmallEnergy)) extraDisplay.text += "小神符" + '\n';
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.LargeEnergy)) extraDisplay.text += "大神符" + '\n';
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.Jump)) extraDisplay.text += "飞坡增益" + "\n";
-                        if (_localRobot.Buffs.Any(b => b.type == BuffT.Activator)) extraDisplay.text += "狙击点\n";
 
                         extraDisplay.text += "等级" + _localRobot.level + "\n";
 

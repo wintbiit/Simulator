@@ -354,7 +354,7 @@ MonoBehaviour:
     motor: 0
   maxSteeringSpeed: 4
   pitch: {fileID: 6009261709017031260}
-  maxPitchAngle: 60
+  maxPitchAngle: 80
   chassis: {fileID: 4903115676946126291}
   spinner: {fileID: 158335591970282043}
   gun: {fileID: 0}
@@ -374,6 +374,7 @@ MonoBehaviour:
   fpCam: {fileID: 6009261709017031260}
   capability: 0
   con: 0
+  laser: {fileID: 0}
   opProcess: 0
   reviveTime: 0
 --- !u!1 &637891227767829832

@@ -75,6 +75,12 @@ namespace Script.Controller
                         break;
                 }
             }
+            
+            [ClientRpc]
+            public void Supply(int ammo)
+            {
+                largeAmmo = ammo;
+            }
 
             private bool _oDown;
 

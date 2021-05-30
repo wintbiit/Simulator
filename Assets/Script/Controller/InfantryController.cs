@@ -26,7 +26,6 @@ namespace Script.Controller
             {
                 base.OnTriggerEnter(other);
                 if (!isServer) return;
-                Debug.Log(other.name);
                 if (other.name == "RS" || other.name == "BS")
                     atSupply = other.name == (role.Camp == CampT.Red ? "RS" : "BS");
             }
@@ -41,6 +40,12 @@ namespace Script.Controller
             }
 
             private bool _oDown;
+
+            [ClientRpc]
+            public void Supply(int ammo)
+            {
+                smallAmmo = ammo;
+            }
 
             private void Update()
             {
