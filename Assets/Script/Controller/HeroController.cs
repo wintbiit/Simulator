@@ -38,8 +38,9 @@ namespace Script.Controller
             protected override void OnTriggerEnter(Collider other)
             {
                 base.OnTriggerEnter(other);
-                // if (!isServer) return;
-                atSupply = other.name == (role.Camp == CampT.Red ? "RSZ" : "BSZ");
+                if (!isServer) return;
+                if (other.name == "RSZ" || other.name == "BSZ")
+                    atSupply = other.name == (role.Camp == CampT.Red ? "RSZ" : "BSZ");
                 switch (other.name)
                 {
                     case "BSP":
@@ -58,7 +59,7 @@ namespace Script.Controller
             protected override void OnTriggerExit(Collider other)
             {
                 base.OnTriggerExit(other);
-                // if (!isServer) return;
+                if (!isServer) return;
                 if (role.Camp == CampT.Red && other.name == "RSZ"
                     || role.Camp == CampT.Blue && other.name == "BSZ")
                     atSupply = false;

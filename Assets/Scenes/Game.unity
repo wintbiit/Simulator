@@ -9644,8 +9644,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 3.5455427, y: 1, z: 1.546998}
-  m_Center: {x: 0.076563835, y: 0, z: -0.38587523}
+  m_Size: {x: 3.5455427, y: 1.0529857, z: 1.546998}
+  m_Center: {x: 0.076563835, y: 0.026492834, z: -0.38587523}
 --- !u!4 &517286661
 Transform:
   m_ObjectHideFlags: 0
@@ -25342,6 +25342,7 @@ MonoBehaviour:
   blurLayer: {fileID: 839998074}
   redDCam: {fileID: 1801270946}
   blueDCam: {fileID: 1401984795}
+  mineDropTimes: 
   globalStatus:
     countDown: 0
     playing: 0
@@ -25368,6 +25369,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sceneId: 1015154991
   serverOnly: 0
+  visible: 0
   m_AssetId: 
   hasSpawned: 0
 --- !u!1 &1345729286
@@ -38408,8 +38410,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.43324813, y: 1.1714586, z: 3.0009964}
-  m_Center: {x: -0.21872266, y: -0.0857297, z: -0.05935118}
+  m_Size: {x: 0.39220038, y: 1.1714586, z: 3.0009964}
+  m_Center: {x: -0.23924653, y: -0.0857297, z: -0.059351183}
 --- !u!1 &2011410701
 GameObject:
   m_ObjectHideFlags: 0

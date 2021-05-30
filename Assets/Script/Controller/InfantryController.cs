@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Mirror;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
@@ -10,10 +10,10 @@ namespace Script.Controller
         public class InfantryControllerRecord : GroundControllerBaseRecord
         {
         }
-        
+
         public class InfantryController : GroundControllerBase
         {
-            public bool atSupply;
+            [SyncVar] public bool atSupply;
 
             public InfantryControllerRecord RecordFrame()
             {
@@ -25,12 +25,16 @@ namespace Script.Controller
             protected override void OnTriggerEnter(Collider other)
             {
                 base.OnTriggerEnter(other);
-                atSupply = other.name == (role.Camp == CampT.Red ? "RS" : "BS");
+                if (!isServer) return;
+                Debug.Log(other.name);
+                if (other.name == "RS" || other.name == "BS")
+                    atSupply = other.name == (role.Camp == CampT.Red ? "RS" : "BS");
             }
 
             protected override void OnTriggerExit(Collider other)
             {
                 base.OnTriggerExit(other);
+                if (!isServer) return;
                 if (role.Camp == CampT.Red && other.name == "RS"
                     || role.Camp == CampT.Blue && other.name == "BS")
                     atSupply = false;

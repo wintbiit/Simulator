@@ -127,7 +127,7 @@ namespace Script.Controller
                         sp -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
                         var distance = sp.sqrMagnitude;
                         if (!(distance < minDistance)) continue;
-                        if ((t.transform.position - fpCam.transform.position).magnitude > 7) continue;
+                        if ((t.transform.position - fpCam.transform.position).magnitude > 6.5f) continue;
                         minDistance = distance;
                         target = t;
                     }

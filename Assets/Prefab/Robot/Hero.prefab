@@ -1747,6 +1747,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sceneId: 0
   serverOnly: 0
+  visible: 0
   m_AssetId: 
   hasSpawned: 0
 --- !u!114 &1035028670030068871
@@ -1767,6 +1768,11 @@ MonoBehaviour:
   localPositionSensitivity: 0.01
   localRotationSensitivity: 0.01
   localScaleSensitivity: 0.01
+  compressRotation: 0
+  interpolateScale: 1
+  interpolateRotation: 1
+  interpolatePosition: 1
+  syncScale: 1
 --- !u!114 &502567192707288650
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1822,6 +1828,7 @@ MonoBehaviour:
   fpCam: {fileID: 883251184541810457}
   capability: 0
   con: 0
+  laser: {fileID: 4690545092737739316}
   atSupply: 0
 --- !u!1 &3947758989139783681
 GameObject:
@@ -2325,7 +2332,7 @@ GameObject:
   - component: {fileID: 2633360447015613431}
   - component: {fileID: 5609934373071490415}
   - component: {fileID: 4263090177026272422}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: chassis
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4929,6 +4936,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Laser
       objectReference: {fileID: 0}
+    - target: {fileID: 3775025177275134979, guid: a56223a923f96a9469a3fb17991320d2,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5306809395526194156, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: camera
@@ -4937,7 +4949,7 @@ PrefabInstance:
     - target: {fileID: 5306809395526194156, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: LaserOn
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
@@ -5002,10 +5014,16 @@ PrefabInstance:
     - target: {fileID: 8771704512621858865, guid: a56223a923f96a9469a3fb17991320d2,
         type: 3}
       propertyPath: LaserOn
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a56223a923f96a9469a3fb17991320d2, type: 3}
+--- !u!1 &4690545092737739316 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3775025177275134979, guid: a56223a923f96a9469a3fb17991320d2,
+    type: 3}
+  m_PrefabInstance: {fileID: 8465567237581200951}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &933555781276822061 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8759242364460086298, guid: a56223a923f96a9469a3fb17991320d2,

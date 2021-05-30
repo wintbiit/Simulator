@@ -53,6 +53,7 @@ namespace Script.Controller
         public ActivatorBuff()
         {
             type = BuffT.Activator;
+            timeOut = float.MaxValue;
         }
     }
 
@@ -170,6 +171,10 @@ namespace Script.Controller
         private float _flightTime;
         private LineRenderer _visual;
         private GameObject _target;
+
+        // 激光
+        public GameObject laser;
+        private bool _laser;
 
         // 辅助变量
         private float _steeringSpeed;
@@ -686,6 +691,17 @@ namespace Script.Controller
                         health = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit;
                     }
                 }
+
+                if (health == 0)
+                {
+                    foreach (var axleInfo in axleInfos.Where(axleInfo => axleInfo.motor))
+                    {
+                        axleInfo.leftWheel.motorTorque = 0;
+                        axleInfo.rightWheel.motorTorque = 0;
+                    }
+
+                    GetComponent<Rigidbody>().velocity /= 1.15f;
+                }
             }
 
             if (isLocalRobot && health > 0)
@@ -989,7 +1005,7 @@ namespace Script.Controller
                 if (con)
                 {
                     _maxMotorTorque =
-                        RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 2.5f;
+                        RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 4;
                     capability -= 0.0015f;
                     if (capability < 1e-2)
                         con = false;
@@ -1102,6 +1118,15 @@ namespace Script.Controller
                 {
                     highFreq = true;
                 }
+
+                // 开关激光
+                if (role.Type != TypeT.Engineer && Input.GetKey(KeyCode.L) && !_laser)
+                {
+                    _laser = true;
+                    laser.SetActive(!laser.activeSelf);
+                }
+
+                if (!Input.GetKey(KeyCode.L)) _laser = false;
 
                 // 特殊角度导航
                 if (Input.GetKey(KeyCode.Q) && !_isNav)

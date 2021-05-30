@@ -31,7 +31,7 @@ namespace Script.Controller
         public void Hit(int hitter, CaliberT caliber, bool isTriangle)
         {
             if (Object.FindObjectsOfType<RobotBase>().First(r => r.id == hitter).Buffs
-                .Any(b => b.type != BuffT.Activator))
+                .Any(b => b.type == BuffT.Activator))
             {
                 if (!Ok)
                     Ok = true;
@@ -125,7 +125,7 @@ namespace Script.Controller
         {
             _enable = true;
             _large = large;
-            _current = Random.Range(0, 5);
+            _current = Random.Range(0, 5); 
             Select(_current);
         }
 
@@ -162,12 +162,6 @@ namespace Script.Controller
             }
         }
 
-        [Command(requiresAuthority = false)]
-        private void CmdSelect(int index)
-        {
-            Select(index);
-        }
-
         [Server]
         private void Select(int index)
         {
@@ -201,11 +195,10 @@ namespace Script.Controller
             branches[index].Marker.Ok = true;
         }
 
-        [Command(requiresAuthority = false)]
-        private void CmdActivate()
+        [Server]
+        private void Activate()
         {
-            if (isServer)
-                gameManager.Emit(new BuffActivateEvent(role.Camp, _large));
+            gameManager.Emit(new BuffActivateEvent(role.Camp, _large));
         }
 
         protected override void FixedUpdate()
@@ -218,16 +211,6 @@ namespace Script.Controller
                     if (branches[_current].Marker.Ok)
                     {
                         CmdActive(_current);
-                        if (branches.All(b => b.Marker.Ok)) CmdActivate();
-                        else
-                        {
-                            while (branches[_current].Marker.Ok)
-                            {
-                                _current = Random.Range(0, 5);
-                            }
-
-                            CmdSelect(_current);
-                        }
                     }
                 }
             }
@@ -238,6 +221,17 @@ namespace Script.Controller
                 {
                     var speed = _large ? 0.785f * Mathf.Sin(1.884f * Time.time) + 1.305f : 1;
                     transform.Rotate(Vector3.forward, role.Camp == CampT.Red ? speed : -speed);
+                    if (branches.All(b => b.Marker.Ok)) Activate();
+                    else
+                    {
+                        while (branches[_current].Marker.Ok)
+                        {
+                            _current = Random.Range(0, 5);
+                        }
+
+                        Select(_current);
+                    }
+
                     if (branches.Any(b => b.Marker.Ok))
                         if (Time.time - _lastCheck > 2.5f)
                         {

@@ -111,6 +111,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114092700928582892, guid: 7b8076038aa3198489c992619f779dad,
         type: 3}
+      propertyPath: EndFlare
+      value: 
+      objectReference: {fileID: 8762643014090645349}
+    - target: {fileID: 114092700928582892, guid: 7b8076038aa3198489c992619f779dad,
+        type: 3}
       propertyPath: EndWidth
       value: 0.004
       objectReference: {fileID: 0}
@@ -139,12 +144,38 @@ PrefabInstance:
       propertyPath: LaserMask.m_Bits
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 123303022164910914, guid: 7b8076038aa3198489c992619f779dad,
+        type: 3}
+      propertyPath: m_Color.b
+      value: 0.01845169
+      objectReference: {fileID: 0}
+    - target: {fileID: 123303022164910914, guid: 7b8076038aa3198489c992619f779dad,
+        type: 3}
+      propertyPath: m_Color.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 123536070850683268, guid: 7b8076038aa3198489c992619f779dad,
+        type: 3}
+      propertyPath: m_Color.b
+      value: 0.01845169
+      objectReference: {fileID: 0}
+    - target: {fileID: 123536070850683268, guid: 7b8076038aa3198489c992619f779dad,
+        type: 3}
+      propertyPath: m_Color.g
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 64694155976642248, guid: 7b8076038aa3198489c992619f779dad, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 7b8076038aa3198489c992619f779dad, type: 3}
 --- !u!4 &5197294540040879096 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4708567100542200, guid: 7b8076038aa3198489c992619f779dad,
+    type: 3}
+  m_PrefabInstance: {fileID: 5201874945178302208}
+  m_PrefabAsset: {fileID: 0}
+--- !u!123 &5297964709349938820 stripped
+LensFlare:
+  m_CorrespondingSourceObject: {fileID: 123536070850683268, guid: 7b8076038aa3198489c992619f779dad,
     type: 3}
   m_PrefabInstance: {fileID: 5201874945178302208}
   m_PrefabAsset: {fileID: 0}
@@ -227,6 +258,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114446864398736282, guid: 62ebe07833974694994fc80566840c1f,
         type: 3}
+      propertyPath: EndFlare
+      value: 
+      objectReference: {fileID: 8762643014090645349}
+    - target: {fileID: 114446864398736282, guid: 62ebe07833974694994fc80566840c1f,
+        type: 3}
       propertyPath: EndWidth
       value: 0.001
       objectReference: {fileID: 0}
@@ -235,6 +271,11 @@ PrefabInstance:
       propertyPath: StartWidth
       value: 0.001
       objectReference: {fileID: 0}
+    - target: {fileID: 114446864398736282, guid: 62ebe07833974694994fc80566840c1f,
+        type: 3}
+      propertyPath: SourceFlare
+      value: 
+      objectReference: {fileID: 5297964709349938820}
     - target: {fileID: 114446864398736282, guid: 62ebe07833974694994fc80566840c1f,
         type: 3}
       propertyPath: LaserColor.a
@@ -255,12 +296,38 @@ PrefabInstance:
       propertyPath: LaserMask.m_Bits
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 123544921432839374, guid: 62ebe07833974694994fc80566840c1f,
+        type: 3}
+      propertyPath: m_Color.b
+      value: 0.01845169
+      objectReference: {fileID: 0}
+    - target: {fileID: 123544921432839374, guid: 62ebe07833974694994fc80566840c1f,
+        type: 3}
+      propertyPath: m_Color.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 123744904775759806, guid: 62ebe07833974694994fc80566840c1f,
+        type: 3}
+      propertyPath: m_Color.b
+      value: 0.01845169
+      objectReference: {fileID: 0}
+    - target: {fileID: 123744904775759806, guid: 62ebe07833974694994fc80566840c1f,
+        type: 3}
+      propertyPath: m_Color.g
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 64827242927738442, guid: 62ebe07833974694994fc80566840c1f, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 62ebe07833974694994fc80566840c1f, type: 3}
 --- !u!4 &8656707820686610971 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4239662478498224, guid: 62ebe07833974694994fc80566840c1f,
+    type: 3}
+  m_PrefabInstance: {fileID: 8659791060523846571}
+  m_PrefabAsset: {fileID: 0}
+--- !u!123 &8762643014090645349 stripped
+LensFlare:
+  m_CorrespondingSourceObject: {fileID: 123544921432839374, guid: 62ebe07833974694994fc80566840c1f,
     type: 3}
   m_PrefabInstance: {fileID: 8659791060523846571}
   m_PrefabAsset: {fileID: 0}

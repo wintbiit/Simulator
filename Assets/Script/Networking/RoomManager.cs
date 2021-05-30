@@ -42,7 +42,7 @@ namespace Script.Networking
             public string LocalDisplayName { set; get; }
 
             // WebSocket 服务
-            private WsApi _wsApi;
+            // private WsApi _wsApi;
 
             // 服务端侧成员
             private LobbyManager _lobbyManager;
@@ -103,8 +103,8 @@ namespace Script.Networking
                     case "Assets/Scenes/Game.unity":
                         _gameManager = GameObject.Find("Main Camera").GetComponent<GameManager>();
                         _gameManager.RoomManagerRegister(this);
-                        if (_wsApi != null)
-                            _wsApi.SetGameManager(_gameManager);
+                        // if (_wsApi != null)
+                        //     _wsApi.SetGameManager(_gameManager);
                         break;
                 }
             }
@@ -392,7 +392,7 @@ namespace Script.Networking
             private void FixedUpdate()
             {
                 if (!IsServer) return;
-                _wsApi?.OnFixedUpdate();
+                // _wsApi?.OnFixedUpdate();
                 if (_gameManager == null) return;
                 if (_connections.Count != 0) return;
                 ResetServer();
@@ -413,7 +413,7 @@ namespace Script.Networking
                 _roles.Clear();
                 _connections.Clear();
                 _facilitiesInitiated = false;
-                _wsApi.Stop();
+                // _wsApi.Stop();
             }
 
             #endregion
@@ -427,8 +427,8 @@ namespace Script.Networking
             public override void OnRoomStartServer()
             {
                 IsServer = true;
-                if (_wsApi == null)
-                    _wsApi = new WsApi(this);
+                // if (_wsApi == null)
+                //     _wsApi = new WsApi(this);
             }
 
             public override void OnGUI()

@@ -43,14 +43,7 @@ namespace Script.Controller
             if (!isServer) return;
             if (type == MineType.Gold)
             {
-                if (index == 2 || index == 4)
-                {
-                    dropTime = 405 - Random.Range(3, 10);
-                }
-                else
-                {
-                    dropTime = 240 - Random.Range(3, 10);
-                }
+                dropTime = _gameManager.mineDropTimes[index - 1];
             }
         }
 

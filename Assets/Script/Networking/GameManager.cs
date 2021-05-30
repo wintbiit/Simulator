@@ -248,6 +248,8 @@ namespace Script.Networking
             private List<FacilityBase> _clientFacilityBases = new List<FacilityBase>();
             private int _slowDecisionUpdate;
 
+            public List<int> mineDropTimes = new List<int>();
+
             // Data Refactor
             [SyncVar] public GlobalStatus globalStatus = new GlobalStatus();
 
@@ -257,7 +259,7 @@ namespace Script.Networking
                 {CampT.Blue, new CampStatus()}
             };
 
-            private readonly List<RecordFrame> _recordFrames = new List<RecordFrame>();
+            // private readonly List<RecordFrame> _recordFrames = new List<RecordFrame>();
 
             #region Server
 
@@ -317,7 +319,27 @@ namespace Script.Networking
             [Server]
             private void ServerStart()
             {
+                var rand = new Random();
                 globalStatus.countDown = gameTime;
+                mineDropTimes.Add(405);
+                mineDropTimes.Add(405);
+                var seed = rand.Next(0, 2);
+                for (var i = 0; i < 2; i++)
+                    mineDropTimes[i] -= (seed + i) % 2 == 0 ? 5 : 0;
+                mineDropTimes.Add(240);
+                mineDropTimes.Add(240);
+                mineDropTimes.Add(240);
+                seed = rand.Next(0, 3);
+                for (var i = 0; i < 3; i++)
+                {
+                    var order = i - seed;
+                    if (order < 0) order = 2 - order;
+                    mineDropTimes[i + 2] -= 5 * order;
+                }
+
+                var tmp = mineDropTimes[3];
+                mineDropTimes[3] = mineDropTimes[0];
+                mineDropTimes[0] = tmp;
             }
 
             [Server]
@@ -421,29 +443,29 @@ namespace Script.Networking
                 }
             }
 
-            [Server]
-            private void ResumeRecord(int frame)
-            {
-                if (frame >= 0 && frame < _recordFrames.Count)
-                {
-                    if (frame < _recordFrames.Count - 1)
-                        _recordFrames.RemoveRange(frame + 1, _recordFrames.Count - frame - 1);
-                    // Resume Global & Camp
-                    globalStatus = _recordFrames[frame].GlobalStatus;
-                    _campStatus[CampT.Red] = _recordFrames[frame].RedStatus;
-                    _campStatus[CampT.Blue] = _recordFrames[frame].BlueStatus;
-                    var smallBuffCdOffset = globalStatus.smallBuffColdDown - globalStatus.startTime;
-                    var largeBuffCdOffset = globalStatus.largeBuffColdDown - globalStatus.startTime;
-                    globalStatus.startTime = (int) Time.time - (gameTime - globalStatus.countDown);
-                    globalStatus.smallBuffColdDown = globalStatus.startTime + smallBuffCdOffset;
-                    globalStatus.largeBuffColdDown = globalStatus.startTime + largeBuffCdOffset;
-                    // Resume Robots
-                    // Resume Facilities
-                    // Resume Mine & Blocks
-                    // Other status
-                    // TimeEvents
-                }
-            }
+            // [Server]
+            // private void ResumeRecord(int frame)
+            // {
+            //     if (frame >= 0 && frame < _recordFrames.Count)
+            //     {
+            //         if (frame < _recordFrames.Count - 1)
+            //             _recordFrames.RemoveRange(frame + 1, _recordFrames.Count - frame - 1);
+            //         // Resume Global & Camp
+            //         globalStatus = _recordFrames[frame].GlobalStatus;
+            //         _campStatus[CampT.Red] = _recordFrames[frame].RedStatus;
+            //         _campStatus[CampT.Blue] = _recordFrames[frame].BlueStatus;
+            //         var smallBuffCdOffset = globalStatus.smallBuffColdDown - globalStatus.startTime;
+            //         var largeBuffCdOffset = globalStatus.largeBuffColdDown - globalStatus.startTime;
+            //         globalStatus.startTime = (int) Time.time - (gameTime - globalStatus.countDown);
+            //         globalStatus.smallBuffColdDown = globalStatus.startTime + smallBuffCdOffset;
+            //         globalStatus.largeBuffColdDown = globalStatus.startTime + largeBuffCdOffset;
+            //         // Resume Robots
+            //         // Resume Facilities
+            //         // Resume Mine & Blocks
+            //         // Other status
+            //         // TimeEvents
+            //     }
+            // }
 
             [Server]
             private void RecordFrame()
@@ -458,55 +480,55 @@ namespace Script.Networking
                 globalStatus = newRecord.GlobalStatus;
                 _campStatus[CampT.Red] = newRecord.RedStatus;
                 _campStatus[CampT.Blue] = newRecord.BlueStatus;
-                foreach (var rb in FindObjectsOfType<RobotBase>())
-                {
-                    if (rb.role.IsInfantry())
-                        newRecord.RobotBaseRecords.Add(((InfantryController) rb).RecordFrame());
-                    else
-                        switch (rb.role.Type)
-                        {
-                            case TypeT.Engineer:
-                                newRecord.RobotBaseRecords.Add(((EngineerController) rb).RecordFrame());
-                                break;
-                            case TypeT.Hero:
-                                newRecord.RobotBaseRecords.Add(((HeroController) rb).RecordFrame());
-                                break;
-                            case TypeT.Drone:
-                                newRecord.RobotBaseRecords.Add(((DroneController) rb).RecordFrame());
-                                break;
-                            case TypeT.Guard:
-                                newRecord.RobotBaseRecords.Add(((GuardController) rb).RecordFrame());
-                                break;
-                        }
-                }
-
-                foreach (var fb in FindObjectsOfType<FacilityBase>())
-                {
-                    switch (fb.role.Type)
-                    {
-                        case TypeT.Base:
-                            newRecord.FacilityBaseRecords.Add(((BaseController) fb).RecordFrame());
-                            break;
-                        case TypeT.EnergyMechanism:
-                            newRecord.FacilityBaseRecords.Add(((EnergyMechanismController) fb).RecordFrame());
-                            break;
-                        case TypeT.Outpost:
-                            newRecord.FacilityBaseRecords.Add(((OutpostController) fb).RecordFrame());
-                            break;
-                    }
-                }
-
-                foreach (var bc in FindObjectsOfType<BlockController>())
-                {
-                    newRecord.BlockControllerRecords.Add(bc.RecordFrame());
-                }
-
-                foreach (var mc in FindObjectsOfType<MineController>())
-                {
-                    newRecord.MineControllers.Add(mc.RecordFrame());
-                }
-
-                _recordFrames.Add(newRecord);
+                // foreach (var rb in FindObjectsOfType<RobotBase>())
+                // {
+                //     if (rb.role.IsInfantry())
+                //         newRecord.RobotBaseRecords.Add(((InfantryController) rb).RecordFrame());
+                //     else
+                //         switch (rb.role.Type)
+                //         {
+                //             case TypeT.Engineer:
+                //                 newRecord.RobotBaseRecords.Add(((EngineerController) rb).RecordFrame());
+                //                 break;
+                //             case TypeT.Hero:
+                //                 newRecord.RobotBaseRecords.Add(((HeroController) rb).RecordFrame());
+                //                 break;
+                //             case TypeT.Drone:
+                //                 newRecord.RobotBaseRecords.Add(((DroneController) rb).RecordFrame());
+                //                 break;
+                //             case TypeT.Guard:
+                //                 newRecord.RobotBaseRecords.Add(((GuardController) rb).RecordFrame());
+                //                 break;
+                //         }
+                // }
+                //
+                // foreach (var fb in FindObjectsOfType<FacilityBase>())
+                // {
+                //     switch (fb.role.Type)
+                //     {
+                //         case TypeT.Base:
+                //             newRecord.FacilityBaseRecords.Add(((BaseController) fb).RecordFrame());
+                //             break;
+                //         case TypeT.EnergyMechanism:
+                //             newRecord.FacilityBaseRecords.Add(((EnergyMechanismController) fb).RecordFrame());
+                //             break;
+                //         case TypeT.Outpost:
+                //             newRecord.FacilityBaseRecords.Add(((OutpostController) fb).RecordFrame());
+                //             break;
+                //     }
+                // }
+                //
+                // foreach (var bc in FindObjectsOfType<BlockController>())
+                // {
+                //     newRecord.BlockControllerRecords.Add(bc.RecordFrame());
+                // }
+                //
+                // foreach (var mc in FindObjectsOfType<MineController>())
+                // {
+                //     newRecord.MineControllers.Add(mc.RecordFrame());
+                // }
+                //
+                // _recordFrames.Add(newRecord);
                 // Debug.Log(_recordFrames.Count);
                 // FacilityBase ok
                 //  BaseController ok
@@ -527,7 +549,7 @@ namespace Script.Networking
             [Server]
             private void ServerFixedUpdate()
             {
-                if (_started && !globalStatus.finished)
+                if (_started) // && !globalStatus.finished)
                 {
                     RecordFrame();
                 }
@@ -1218,6 +1240,7 @@ namespace Script.Networking
                     countDownDisplay.text = minute + ":" + (second < 10 ? "0" : "") + second;
 
                     extraDisplay.text = "";
+                    extraDisplay.text += "连接延迟：" + $"{Math.Round(NetworkTime.rtt * 1000)}ms\n";
                     extraDisplay.text += "蓝方基地无敌：" +
                                          (_clientFacilityBases.First(fb =>
                                              fb.role.Equals(new RoleT(CampT.Blue, TypeT.Outpost))).health > 0
@@ -1327,6 +1350,7 @@ namespace Script.Networking
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.SmallEnergy)) extraDisplay.text += "小神符" + '\n';
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.LargeEnergy)) extraDisplay.text += "大神符" + '\n';
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.Jump)) extraDisplay.text += "飞坡增益" + "\n";
+                        if (_localRobot.Buffs.Any(b => b.type == BuffT.Activator)) extraDisplay.text += "狙击点\n";
 
                         extraDisplay.text += "等级" + _localRobot.level + "\n";
 
@@ -1369,7 +1393,7 @@ namespace Script.Networking
             [Client]
             public void Disconnect()
             {
-                if (isServer)
+                if (_roomManager && _roomManager.IsHost)
                     _roomManager.ResetServer();
                 FindObjectOfType<RoomManager>().StopClient();
                 SceneManager.LoadScene("Index");
