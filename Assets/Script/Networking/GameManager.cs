@@ -63,6 +63,13 @@ namespace Script.Networking
         }
 
         [Serializable]
+        public class StatusDisplay
+        {
+            public TypeT type;
+            public RawImage status;
+        }
+
+        [Serializable]
         public class MapRobot
         {
             public TypeT type;
@@ -180,6 +187,10 @@ namespace Script.Networking
 
             public List<HealthDisplay> redHealthDisplays = new List<HealthDisplay>();
             public List<HealthDisplay> blueHealthDisplays = new List<HealthDisplay>();
+            public List<StatusDisplay> redStatusDisplay = new List<StatusDisplay>();
+            public List<StatusDisplay> blueStatusDisplay = new List<StatusDisplay>();
+            public Texture protectStatus;
+            public Texture attackStatus;
             public Image redBaseHealthBar;
             public Image blueBaseHealthBar;
             public TMP_Text redBaseHealthDisplay;
@@ -208,6 +219,8 @@ namespace Script.Networking
             public TMP_Text levelDisplay;
             public TMP_Text capacityDisplay;
             public TMP_Text latencyDisplay;
+            public TMP_Text speedDisplay;
+            public TMP_Text ammoDisplay;
 
             public List<MapRobot> mapRobots = new List<MapRobot>();
 
@@ -1135,6 +1148,40 @@ namespace Script.Networking
                             }
                         }
 
+                        foreach (var sd in redStatusDisplay) sd.status.color = new Color(0, 0, 0, 0);
+                        foreach (var sd in blueStatusDisplay) sd.status.color = new Color(0, 0, 0, 0);
+                        foreach (var sd in redStatusDisplay)
+                            if (_clientRobotBases.Any(r => r.role.Equals(new RoleT(CampT.Red, sd.type))))
+                            {
+                                var robot = _clientRobotBases.First(r =>
+                                    r.role.Equals(new RoleT(CampT.Red, sd.type)));
+                                if (robot.health <
+                                    RobotPerformanceTable.Table[robot.level][robot.role.Type][robot.chassisType][
+                                        robot.gunType].HealthLimit * 0.75f)
+                                {
+                                    sd.status.texture = _localRobot.role.Camp == CampT.Red
+                                        ? protectStatus
+                                        : attackStatus;
+                                    sd.status.color = new Color32(230, 255, 177, 200);
+                                }
+                            }
+
+                        foreach (var sd in blueStatusDisplay)
+                            if (_clientRobotBases.Any(r => r.role.Equals(new RoleT(CampT.Blue, sd.type))))
+                            {
+                                var robot = _clientRobotBases.First(r =>
+                                    r.role.Equals(new RoleT(CampT.Blue, sd.type)));
+                                if (robot.health <
+                                    RobotPerformanceTable.Table[robot.level][robot.role.Type][robot.chassisType][
+                                        robot.gunType].HealthLimit * 0.75f)
+                                {
+                                    sd.status.texture = _localRobot.role.Camp == CampT.Blue
+                                        ? protectStatus
+                                        : attackStatus;
+                                    sd.status.color = new Color32(230, 255, 177, 200);
+                                }
+                            }
+
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
                         deadHint.SetActive(_localRobot.health == 0);
                         if (_localRobot.role.Type != TypeT.Engineer)
@@ -1232,7 +1279,7 @@ namespace Script.Networking
                     countDownDisplay.text = minute + ":" + (second < 10 ? "0" : "") + second;
 
                     extraDisplay.text = "";
-                    latencyDisplay.text = "latency: " + $"{Math.Round(NetworkTime.rtt * 1000)}ms";
+                    latencyDisplay.text = $"{Math.Round(NetworkTime.rtt * 1000)}ms";
                     // extraDisplay.text += "latency: " + $"{Math.Round(NetworkTime.rtt * 1000)}ms\n";
                     // extraDisplay.text += "blue base: " +
                     //                      (_clientFacilityBases.First(fb =>
@@ -1257,8 +1304,14 @@ namespace Script.Networking
                     }
                     else
                     {
-                        smallAmmoDisplay.text = "17mm: " + _localRobot.smallAmmo;
-                        largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
+                        // smallAmmoDisplay.text = "17mm: " + _localRobot.smallAmmo;
+                        // largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
+                        ammoDisplay.text = "0";
+                        if (_localRobot.smallAmmo != 0) ammoDisplay.text = _localRobot.smallAmmo.ToString();
+                        if (_localRobot.largeAmmo != 0) ammoDisplay.text = _localRobot.largeAmmo.ToString();
+                        speedDisplay.text =
+                            RobotPerformanceTable.Table[_localRobot.level][_localRobot.role.Type][
+                                _localRobot.chassisType][_localRobot.gunType].VelocityLimit + "m/s";
                         expDisplay.text = "经验值：" + Math.Round(_localRobot.experience, 1);
                         moneyDisplay.text =
                             "团队金钱：" + (_localRobot.role.Camp == CampT.Red
@@ -1274,7 +1327,11 @@ namespace Script.Networking
                                                        RobotPerformanceTable.Table[ground.level][ground.role.Type][
                                                            ground.chassisType][
                                                            ground.gunType].HealthLimit;
-                            capacityDisplay.text = ground.role.Type != TypeT.Engineer ? "capacity: " + Math.Round(ground.capability, 4) * 100 + "%" : "";
+                            capacityDisplay.text = ground.role.Type != TypeT.Engineer
+                                ? Math.Round(ground.capability, 4) * 100 + "%"
+                                : "";
+                            capacityDisplay.color =
+                                ground.con ? new Color32(255, 116, 84, 220) : new Color32(83, 200, 255, 220);
                             // extraDisplay.text += "capacity: " + Math.Round(ground.capability, 4) * 100 + "%\n";
                         }
 
@@ -1284,7 +1341,8 @@ namespace Script.Networking
                             mineDisplay.text = "矿物价值：" + engineer.MineValue();
                             if (engineer.Buffs.Any(b => b.type == BuffT.EngineerRevive))
                             {
-                                extraDisplay.text += "revive in " + ((EngineerController) _localRobot).reviveTime + "\n";
+                                extraDisplay.text +=
+                                    "revive in " + ((EngineerController) _localRobot).reviveTime + "\n";
                             }
 
                             operationProcess.fillAmount = engineer.opProcess;
@@ -1353,7 +1411,7 @@ namespace Script.Networking
                             extraDisplay.text += "large em" + '\n';
                         if (_localRobot.Buffs.Any(b => b.type == BuffT.Jump)) extraDisplay.text += "fly buff" + "\n";
 
-                        levelDisplay.text = "level " + _localRobot.level;
+                        levelDisplay.text = _localRobot.level.ToString();
                         // extraDisplay.text += "level " + _localRobot.level + "\n";
 
                         if (_localRobot.role.IsInfantry() || _localRobot.role.Type == TypeT.Hero)
@@ -1361,7 +1419,7 @@ namespace Script.Networking
                             var pitch = _localRobot.GetComponent<GroundControllerBase>().pitch
                                 .transform.localEulerAngles.x * -1;
                             if (pitch < -180) pitch += 360;
-                            pitchDisplay.text = "Pitch: " + Math.Round(pitch, 2);
+                            pitchDisplay.text = Math.Round(pitch, 2) + " deg";
                             // extraDisplay.text += "Pitch: " + Math.Round(pitch, 2) + "\n";
                         }
 
