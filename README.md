@@ -1,144 +1,43 @@
-﻿# Simulator
+![](Images/Simulatior.png)
 
-RoboMaster 比赛模拟器第三版。
+*Simulator* 是华南理工大学华南虎战队为 **RoboMaster 2021 超级对抗赛** 开发的操作手训练模拟器。旨在方便战术推演、配合训练，为操作手提供不受限制的跑场、对战模拟环境。
+
+> "98% 的队伍在这里被打败，然后变得更强。" ———— ROBOMASTER
+
+[Release 日志](Releases.md)
+
+### 功能概要
+
+模拟器系统分为服务端与客户端两部分。
+
+服务端 **Server_{Version}.zip** 用于在局域网或公网服务器部署，以 headless 模式运行。
+
+客户端 **Client_{Version}.zip** 可独立运行本地跑图，也可以连接服务端实现多人对战。
+
+模拟器开发目标是实现 [规则手册](https://www.robomaster.com/zh-CN/resource/pages/announcement/1191) 中的所有赛制。目前已实现的功能有：
+
++ 参赛角色：裁判、英雄机器人、工程机器人、步兵机器人、飞手、云台手。
++ 比赛模式：本地跑图模式、联机对战模式。
++ 角色功能：
+  + 裁判：自由视角。
+  + 地面作战机器人：弹丸兑换、发射、击杀经验统计、升级、辅助瞄准、热量限制、小陀螺、激光瞄准。
+  + 工程机器人：采矿、兑换、刷卡（接近）复活、固连救援、自动复活、自动回血、搬运障碍块。
+  + 云台手：呼叫空中支援、辅助瞄准、发射弹丸、发射飞镖。
+  + 飞手：操控无人机运动。
++ 系统功能：
+  + 经济与经验自然增长。
+  + 建筑物与虚拟护盾机制。
+  + 底盘、发射机构类型选择，自动哨兵。
+  + 增益点、神符激活、矿石掉落、矿石指示灯、起伏路段。
+
+### 服务器部署
+
+服务端可以在 1 核 2G 的配置下流畅运行，其对带宽的要求根据客户端数量从 1Mbps 到 5Mbps 不等。
+
+部署客户端时 **需保证服务器 7777 端口 tcp、udp 畅通**，可通过临时关闭防火墙或添加出站规则实现。
+
+### 旧版模拟器项目
 
 [第一版 RoboSim](https://github.com/scutbot/RoboSim) 
 
 [第二版 Realive](https://github.com/scutbot/Realive)
-
-![Editor](Images/Editor.png)
-
-## Work In Progress
-
-- [x] 矿物掉落指示灯
-- [x] 机器人救援穿模
-- [x] 经验自然增长
-- [x] 弹丸伤害修正
-- [x] 超热量死亡提示问题
-- [ ] 裁判功能：控制比赛进程，判罚
-- [ ] 工程取矿过程
-- [ ] 矿物随机落下
-- [ ] 比赛结算页面
-- [ ] 机器人移动不连续、穿模
-- [ ] 修改天空盒
-- [ ] 摄像头拟真效果
-- [ ] 前哨站、基地灯条
-- [ ] 装甲板击中效果
-- [ ] 检查神符激活BUG
-
-## Nightly 2021/5/28
-
-![V1](Images/Version052821.png)
-
-## Nightly 2021/5/26
-
-两次修复情况
-
-![V1](Images/Version052621.png)
-![V2](Images/Version052521.png)
-
-## Nightly 2021/5/25
-
-两次测试情况及修复情况
-
-![T2](Images/TestRecord052421.png)
-![T1](Images/TestRecord052321.png)
-
-## 主要功能（未更新进度）
-
-+ 全兵种操控模拟
-+ 赛制模拟，包括经济、经验、神符等
-
-![GUI](Images/GUI.png)
-
-## 开发进度
-
-- [x] 准备大厅
-- [x] 机器人运动模型
-- [x] 补弹、采集、救援、搬运
-- [x] 自瞄、射击、飞镖机制
-- [x] 场地增益、复活机制
-- [ ] 裁判、云台手
-- [ ] 等级、底盘类型
-- [ ] 内置语音
-
-## 操作流程
-
-+ 运行软件，显示首页（登录界面）
-  + 输入用户名，按回车键，以单机跑图模式运行
-  + 输入用户名，输入服务器地址，按回车键，以客户端模式连接服务器
-  + 按 F1 键，以纯服务端模式运行（无后续操作）
-  + 按 Esc 键，退出软件
-+ 进入准备大厅页面
-  + 等待音频设备初始化（已跳过）
-  + 单机跑图模式下，点击选择角色，按 R 开始游戏
-  + 客户端模式下，点击选择角色，按 R 准备，等待裁判开始游戏
-  + 若音频设备初始化失败，可选择断开连接重连重试，或在无语音情况下继续运行
-  + 按 Esc 键，退出软件
-+ 进入比赛场景
-  + 按照特定角色操作进行操控
-
-## 项目结构
-
-项目分为三个场景：
-
-+ **Index** 登录界面，选择单机跑图、纯服务器或联机运行方式。
-  + `Assets/Scenes/Index.unity`
-+ **Lobby** 准备大厅，操作手进行角色选择。
-  + `Assets/Scenes/Lobby.unity`
-+ **Game** 比赛场景。
-  + `Assets/Scenes/Game.unity`
-
-每一个场景对应一个场景管理器，负责处理对应场景的 **UI 组件，键盘事件，对象变化（如倒计时影响神符）等**，分别为：
-
-+ `Assets/Script/Networking/IndexManager.cs`
-+ `Assets/Script/Networking/LobbyManager.cs`
-+ `Assets/Script/Networking/GameManager.cs`
-
-项目存在一个全局单例的房间管理器，用于 **在场景之间传递数据，生成玩家和机器人等**：
-
-+ `Assets/Script/Networking/RoomManager.cs`
-
-赛场上的每一个单元（如机器人、装甲板、子弹等）对应一种控制器。机器人控制器主要负责对应角色的移动、射击和特定功能实现。其他单元的控制器于机器人控制器相互配合完成赛制模拟。目前实现的控制器包括：
-
-+ `Assets/Script/Controller/InfantryController.cs`
-+ `Assets/Script/Controller/ArmorController.cs`
-+ `Assets/Script/Controller/BulletController.cs`
-
-具体代码实现中还包括其他类型和接口的定义。
-
-## 运行流程
-
-+ 启动软件，进入 **Index** 场景
-+ RoomManager 初始化，IndexManager 初始化
-+ 获得用户名等信息，以指定方式运行（Host、Server 或 Client）
-+ IndexManager 销毁
-
------
-
-+ 进入 **Lobby** 场景
-+ LobbyManager 初始化
-+ 服务端 RoomManager 生成 RoomPlayer 对象
-+ 本地 RoomPlayer 对象从本地 RoomManager 取得用户名
-+ 本地 RoomPlayer 对象向 LobbyManager 请求登记
-+ 登记完成后，本地 LobbyManager 执行音频设备初始化
-+ 等待音频初始化结果
-+ 操作手选择角色，裁判或操作手选择开始游戏
-+ RoomManager 从 LobbyManager 处取得角色选择信息
-+ LobbyManager 销毁
-
------
-
-+ 进入 **Game** 场景
-+ GameManager 初始化
-+ 服务端 RoomManager 生成 GamePlayer 和 Robot 对象
-+ 本地 GamePlayer 对象认领本地 Robot 对象
-+ （待续）
-
-## 开发安排
-
-+ 取得新地图模型
-+ 基础功能补全（准备室在线玩家显示等）
-+ 代码优化（ClientRpc 改 TargetRpc，UI操作提取到 Update 函数等）
-+ 设计赛制状态机
-+ 设计空中机器人运动模型
