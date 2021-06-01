@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using Mirror;
@@ -621,7 +622,8 @@ namespace Script.Networking
 
                                 var protect = damage * (1 - _robotBases[hitEvent.Target].GetAttr().ArmorRate);
                                 if (_robotBases.ContainsKey(hitEvent.Hitter) &&
-                                    _robotBases[hitEvent.Hitter].role.Type == TypeT.Guard)
+                                    _robotBases[hitEvent.Hitter].role.Type == TypeT.Guard &&
+                                    _robotBases[hitEvent.Hitter].health > 0)
                                     _robotBases[hitEvent.Hitter].health += (int) protect / 5;
                                 if (_robotBases[hitEvent.Hitter].health >
                                     RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
@@ -1119,11 +1121,27 @@ namespace Script.Networking
             {
                 if (_clientFacilityBases.Count > 0)
                 {
+                    var minute = (int) Math.Floor(globalStatus.countDown / 60.0f);
+                    var second = globalStatus.countDown % 60;
+                    if (minute == 0 && second <= 10)
+                        countDownDisplay.color = Color.red;
+                    if (globalStatus.finished)
+                    {
+                        countDownDisplay.color = Color.red;
+                        minute = 0;
+                        second = 10 + (globalStatus.countDown -
+                                       (gameTime - (globalStatus.finishTime - globalStatus.startTime)));
+                        if (second == 0)
+                            CmdReset();
+                    }
+
+                    countDownDisplay.text = minute + ":" + (second < 10 ? "0" : "") + second;
                     if (_judge)
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
                     // 信息显示更新
                     if (_localRobot)
                     {
+                        // Decision
                         _slowDecisionUpdate++;
                         if (_slowDecisionUpdate > 20)
                         {
@@ -1154,6 +1172,7 @@ namespace Script.Networking
                             }
                         }
 
+                        // Indicator
                         var wave = Mathf.Sin(Time.time * 6);
                         var op = _clientFacilityBases.First(r =>
                             r.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Outpost)));
@@ -1161,8 +1180,10 @@ namespace Script.Networking
                             ? new Color32(255, 70, 59, (byte) (200 * wave))
                             : new Color32(230, 255, 174, 200);
                         guardIndicator.color =
-                            _clientRobotBases.First(r => r.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Guard)))
-                                .health < RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
+                            _clientRobotBases.First(r =>
+                                    r.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Guard)))
+                                .health <
+                            RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
                                 .HealthLimit * 0.75f
                                 ? new Color32(255, 70, 59, (byte) (200 * wave))
                                 : new Color32(230, 255, 174, 200);
@@ -1179,7 +1200,7 @@ namespace Script.Networking
                                 ? new Color32(255, 70, 59, (byte) (200 * wave))
                                 : new Color32(230, 255, 174, 200);
 
-
+                        // Bot Status
                         foreach (var sd in redStatusDisplay) sd.status.color = new Color(0, 0, 0, 0);
                         foreach (var sd in blueStatusDisplay) sd.status.color = new Color(0, 0, 0, 0);
                         foreach (var sd in from sd in redStatusDisplay
@@ -1292,22 +1313,6 @@ namespace Script.Networking
                         redMoneyDisplay.text = _campStatus[CampT.Red].money.ToString();
                         blueMoneyDisplay.text = _campStatus[CampT.Blue].money.ToString();
 
-                        var minute = (int) Math.Floor(globalStatus.countDown / 60.0f);
-                        var second = globalStatus.countDown % 60;
-                        if (minute == 0 && second <= 10)
-                            countDownDisplay.color = Color.red;
-                        if (globalStatus.finished)
-                        {
-                            countDownDisplay.color = Color.red;
-                            minute = 0;
-                            second = 10 + (globalStatus.countDown -
-                                           (gameTime - (globalStatus.finishTime - globalStatus.startTime)));
-                            if (second == 0)
-                                CmdReset();
-                        }
-
-                        countDownDisplay.text = minute + ":" + (second < 10 ? "0" : "") + second;
-
                         extraDisplay.text = "";
                         latencyDisplay.text = $"{Math.Round(NetworkTime.rtt * 1000)}ms";
                         // extraDisplay.text += "latency: " + $"{Math.Round(NetworkTime.rtt * 1000)}ms\n";
@@ -1323,151 +1328,148 @@ namespace Script.Networking
                         //                          : "unavailable") + '\n';
                         // extraDisplay.text += "蓝方虚拟护盾：" + (_campStatus[CampT.Blue].virtualShield ? "是" : "否") + '\n';
                         // extraDisplay.text += "红方虚拟护盾：" + (_campStatus[CampT.Red].virtualShield ? "是" : "否") + '\n';
-
-                        if (_localRobot == null)
+                        // smallAmmoDisplay.text = "17mm: " + _localRobot.smallAmmo;
+                        // largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
+                        ammoDisplay.text = "0";
+                        if (_localRobot.smallAmmo != 0) ammoDisplay.text = _localRobot.smallAmmo.ToString();
+                        if (_localRobot.largeAmmo != 0) ammoDisplay.text = _localRobot.largeAmmo.ToString();
+                        speedDisplay.text =
+                            RobotPerformanceTable.Table[_localRobot.level][_localRobot.role.Type][
+                                _localRobot.chassisType][_localRobot.gunType].VelocityLimit + "m/s";
+                        experienceDisplay.text = Math.Round(_localRobot.experience, 1)
+                            .ToString(CultureInfo.InvariantCulture);
+                        // expDisplay.text = "经验值：" + Math.Round(_localRobot.experience, 1);
+                        // moneyDisplay.text =
+                        //     "团队金钱：" + (_localRobot.role.Camp == CampT.Red
+                        //         ? _campStatus[CampT.Red].money
+                        //         : _campStatus[CampT.Blue].money);
+                        operationProcess.fillAmount = 0;
+                        if (_localRobot is GroundControllerBase)
                         {
-                            var player = FindObjectsOfType<GamePlayer>().First(p => p.isLocalPlayer);
-                            if (player.role.Type == TypeT.Ptz)
-                            {
-                                loadingHint.SetActive(true);
-                            }
+                            var ground = _localRobot.GetComponent<GroundControllerBase>();
+                            // superCDisplay.color = ground.con ? Color.red : Color.green;
+                            // superCDisplay.fillAmount = ground.capability;
+                            healthDisplay.fillAmount = (float) ground.health /
+                                                       RobotPerformanceTable.Table[ground.level][ground.role.Type][
+                                                           ground.chassisType][
+                                                           ground.gunType].HealthLimit;
+                            capacityDisplay.text = ground.role.Type != TypeT.Engineer
+                                ? Math.Round(ground.capability, 4) * 100 + "%"
+                                : "";
+                            capacityDisplay.color =
+                                ground.con ? new Color32(255, 116, 84, 220) : new Color32(83, 200, 255, 220);
+                            // extraDisplay.text += "capacity: " + Math.Round(ground.capability, 4) * 100 + "%\n";
                         }
-                        else
+
+                        if (_localRobot.role.Type == TypeT.Engineer)
                         {
-                            // smallAmmoDisplay.text = "17mm: " + _localRobot.smallAmmo;
-                            // largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
-                            ammoDisplay.text = "0";
-                            if (_localRobot.smallAmmo != 0) ammoDisplay.text = _localRobot.smallAmmo.ToString();
-                            if (_localRobot.largeAmmo != 0) ammoDisplay.text = _localRobot.largeAmmo.ToString();
-                            speedDisplay.text =
-                                RobotPerformanceTable.Table[_localRobot.level][_localRobot.role.Type][
-                                    _localRobot.chassisType][_localRobot.gunType].VelocityLimit + "m/s";
-                            experienceDisplay.text = Math.Round(_localRobot.experience, 1).ToString();
-                            // expDisplay.text = "经验值：" + Math.Round(_localRobot.experience, 1);
-                            // moneyDisplay.text =
-                            //     "团队金钱：" + (_localRobot.role.Camp == CampT.Red
-                            //         ? _campStatus[CampT.Red].money
-                            //         : _campStatus[CampT.Blue].money);
-                            operationProcess.fillAmount = 0;
-                            if (_localRobot is GroundControllerBase)
+                            var engineer = _localRobot.GetComponent<EngineerController>();
+                            // mineDisplay.text = "矿物价值：" + engineer.MineValue();
+                            if (engineer.Buffs.Any(b => b.type == BuffT.EngineerRevive))
                             {
-                                var ground = _localRobot.GetComponent<GroundControllerBase>();
-                                // superCDisplay.color = ground.con ? Color.red : Color.green;
-                                // superCDisplay.fillAmount = ground.capability;
-                                healthDisplay.fillAmount = (float) ground.health /
-                                                           RobotPerformanceTable.Table[ground.level][ground.role.Type][
-                                                               ground.chassisType][
-                                                               ground.gunType].HealthLimit;
-                                capacityDisplay.text = ground.role.Type != TypeT.Engineer
-                                    ? Math.Round(ground.capability, 4) * 100 + "%"
-                                    : "";
-                                capacityDisplay.color =
-                                    ground.con ? new Color32(255, 116, 84, 220) : new Color32(83, 200, 255, 220);
-                                // extraDisplay.text += "capacity: " + Math.Round(ground.capability, 4) * 100 + "%\n";
+                                extraDisplay.text +=
+                                    "revive in " + ((EngineerController) _localRobot).reviveTime + "\n";
                             }
 
-                            if (_localRobot.role.Type == TypeT.Engineer)
+                            operationProcess.fillAmount = engineer.opProcess;
+                        }
+
+                        if (_localRobot.role.IsInfantry())
+                        {
+                            var infantry = _localRobot.GetComponent<InfantryController>();
+                            infantrySupplyHint.SetActive(infantry.atSupply);
+                        }
+
+                        if (_localRobot.role.Type == TypeT.Hero)
+                        {
+                            var hero = _localRobot.GetComponent<HeroController>();
+                            heroSupplyHint.SetActive(hero.atSupply);
+                        }
+
+                        if (_localRobot.role.Type == TypeT.Drone)
+                        {
+                            if (((DroneController) _localRobot).isPtz)
                             {
-                                var engineer = _localRobot.GetComponent<EngineerController>();
-                                // mineDisplay.text = "矿物价值：" + engineer.MineValue();
-                                if (engineer.Buffs.Any(b => b.type == BuffT.EngineerRevive))
-                                {
+                                var drone = _localRobot.GetComponent<DroneController>();
+                                if (drone.raidStart > 0)
                                     extraDisplay.text +=
-                                        "revive in " + ((EngineerController) _localRobot).reviveTime + "\n";
-                                }
-
-                                operationProcess.fillAmount = engineer.opProcess;
-                            }
-
-                            if (_localRobot.role.IsInfantry())
-                            {
-                                var infantry = _localRobot.GetComponent<InfantryController>();
-                                infantrySupplyHint.SetActive(infantry.atSupply);
-                            }
-
-                            if (_localRobot.role.Type == TypeT.Hero)
-                            {
-                                var hero = _localRobot.GetComponent<HeroController>();
-                                heroSupplyHint.SetActive(hero.atSupply);
-                            }
-
-                            if (_localRobot.role.Type == TypeT.Drone)
-                            {
-                                if (((DroneController) _localRobot).isPtz)
+                                        "air raid: " + Mathf.RoundToInt(30 - (Time.time - drone.raidStart)) +
+                                        " remain\n";
+                                else if (drone.role.Camp == CampT.Red && _campStatus[CampT.Red].money >= 400 ||
+                                         drone.role.Camp == CampT.Blue && _campStatus[CampT.Blue].money >= 400)
+                                    extraDisplay.text += "press H for an air raid\n";
+                                extraDisplay.text += "missile " + (4 - drone.dartCount) + "times remain\n";
+                                if (drone.dartCount < 4)
                                 {
-                                    var drone = _localRobot.GetComponent<DroneController>();
-                                    if (drone.raidStart > 0)
-                                        extraDisplay.text +=
-                                            "air raid: " + Mathf.RoundToInt(30 - (Time.time - drone.raidStart)) +
-                                            " remain\n";
-                                    else if (drone.role.Camp == CampT.Red && _campStatus[CampT.Red].money >= 400 ||
-                                             drone.role.Camp == CampT.Blue && _campStatus[CampT.Blue].money >= 400)
-                                        extraDisplay.text += "press H for an air raid\n";
-                                    extraDisplay.text += "missile " + (4 - drone.dartCount) + "times remain\n";
-                                    if (drone.dartCount < 4)
-                                    {
-                                        if (drone.dartTill > Time.time)
-                                            extraDisplay.text += "missile ready in: " +
-                                                                 Mathf.RoundToInt(drone.dartTill - Time.time) + "\n";
-                                        else
-                                            extraDisplay.text += "push Y to launch missile\n";
-                                    }
+                                    if (drone.dartTill > Time.time)
+                                        extraDisplay.text += "missile ready in: " +
+                                                             Mathf.RoundToInt(drone.dartTill - Time.time) + "\n";
+                                    else
+                                        extraDisplay.text += "push Y to launch missile\n";
+                                }
+                            }
+                            else
+                            {
+                                if (_localRobot.role.Camp == CampT.Red)
+                                {
+                                    redDCam.transform.LookAt(_localRobot.transform);
                                 }
                                 else
                                 {
-                                    if (_localRobot.role.Camp == CampT.Red)
-                                    {
-                                        redDCam.transform.LookAt(_localRobot.transform);
-                                    }
-                                    else
-                                    {
-                                        blueDCam.transform.LookAt(_localRobot.transform);
-                                    }
+                                    blueDCam.transform.LookAt(_localRobot.transform);
                                 }
                             }
+                        }
 
-                            var a = _localRobot.GetAttr();
-                            if (Math.Abs(a.DamageRate - 1) > 1e-2)
-                                extraDisplay.text += "attack buff: " + a.DamageRate * 100 + "%\n";
-                            if (Math.Abs(a.ArmorRate - 0) > 1e-2)
-                                extraDisplay.text += "protect buff: " + a.ArmorRate * 100 + "%\n";
-                            if (Math.Abs(a.ColdDownRate - 1) > 1e-2)
-                                extraDisplay.text += "cooldown buff: " + a.ColdDownRate * 100 + "%\n";
-                            if (Math.Abs(a.ReviveRate - 0) > 1e-2)
-                                extraDisplay.text += "revive buff: " + a.ReviveRate * 100 + "%\n";
+                        var a = _localRobot.GetAttr();
+                        if (Math.Abs(a.DamageRate - 1) > 1e-2)
+                            extraDisplay.text += "attack buff: " + a.DamageRate * 100 + "%\n";
+                        if (Math.Abs(a.ArmorRate - 0) > 1e-2)
+                            extraDisplay.text += "protect buff: " + a.ArmorRate * 100 + "%\n";
+                        if (Math.Abs(a.ColdDownRate - 1) > 1e-2)
+                            extraDisplay.text += "cooldown buff: " + a.ColdDownRate * 100 + "%\n";
+                        if (Math.Abs(a.ReviveRate - 0) > 1e-2)
+                            extraDisplay.text += "revive buff: " + a.ReviveRate * 100 + "%\n";
 
-                            if (_localRobot.Buffs.Any(b => b.type == BuffT.SmallEnergy))
-                                extraDisplay.text += "small em" + '\n';
-                            if (_localRobot.Buffs.Any(b => b.type == BuffT.LargeEnergy))
-                                extraDisplay.text += "large em" + '\n';
-                            if (_localRobot.Buffs.Any(b => b.type == BuffT.Jump))
-                                extraDisplay.text += "fly buff" + "\n";
+                        if (_localRobot.Buffs.Any(b => b.type == BuffT.SmallEnergy))
+                            extraDisplay.text += "small em" + '\n';
+                        if (_localRobot.Buffs.Any(b => b.type == BuffT.LargeEnergy))
+                            extraDisplay.text += "large em" + '\n';
+                        if (_localRobot.Buffs.Any(b => b.type == BuffT.Jump))
+                            extraDisplay.text += "fly buff" + "\n";
 
-                            levelDisplay.text = _localRobot.level.ToString();
-                            // extraDisplay.text += "level " + _localRobot.level + "\n";
+                        levelDisplay.text = _localRobot.level.ToString();
+                        // extraDisplay.text += "level " + _localRobot.level + "\n";
 
-                            if (_localRobot.role.IsInfantry() || _localRobot.role.Type == TypeT.Hero)
+                        if (_localRobot.role.IsInfantry() || _localRobot.role.Type == TypeT.Hero)
+                        {
+                            var pitch = _localRobot.GetComponent<GroundControllerBase>().pitch
+                                .transform.localEulerAngles.x * -1;
+                            if (pitch < -180) pitch += 360;
+                            pitchDisplay.text = Math.Round(pitch, 2) + " deg";
+                            // extraDisplay.text += "Pitch: " + Math.Round(pitch, 2) + "\n";
+                        }
+
+                        if (_localRobot.role.Type == TypeT.Ptz)
+                        {
+                            extraDisplay.text += "\n";
+                            foreach (var r in _clientRobotBases.Where(r => r.role.Camp == _localRobot.role.Camp))
                             {
-                                var pitch = _localRobot.GetComponent<GroundControllerBase>().pitch
-                                    .transform.localEulerAngles.x * -1;
-                                if (pitch < -180) pitch += 360;
-                                pitchDisplay.text = Math.Round(pitch, 2) + " deg";
-                                // extraDisplay.text += "Pitch: " + Math.Round(pitch, 2) + "\n";
-                            }
-
-                            if (_localRobot.role.Type == TypeT.Ptz)
-                            {
+                                extraDisplay.text += r.role.Type + " ";
+                                if (r.largeAmmo != 0)
+                                    extraDisplay.text += r.largeAmmo;
+                                if (r.smallAmmo != 0)
+                                    extraDisplay.text += r.smallAmmo;
                                 extraDisplay.text += "\n";
-                                foreach (var r in _clientRobotBases.Where(r => r.role.Camp == _localRobot.role.Camp))
-                                {
-                                    extraDisplay.text += r.role.Type + " ";
-                                    if (r.largeAmmo != 0)
-                                        extraDisplay.text += r.largeAmmo;
-                                    if (r.smallAmmo != 0)
-                                        extraDisplay.text += r.smallAmmo;
-                                    extraDisplay.text += "\n";
-                                }
                             }
+                        }
+                    }
+                    else
+                    {
+                        var player = FindObjectsOfType<GamePlayer>().First(p => p.isLocalPlayer);
+                        if (player.role.Type == TypeT.Ptz)
+                        {
+                            loadingHint.SetActive(true);
                         }
                     }
                 }
