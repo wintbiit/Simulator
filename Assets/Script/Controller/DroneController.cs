@@ -364,7 +364,7 @@ namespace Script.Controller
                             highFreq = true;
                         }
 
-                        if (Input.GetKey(KeyCode.V))
+                        if (Input.GetMouseButton(1))
                         {
                             ArmorController target = null;
                             var fpCamera = cam.GetComponent<Camera>();
@@ -389,6 +389,11 @@ namespace Script.Controller
                             else
                             {
                                 target = _target.GetComponent<ArmorController>();
+                                if (target.GetColor() == ColorT.Down)
+                                {
+                                    _target = null;
+                                    target = null;
+                                }
                             }
 
                             if (target != null)

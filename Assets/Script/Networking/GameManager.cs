@@ -91,6 +91,7 @@ namespace Script.Networking
             public int infantrySupplyAmount;
             public int heroSupplyAmount;
             public int airRaidAmount;
+            public int damage;
 
             public CampStatus DeepCopy()
             {
@@ -100,7 +101,8 @@ namespace Script.Networking
                     virtualShield = virtualShield,
                     infantrySupplyAmount = infantrySupplyAmount,
                     heroSupplyAmount = heroSupplyAmount,
-                    airRaidAmount = airRaidAmount
+                    airRaidAmount = airRaidAmount,
+                    damage = damage
                 };
             }
         }
@@ -277,7 +279,7 @@ namespace Script.Networking
             // Data Refactor
             [SyncVar] public GlobalStatus globalStatus = new GlobalStatus();
 
-            private readonly SyncDictionary<CampT, CampStatus> _campStatus = new SyncDictionary<CampT, CampStatus>
+            public readonly SyncDictionary<CampT, CampStatus> CampStatusMap = new SyncDictionary<CampT, CampStatus>
             {
                 {CampT.Red, new CampStatus()},
                 {CampT.Blue, new CampStatus()}
@@ -367,7 +369,7 @@ namespace Script.Networking
             }
 
             [Server]
-            private bool IsRedWin()
+            private int IsRedWin()
             {
                 var redBase = _facilityBases
                     .First(
@@ -382,7 +384,19 @@ namespace Script.Networking
                                 new RoleT(CampT.Blue, TypeT.Base)))
                     .Value;
                 if (redBase.health != blueBase.health)
-                    return redBase.health > blueBase.health;
+                    return redBase.health > blueBase.health ? 1 : -1;
+                var redGuard = _robotBases
+                    .First(
+                        r =>
+                            r.Value.role.Equals(
+                                new RoleT(CampT.Red, TypeT.Guard))).Value;
+                var blueGuard = _robotBases
+                    .First(
+                        r =>
+                            r.Value.role.Equals(
+                                new RoleT(CampT.Blue, TypeT.Guard))).Value;
+                if (redGuard.health != blueGuard.health)
+                    return redGuard.health > blueGuard.health ? 1 : -1;
                 var redOutpost = _facilityBases
                     .First(
                         f =>
@@ -396,9 +410,10 @@ namespace Script.Networking
                                 new RoleT(CampT.Blue, TypeT.Outpost)))
                     .Value;
                 if (redOutpost.health != blueOutpost.health)
-                    return redOutpost.health > blueOutpost.health;
-                // TODO: 伤害统计
-                return true;
+                    return redOutpost.health > blueOutpost.health ? 1 : -1;
+                if (CampStatusMap[CampT.Red].damage != CampStatusMap[CampT.Blue].damage)
+                    return CampStatusMap[CampT.Red].damage > CampStatusMap[CampT.Blue].damage ? 1 : -1;
+                return 0;
             }
 
             [Command(requiresAuthority = false)]
@@ -409,10 +424,10 @@ namespace Script.Networking
                     case CampT.Unknown:
                         break;
                     case CampT.Red:
-                        _campStatus[CampT.Red].money += value;
+                        CampStatusMap[CampT.Red].money += value;
                         break;
                     case CampT.Blue:
-                        _campStatus[CampT.Blue].money += value;
+                        CampStatusMap[CampT.Blue].money += value;
                         break;
                     case CampT.Judge:
                         break;
@@ -427,12 +442,12 @@ namespace Script.Networking
                 if (role.IsInfantry())
                 {
                     var i = _robotBases.First(r => r.Value.role.Equals(role)).Value;
-                    if (_campStatus[role.Camp].money >= 50)
+                    if (CampStatusMap[role.Camp].money >= 50)
                     {
-                        if (_campStatus[role.Camp].infantrySupplyAmount < 1500)
+                        if (CampStatusMap[role.Camp].infantrySupplyAmount < 1500)
                         {
-                            _campStatus[role.Camp].money -= 50;
-                            _campStatus[role.Camp].infantrySupplyAmount += 50;
+                            CampStatusMap[role.Camp].money -= 50;
+                            CampStatusMap[role.Camp].infantrySupplyAmount += 50;
                             i.smallAmmo = origin + 50;
                             ((InfantryController) i).Supply(origin + 50);
                         }
@@ -442,12 +457,12 @@ namespace Script.Networking
                 if (role.Type == TypeT.Hero)
                 {
                     var h = _robotBases.First(r => r.Value.role.Equals(role)).Value;
-                    if (_campStatus[role.Camp].money >= 75)
+                    if (CampStatusMap[role.Camp].money >= 75)
                     {
-                        if (_campStatus[role.Camp].heroSupplyAmount < 100)
+                        if (CampStatusMap[role.Camp].heroSupplyAmount < 100)
                         {
-                            _campStatus[role.Camp].money -= 75;
-                            _campStatus[role.Camp].heroSupplyAmount += 5;
+                            CampStatusMap[role.Camp].money -= 75;
+                            CampStatusMap[role.Camp].heroSupplyAmount += 5;
                             h.largeAmmo = origin + 5;
                             ((HeroController) h).Supply(origin + 5);
                         }
@@ -485,13 +500,13 @@ namespace Script.Networking
                 var newRecord = new RecordFrame
                 {
                     GlobalStatus = globalStatus.DeepCopy(),
-                    RedStatus = _campStatus[CampT.Red].DeepCopy(),
-                    BlueStatus = _campStatus[CampT.Blue].DeepCopy(),
+                    RedStatus = CampStatusMap[CampT.Red].DeepCopy(),
+                    BlueStatus = CampStatusMap[CampT.Blue].DeepCopy(),
                 };
                 // 强制数据同步   
                 globalStatus = newRecord.GlobalStatus;
-                _campStatus[CampT.Red] = newRecord.RedStatus;
-                _campStatus[CampT.Blue] = newRecord.BlueStatus;
+                CampStatusMap[CampT.Red] = newRecord.RedStatus;
+                CampStatusMap[CampT.Blue] = newRecord.BlueStatus;
                 // foreach (var rb in FindObjectsOfType<RobotBase>())
                 // {
                 //     if (rb.role.IsInfantry())
@@ -621,19 +636,24 @@ namespace Script.Networking
                                 }
 
                                 var protect = damage * (1 - _robotBases[hitEvent.Target].GetAttr().ArmorRate);
-                                if (_robotBases.ContainsKey(hitEvent.Hitter) &&
-                                    _robotBases[hitEvent.Hitter].role.Type == TypeT.Guard &&
-                                    _robotBases[hitEvent.Hitter].health > 0)
-                                    _robotBases[hitEvent.Hitter].health += (int) protect / 5;
-                                if (_robotBases[hitEvent.Hitter].health >
-                                    RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
-                                        .HealthLimit)
-                                    _robotBases[hitEvent.Hitter].health =
-                                        RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
-                                            .HealthLimit;
                                 if (_robotBases[hitEvent.Target].health > 0)
                                 {
                                     _robotBases[hitEvent.Target].health -= (int) protect;
+                                    CampStatusMap[_robotBases[hitEvent.Hitter].role.Camp].damage += (int) protect;
+                                    if (_robotBases.ContainsKey(hitEvent.Hitter) &&
+                                        _robotBases[hitEvent.Hitter].role.Type == TypeT.Guard &&
+                                        _robotBases[hitEvent.Hitter].health > 0)
+                                    {
+                                        _robotBases[hitEvent.Hitter].health += (int) protect / 5;
+                                        if (_robotBases[hitEvent.Hitter].health >
+                                            RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
+                                                .HealthLimit)
+                                            _robotBases[hitEvent.Hitter].health =
+                                                RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][
+                                                        GunT.Default]
+                                                    .HealthLimit;
+                                    }
+
                                     if (_robotBases[hitEvent.Target].health <= 0)
                                     {
                                         _robotBases[hitEvent.Target].health = 0;
@@ -684,6 +704,8 @@ namespace Script.Networking
                                         _facilityBases[hitEvent.Target].health -= (int) protect / 2;
                                     else
                                         _facilityBases[hitEvent.Target].health -= (int) protect;
+                                    if (hitEvent.Caliber != CaliberT.Dart && _robotBases.ContainsKey(hitEvent.Hitter))
+                                        CampStatusMap[_robotBases[hitEvent.Hitter].role.Camp].damage += (int) protect;
                                     if (_facilityBases[hitEvent.Target].health <= 0)
                                     {
                                         _facilityBases[hitEvent.Target].health = 0;
@@ -698,9 +720,9 @@ namespace Script.Networking
                                                 _facilityBases[hitEvent.Target].role.Camp).Value.health <= 0)
                                             {
                                                 if (_facilityBases[hitEvent.Target].role.Camp == CampT.Red &&
-                                                    _campStatus[CampT.Red].virtualShield
+                                                    CampStatusMap[CampT.Red].virtualShield
                                                     || _facilityBases[hitEvent.Target].role.Camp == CampT.Blue &&
-                                                    _campStatus[CampT.Blue].virtualShield)
+                                                    CampStatusMap[CampT.Blue].virtualShield)
                                                 {
                                                     _facilityBases.First(fb =>
                                                         fb.Value.role.Type == TypeT.Base && fb.Value.role.Camp ==
@@ -710,10 +732,10 @@ namespace Script.Networking
                                                         case CampT.Unknown:
                                                             break;
                                                         case CampT.Red:
-                                                            _campStatus[CampT.Red].virtualShield = false;
+                                                            CampStatusMap[CampT.Red].virtualShield = false;
                                                             break;
                                                         case CampT.Blue:
-                                                            _campStatus[CampT.Blue].virtualShield = false;
+                                                            CampStatusMap[CampT.Blue].virtualShield = false;
                                                             break;
                                                         case CampT.Judge:
                                                             break;
@@ -754,13 +776,13 @@ namespace Script.Networking
                             Debug.Log("Starting game with " + confirmedCount + " players.");
                             globalStatus.startTime = (int) Time.time;
                             globalStatus.playing = true;
-                            _campStatus[CampT.Red].money = 200;
-                            _campStatus[CampT.Blue].money = 200;
+                            CampStatusMap[CampT.Red].money = 200;
+                            CampStatusMap[CampT.Blue].money = 200;
                             // 单机无限金钱
                             if (_roomManager.IsHost && _roomManager.roomSlots.Count == 1)
                             {
-                                _campStatus[CampT.Red].money = 10000;
-                                _campStatus[CampT.Blue].money = 10000;
+                                CampStatusMap[CampT.Red].money = 10000;
+                                CampStatusMap[CampT.Blue].money = 10000;
                             }
 
                             foreach (var player in _players)
@@ -769,31 +791,31 @@ namespace Script.Networking
 
                             break;
                         case JudgeSystem.Event.TypeT.SixMinute:
-                            _campStatus[CampT.Red].money += 100;
-                            _campStatus[CampT.Blue].money += 100;
+                            CampStatusMap[CampT.Red].money += 100;
+                            CampStatusMap[CampT.Blue].money += 100;
                             globalStatus.smallBuffStart = true;
                             break;
                         case JudgeSystem.Event.TypeT.FiveMinute:
-                            _campStatus[CampT.Red].money += 100;
-                            _campStatus[CampT.Blue].money += 100;
+                            CampStatusMap[CampT.Red].money += 100;
+                            CampStatusMap[CampT.Blue].money += 100;
                             break;
                         case JudgeSystem.Event.TypeT.FourMinute:
-                            _campStatus[CampT.Red].money += 100;
-                            _campStatus[CampT.Blue].money += 100;
+                            CampStatusMap[CampT.Red].money += 100;
+                            CampStatusMap[CampT.Blue].money += 100;
                             foreach (var r in _robotBases)
                                 r.Value.Buffs.RemoveAll(b => b.type == BuffT.SmallEnergy);
                             globalStatus.smallBuffStart = false;
                             break;
                         case JudgeSystem.Event.TypeT.ThreeMinute:
-                            _campStatus[CampT.Red].money += 100;
-                            _campStatus[CampT.Blue].money += 100;
+                            CampStatusMap[CampT.Red].money += 100;
+                            CampStatusMap[CampT.Blue].money += 100;
                             globalStatus.largeBuffStart = true;
                             break;
                         case JudgeSystem.Event.TypeT.TwoMinute:
                             break;
                         case JudgeSystem.Event.TypeT.OneMinute:
-                            _campStatus[CampT.Red].money += 200;
-                            _campStatus[CampT.Blue].money += 200;
+                            CampStatusMap[CampT.Red].money += 200;
+                            CampStatusMap[CampT.Blue].money += 200;
                             break;
                         case JudgeSystem.Event.TypeT.GameOver:
                             if (globalStatus.finished) break;
@@ -835,29 +857,29 @@ namespace Script.Networking
                             switch (aR.Camp)
                             {
                                 case CampT.Red:
-                                    if (_campStatus[CampT.Red].money >= 400 && _campStatus[CampT.Red].airRaidAmount < 3)
+                                    if (CampStatusMap[CampT.Red].money >= 400 && CampStatusMap[CampT.Red].airRaidAmount < 3)
                                     {
-                                        _campStatus[CampT.Red].money -= 400;
+                                        CampStatusMap[CampT.Red].money -= 400;
                                         var d = (DroneController) _robotBases.First(r =>
                                                 r.Value.role.Equals(new RoleT(CampT.Red, TypeT.Drone)))
                                             .Value;
                                         d.raidTill = Time.time + 30;
                                         d.smallAmmo = 500;
-                                        _campStatus[CampT.Red].airRaidAmount++;
+                                        CampStatusMap[CampT.Red].airRaidAmount++;
                                     }
 
                                     break;
                                 case CampT.Blue:
-                                    if (_campStatus[CampT.Blue].money >= 400 &&
-                                        _campStatus[CampT.Blue].airRaidAmount < 3)
+                                    if (CampStatusMap[CampT.Blue].money >= 400 &&
+                                        CampStatusMap[CampT.Blue].airRaidAmount < 3)
                                     {
-                                        _campStatus[CampT.Blue].money -= 400;
+                                        CampStatusMap[CampT.Blue].money -= 400;
                                         var d = (DroneController) _robotBases.First(r =>
                                                 r.Value.role.Equals(new RoleT(CampT.Blue, TypeT.Drone)))
                                             .Value;
                                         d.raidTill = Time.time + 30;
                                         d.smallAmmo = 500;
-                                        _campStatus[CampT.Blue].airRaidAmount++;
+                                        CampStatusMap[CampT.Blue].airRaidAmount++;
                                     }
 
                                     break;
@@ -1099,18 +1121,18 @@ namespace Script.Networking
             }
 
             [ClientRpc]
-            private void RpcOnClientGameOver(bool redWin)
+            private void RpcOnClientGameOver(int redWin)
             {
                 foreach (var robot in _clientRobotBases)
                     robot.isLocalRobot = false;
 
                 if (_localRobot != null)
                 {
-                    if (_localRobot.role.Camp == CampT.Red && redWin
-                        || _localRobot.role.Camp == CampT.Blue && !redWin)
+                    if (_localRobot.role.Camp == CampT.Red && redWin == 1
+                        || _localRobot.role.Camp == CampT.Blue && redWin == -1)
                         resultTitle.text = "胜利";
                     else
-                        resultTitle.text = "失败";
+                        resultTitle.text = redWin == 0 ? "平局" : "失败";
                 }
 
                 resultPanel.SetActive(true);
@@ -1310,8 +1332,8 @@ namespace Script.Networking
                             }
                         }
 
-                        redMoneyDisplay.text = _campStatus[CampT.Red].money.ToString();
-                        blueMoneyDisplay.text = _campStatus[CampT.Blue].money.ToString();
+                        redMoneyDisplay.text = CampStatusMap[CampT.Red].money.ToString();
+                        blueMoneyDisplay.text = CampStatusMap[CampT.Blue].money.ToString();
 
                         extraDisplay.text = "";
                         latencyDisplay.text = $"{Math.Round(NetworkTime.rtt * 1000)}ms";
@@ -1395,8 +1417,8 @@ namespace Script.Networking
                                     extraDisplay.text +=
                                         "air raid: " + Mathf.RoundToInt(30 - (Time.time - drone.raidStart)) +
                                         " remain\n";
-                                else if (drone.role.Camp == CampT.Red && _campStatus[CampT.Red].money >= 400 ||
-                                         drone.role.Camp == CampT.Blue && _campStatus[CampT.Blue].money >= 400)
+                                else if (drone.role.Camp == CampT.Red && CampStatusMap[CampT.Red].money >= 400 ||
+                                         drone.role.Camp == CampT.Blue && CampStatusMap[CampT.Blue].money >= 400)
                                     extraDisplay.text += "press H for an air raid\n";
                                 extraDisplay.text += "missile " + (4 - drone.dartCount) + "times remain\n";
                                 if (drone.dartCount < 4)

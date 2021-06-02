@@ -32,14 +32,12 @@ namespace Script.Controller
             public int owner;
             public CaliberT caliber = CaliberT.Small;
 
-            private void Start()
-            {
-                StartCoroutine(RemoveRigid());
-            }
-
             private void OnCollisionEnter(Collision other)
             {
-                if (!isActive || !other.collider.CompareTag("Armor")) return;
+                if (!isActive) return;
+                if (other.gameObject.name == "Arena21")
+                    StartCoroutine(RemoveRigid());
+                if (!other.collider.CompareTag("Armor")) return;
                 other.gameObject.GetComponent<ArmorController>().Hit(owner, caliber);
                 Destroy(this);
             }

@@ -129,6 +129,7 @@ namespace Script.Controller
                                     _dragObject = gc.gameObject;
                                     _drag = true;
                                     _dragObject.GetComponent<Rigidbody>().isKinematic = true;
+                                    _dragObject.GetComponent<NetworkTransform>().enabled = false;
                                 }
                             }
                         }
@@ -136,6 +137,7 @@ namespace Script.Controller
                         {
                             _drag = false;
                             _dragObject.GetComponent<GroundControllerBase>().EndDrag();
+                            _dragObject.GetComponent<NetworkTransform>().enabled = true;
                         }
                         else if (bc != null && !_grab)
                         {
@@ -145,12 +147,14 @@ namespace Script.Controller
                                 _grabObject = bc.gameObject;
                                 _grab = true;
                                 _grabObject.GetComponent<Rigidbody>().isKinematic = true;
+                                _grabObject.GetComponent<NetworkTransform>().enabled = false;
                             }
                         }
                         else if (_grab)
                         {
                             _grab = false;
                             _grabObject.GetComponent<Rigidbody>().isKinematic = false;
+                            _grabObject.GetComponent<NetworkTransform>().enabled = true;
                         }
                     }
                 }
