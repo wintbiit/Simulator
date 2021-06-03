@@ -153,6 +153,10 @@ namespace Script.Networking
 
                 // 如果想选择的角色已被占用，忽略
                 if (_roles.Any(role => role.Value.Equals(target))) return;
+                if (target.Type == TypeT.Ptz)
+                    if (_roles[index].Type == TypeT.Drone) return;
+                    else if (_roles.All(role => !role.Value.Equals(new RoleT(target.Camp, TypeT.Drone))))
+                        return;
 
                 // 选择到角色
                 _roles[index] = target;

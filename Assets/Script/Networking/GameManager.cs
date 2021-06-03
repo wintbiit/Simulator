@@ -685,9 +685,12 @@ namespace Script.Networking
                                     if (_facilityBases.First(fb =>
                                         fb.Value.role.Type == TypeT.Outpost && fb.Value.role.Camp ==
                                         _facilityBases[hitEvent.Target].role.Camp).Value.health > 0)
-                                    {
                                         break;
-                                    }
+                                    if (_robotBases.First(rb =>
+                                            rb.Value.role.Type == TypeT.Guard && rb.Value.role.Camp ==
+                                            _facilityBases[hitEvent.Target].role.Camp).Value.health > 0 &&
+                                        !hitEvent.IsTriangle)
+                                        break;
                                 }
 
                                 float protect;
@@ -727,35 +730,35 @@ namespace Script.Networking
                                         {
                                             if (hitEvent.Caliber != CaliberT.Dart)
                                                 _robotBases[hitEvent.Hitter].experience += 5;
-                                            if (_robotBases.First(rb =>
-                                                rb.Value.role.Type == TypeT.Guard && rb.Value.role.Camp ==
-                                                _facilityBases[hitEvent.Target].role.Camp).Value.health <= 0)
-                                            {
-                                                if (_facilityBases[hitEvent.Target].role.Camp == CampT.Red &&
-                                                    CampStatusMap[CampT.Red].virtualShield
-                                                    || _facilityBases[hitEvent.Target].role.Camp == CampT.Blue &&
-                                                    CampStatusMap[CampT.Blue].virtualShield)
-                                                {
-                                                    _facilityBases.First(fb =>
-                                                        fb.Value.role.Type == TypeT.Base && fb.Value.role.Camp ==
-                                                        _facilityBases[hitEvent.Target].role.Camp).Value.health -= 500;
-                                                    switch (_facilityBases[hitEvent.Target].role.Camp)
-                                                    {
-                                                        case CampT.Unknown:
-                                                            break;
-                                                        case CampT.Red:
-                                                            CampStatusMap[CampT.Red].virtualShield = false;
-                                                            break;
-                                                        case CampT.Blue:
-                                                            CampStatusMap[CampT.Blue].virtualShield = false;
-                                                            break;
-                                                        case CampT.Judge:
-                                                            break;
-                                                        default:
-                                                            throw new ArgumentOutOfRangeException();
-                                                    }
-                                                }
-                                            }
+                                            // if (_robotBases.First(rb =>
+                                            //     rb.Value.role.Type == TypeT.Guard && rb.Value.role.Camp ==
+                                            //     _facilityBases[hitEvent.Target].role.Camp).Value.health <= 0)
+                                            // {
+                                            //     if (_facilityBases[hitEvent.Target].role.Camp == CampT.Red &&
+                                            //         CampStatusMap[CampT.Red].virtualShield
+                                            //         || _facilityBases[hitEvent.Target].role.Camp == CampT.Blue &&
+                                            //         CampStatusMap[CampT.Blue].virtualShield)
+                                            //     {
+                                            //         _facilityBases.First(fb =>
+                                            //             fb.Value.role.Type == TypeT.Base && fb.Value.role.Camp ==
+                                            //             _facilityBases[hitEvent.Target].role.Camp).Value.health -= 500;
+                                            //         switch (_facilityBases[hitEvent.Target].role.Camp)
+                                            //         {
+                                            //             case CampT.Unknown:
+                                            //                 break;
+                                            //             case CampT.Red:
+                                            //                 CampStatusMap[CampT.Red].virtualShield = false;
+                                            //                 break;
+                                            //             case CampT.Blue:
+                                            //                 CampStatusMap[CampT.Blue].virtualShield = false;
+                                            //                 break;
+                                            //             case CampT.Judge:
+                                            //                 break;
+                                            //             default:
+                                            //                 throw new ArgumentOutOfRangeException();
+                                            //         }
+                                            //     }
+                                            // }
                                         }
                                     }
                                     else
@@ -1090,7 +1093,7 @@ namespace Script.Networking
 
             private IEnumerator PlayStartGameMusic()
             {
-                yield return new WaitForSeconds(5);
+                yield return new WaitUntil(() => globalStatus.countDown - gameTime + 5 < 0);
                 GameObject.Find("cdSound").GetComponent<AudioSource>().Play();
                 yield return new WaitForSeconds(7.5f);
                 GameObject.Find("inGameMusic").GetComponent<AudioSource>().Play();
@@ -1298,7 +1301,10 @@ namespace Script.Networking
                         }
 
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
-                        setupHint.SetActive(_localRobot.chassisType == ChassisT.Default);
+                        if (_localRobot is GroundControllerBase && _localRobot.role.Type != TypeT.Engineer)
+                            setupHint.SetActive(_localRobot.chassisType == ChassisT.Default);
+                        else
+                            setupHint.SetActive(false);
                         deadHint.SetActive(_localRobot.health == 0);
                         if (_localRobot.role.Type != TypeT.Engineer)
                         {
@@ -1381,6 +1387,8 @@ namespace Script.Networking
                         healthTextDisplay.text = _localRobot.health + "/" +
                                                  RobotPerformanceTable.Table[_localRobot.level][_localRobot.role.Type][
                                                      _localRobot.chassisType][_localRobot.gunType].HealthLimit;
+                        if (_localRobot.role.Type == TypeT.Drone || _localRobot.role.Type == TypeT.Ptz)
+                            healthTextDisplay.text = "";
 
                         extraDisplay.text = "";
                         latencyDisplay.text = $"{Math.Round(NetworkTime.rtt * 1000)}ms";

@@ -81,80 +81,94 @@ namespace Script.Controller
                             bc = hit.collider.GetComponent<BlockController>();
                         }
 
-                        // 采矿
-                        if (mc != null && !_grab && !_drag)
+                        if (!Input.GetKey(KeyCode.H))
                         {
-                            if ((hit.point - fpCam.transform.position).magnitude > 0.7f) return true;
-                            if (Time.time - _lastCollect > 2.0f && _mine.Count < 3)
+                            // 采矿
+                            if (mc != null && !_grab && !_drag)
                             {
-                                mc.Collect();
-                                switch (mc.type)
+                                if ((hit.point - fpCam.transform.position).magnitude > 0.7f) return true;
+                                if (Time.time - _lastCollect > 2.0f && _mine.Count < 3)
                                 {
-                                    case MineType.Silver:
-                                        _mine.Add(75);
-                                        break;
-                                    case MineType.Gold:
-                                        _mine.Add(300);
-                                        break;
-                                    default:
-                                        throw new ArgumentOutOfRangeException();
-                                }
+                                    mc.Collect();
+                                    switch (mc.type)
+                                    {
+                                        case MineType.Silver:
+                                            _mine.Add(75);
+                                            break;
+                                        case MineType.Gold:
+                                            _mine.Add(300);
+                                            break;
+                                        default:
+                                            throw new ArgumentOutOfRangeException();
+                                    }
 
-                                _lastCollect = Time.time;
-                            }
-                        } // 兑换
-                        else if (
-                            role.Camp == CampT.Red && hit.transform.name == "RE"
-                            || role.Camp == CampT.Blue && hit.transform.name == "BE" && !_grab && !_drag)
-                        {
-                            if ((hit.point - fpCam.transform.position).magnitude > 0.7f) return true;
-                            if (Time.time - _lastExchange > 3.0f)
+                                    _lastCollect = Time.time;
+                                }
+                            } // 兑换
+                            else if (
+                                role.Camp == CampT.Red && hit.transform.name == "RE"
+                                || role.Camp == CampT.Blue && hit.transform.name == "BE" && !_grab && !_drag)
                             {
-                                if (_mine.Count > 0)
+                                if ((hit.point - fpCam.transform.position).magnitude > 0.7f) return true;
+                                if (Time.time - _lastExchange > 3.0f)
                                 {
-                                    FindObjectOfType<GameManager>().Exchange(role.Camp, _mine[0]);
-                                    _mine.RemoveAt(0);
-                                    _lastExchange = Time.time;
+                                    if (_mine.Count > 0)
+                                    {
+                                        FindObjectOfType<GameManager>().Exchange(role.Camp, _mine[0]);
+                                        _mine.RemoveAt(0);
+                                        _lastExchange = Time.time;
+                                    }
+                                }
+                            } // 拖拽
+                            else if (gc != null && !_drag)
+                            {
+                                if ((hit.point - fpCam.transform.position).magnitude > 3.0f) return true;
+                                if (gc.role.Camp == role.Camp)
+                                    // && gc.health == 0)
+                                {
+                                    if (!_drag && !_grab)
+                                    {
+                                        _dragObject = gc.gameObject;
+                                        _drag = true;
+                                        _dragObject.GetComponent<Rigidbody>().isKinematic = true;
+                                        _dragObject.GetComponent<NetworkTransform>().enabled = false;
+                                    }
                                 }
                             }
-                        } // 拖拽
-                        else if (gc != null && !_drag)
+                            else if (_drag)
+                            {
+                                _drag = false;
+                                _dragObject.GetComponent<GroundControllerBase>().EndDrag();
+                                _dragObject.GetComponent<NetworkTransform>().enabled = true;
+                            }
+                            else if (bc != null && !_grab)
+                            {
+                                if ((hit.point - fpCam.transform.position).magnitude > 3.0f) return true;
+                                if (!_grab && !_drag)
+                                {
+                                    _grabObject = bc.gameObject;
+                                    _grab = true;
+                                    _grabObject.GetComponent<Rigidbody>().isKinematic = true;
+                                    _grabObject.GetComponent<NetworkTransform>().enabled = false;
+                                }
+                            }
+                            else if (_grab)
+                            {
+                                _grab = false;
+                                _grabObject.GetComponent<Rigidbody>().isKinematic = false;
+                                _grabObject.GetComponent<NetworkTransform>().enabled = true;
+                            }
+                        }
+                        else if (gc && gc.health == 0)
                         {
-                            if ((hit.point - fpCam.transform.position).magnitude > 3.0f) return true;
                             if (gc.role.Camp == role.Camp)
-                                // && gc.health == 0)
                             {
-                                if (!_drag && !_grab)
-                                {
-                                    _dragObject = gc.gameObject;
-                                    _drag = true;
-                                    _dragObject.GetComponent<Rigidbody>().isKinematic = true;
-                                    _dragObject.GetComponent<NetworkTransform>().enabled = false;
-                                }
+                                if (gc.Buffs.All(b => b.type != BuffT.Revive))
+                                    gc.CmdRevive(
+                                        (int) (RobotPerformanceTable.Table[gc.level][gc.role.Type][gc.chassisType][
+                                                gc.gunType]
+                                            .HealthLimit * 0.2f));
                             }
-                        }
-                        else if (_drag)
-                        {
-                            _drag = false;
-                            _dragObject.GetComponent<GroundControllerBase>().EndDrag();
-                            _dragObject.GetComponent<NetworkTransform>().enabled = true;
-                        }
-                        else if (bc != null && !_grab)
-                        {
-                            if ((hit.point - fpCam.transform.position).magnitude > 3.0f) return true;
-                            if (!_grab && !_drag)
-                            {
-                                _grabObject = bc.gameObject;
-                                _grab = true;
-                                _grabObject.GetComponent<Rigidbody>().isKinematic = true;
-                                _grabObject.GetComponent<NetworkTransform>().enabled = false;
-                            }
-                        }
-                        else if (_grab)
-                        {
-                            _grab = false;
-                            _grabObject.GetComponent<Rigidbody>().isKinematic = false;
-                            _grabObject.GetComponent<NetworkTransform>().enabled = true;
                         }
                     }
                 }
@@ -181,7 +195,7 @@ namespace Script.Controller
                             var t = transform;
                             _dragObject
                                 .GetComponent<GroundControllerBase>()
-                                .Drag(t.position + t.forward + t.up * 0.2f);
+                                .Drag(t.position + t.forward + t.up * -0.2f);
                         }
 
                         if (_grab)

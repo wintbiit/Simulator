@@ -77,16 +77,6 @@ namespace Script.Controller
         }
     }
 
-    public class AidBuff : BuffBase
-    {
-        public AidBuff(float time)
-        {
-            type = BuffT.Revive;
-            reviveRate = 0.025f;
-            timeOut = Time.time + time;
-        }
-    }
-
     public class JumpBuff : BuffBase
     {
         public JumpBuff()
@@ -559,6 +549,7 @@ namespace Script.Controller
         [Command(requiresAuthority = false)]
         private void CmdDrag(Vector3 position)
         {
+            transform.position = position;
             RpcDrag(position);
         }
 
@@ -568,14 +559,27 @@ namespace Script.Controller
             RpcEndDrag();
         }
 
+        [Command(requiresAuthority = false)]
+        public void CmdRevive(int h)
+        {
+            health += h;
+            if (Buffs.All(b => b.type != BuffT.ReviveProtect))
+            {
+                Buffs.Add(new ReviveProtectBuff(5));
+            }
+        }
+
+        [Command(requiresAuthority = false)]
+        public void CmdSetHealth(int h)
+        {
+            health = h;
+        }
+
         [ClientRpc]
         private void RpcDrag(Vector3 position)
         {
-            if (isLocalRobot)
-            {
-                GetComponent<Rigidbody>().isKinematic = true;
-                transform.position = position;
-            }
+            GetComponent<Rigidbody>().isKinematic = true;
+            transform.position = position;
         }
 
         [ClientRpc]
@@ -615,6 +619,7 @@ namespace Script.Controller
 
         public void Drag(Vector3 position)
         {
+            transform.position = position;
             CmdDrag(position);
         }
 
@@ -657,18 +662,6 @@ namespace Script.Controller
                     if (health > RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit)
                         health = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit;
                     _reviveUpdate = Time.time;
-                }
-
-                if (role.Type != TypeT.Engineer)
-                {
-                    var rb = FindObjectsOfType<RobotBase>();
-                    if (rb.Any(r => r.role.Equals(new RoleT(role.Camp, TypeT.Engineer))))
-                    {
-                        var eng = rb.First(r => r.role.Equals(new RoleT(role.Camp, TypeT.Engineer)));
-                        if ((eng.transform.position - transform.position).magnitude < 1.5f)
-                            if (Buffs.All(b => b.type != BuffT.Revive))
-                                Buffs.Add(new AidBuff(1.2f));
-                    }
                 }
 
                 // 经验自然增长
@@ -1088,30 +1081,34 @@ namespace Script.Controller
 
                 var heatLimit = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HeatLimit;
                 var healthLimit = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HealthLimit;
+                var currentHealth = health;
                 if (heat > heatLimit && heat < heatLimit * 2)
                 {
-                    health -= (int) ((heat - heatLimit) / 250 * healthLimit * (Time.fixedDeltaTime / 1.0f));
+                    currentHealth -= (int) ((heat - heatLimit) / 250 * healthLimit * (Time.fixedDeltaTime / 1.0f));
                     heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate *
                             GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
-                    if (health == 0) FindObjectOfType<GameManager>().CmdKill(role, role, "超热量死亡");
+                    if (currentHealth == 0) FindObjectOfType<GameManager>().CmdKill(role, role, "超热量死亡");
                 }
                 else if (heat > heatLimit * 2)
                 {
-                    health -= (int) ((heat - heatLimit * 2) / 250 * healthLimit);
+                    currentHealth -= (int) ((heat - heatLimit * 2) / 250 * healthLimit);
                     heat = heatLimit * 2;
-                    if (health == 0) FindObjectOfType<GameManager>().CmdKill(role, role, "超热量死亡");
+                    if (currentHealth == 0) FindObjectOfType<GameManager>().CmdKill(role, role, "超热量死亡");
                 }
                 else if (heat > 0)
                     heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate *
                             GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
 
-                if (health < 0)
+                if (currentHealth < 0)
                 {
-                    health = 0;
+                    currentHealth = 0;
                     FindObjectOfType<GameManager>().CmdKill(role, role, "超热量死亡");
                 }
+
+                if (currentHealth != health)
+                    CmdSetHealth(currentHealth);
 
 
                 // 射速切换
