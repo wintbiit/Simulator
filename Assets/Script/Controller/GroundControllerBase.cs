@@ -672,9 +672,9 @@ namespace Script.Controller
                 }
 
                 // 经验自然增长
-                if (role.IsInfantry())
+                if (role.IsInfantry() && health > 0)
                     experience += (0.2f / 12) * Time.fixedDeltaTime;
-                if (role.Type == TypeT.Hero)
+                if (role.Type == TypeT.Hero && health > 0)
                     experience += (0.4f / 12) * Time.fixedDeltaTime;
             }
 
@@ -1094,11 +1094,13 @@ namespace Script.Controller
                     heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate *
                             GetAttr().ColdDownRate *
                             (Time.fixedDeltaTime / 1.0f);
+                    if (health == 0) FindObjectOfType<GameManager>().CmdKill(role, role, "超热量死亡");
                 }
                 else if (heat > heatLimit * 2)
                 {
                     health -= (int) ((heat - heatLimit * 2) / 250 * healthLimit);
                     heat = heatLimit * 2;
+                    if (health == 0) FindObjectOfType<GameManager>().CmdKill(role, role, "超热量死亡");
                 }
                 else if (heat > 0)
                     heat -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].CoolDownRate *
@@ -1106,7 +1108,11 @@ namespace Script.Controller
                             (Time.fixedDeltaTime / 1.0f);
 
                 if (health < 0)
+                {
                     health = 0;
+                    FindObjectOfType<GameManager>().CmdKill(role, role, "超热量死亡");
+                }
+
 
                 // 射速切换
                 if (Input.GetKey(KeyCode.LeftControl) && Input.GetKey(KeyCode.C))
@@ -1162,10 +1168,10 @@ namespace Script.Controller
                 }
 
                 // 切换摄像机
-                if (Input.GetKeyDown(KeyCode.Z))
-                {
-                    _fpActive = !_fpActive;
-                }
+                // if (Input.GetKeyDown(KeyCode.Z))
+                // {
+                //     _fpActive = !_fpActive;
+                // }
 
                 tpCam.SetActive(!_fpActive);
                 fpCam.SetActive(_fpActive);

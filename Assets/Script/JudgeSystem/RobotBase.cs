@@ -863,7 +863,7 @@ namespace Script.JudgeSystem
             public float Heat;
             public Vector3 Position;
             public Quaternion Rotation;
-            public List<BuffBase> Buffs = new List<BuffBase>();
+            public readonly List<BuffBase> Buffs = new List<BuffBase>();
         }
 
 /*
@@ -986,6 +986,12 @@ namespace Script.JudgeSystem
                                 experience -= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
                                     .ExpUpgrade;
                                 level++;
+                                health += RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                                    .HealthLimit / 5;
+                                if (health > RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                                    .HealthLimit)
+                                    health = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                                        .HealthLimit;
                             }
                         }
                     }

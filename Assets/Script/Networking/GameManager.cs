@@ -19,6 +19,7 @@ using Script.JudgeSystem.GameEvent;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Lobby;
+using Script.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -225,6 +226,7 @@ namespace Script.Networking
             public TMP_Text speedDisplay;
             public TMP_Text ammoDisplay;
             public TMP_Text experienceDisplay;
+            public TMP_Text healthTextDisplay;
 
             public RawImage outpostIndicator;
             public RawImage guardIndicator;
@@ -244,6 +246,7 @@ namespace Script.Networking
             public TMP_Dropdown chassisTypeSelect;
             public TMP_Dropdown gunTypeSelect;
             public Button typeConfirm;
+            public GameObject setupHint;
 
             public GameObject deadHint;
 
@@ -657,6 +660,8 @@ namespace Script.Networking
                                     if (_robotBases[hitEvent.Target].health <= 0)
                                     {
                                         _robotBases[hitEvent.Target].health = 0;
+                                        KillRpc(_robotBases[hitEvent.Hitter].role, _robotBases[hitEvent.Target].role,
+                                            "击杀");
                                         _robotBases[hitEvent.Hitter].experience +=
                                             RobotPerformanceTable.Table[_robotBases[hitEvent.Target].level][
                                                 _robotBases[hitEvent.Target].role.Type][
@@ -709,6 +714,13 @@ namespace Script.Networking
                                     if (_facilityBases[hitEvent.Target].health <= 0)
                                     {
                                         _facilityBases[hitEvent.Target].health = 0;
+                                        var killer = hitEvent.Caliber == CaliberT.Dart
+                                            ? new RoleT(
+                                                _facilityBases[hitEvent.Target].role.Camp == CampT.Red
+                                                    ? CampT.Blue
+                                                    : CampT.Red, TypeT.Ptz)
+                                            : _robotBases[hitEvent.Hitter].role;
+                                        KillRpc(killer, _facilityBases[hitEvent.Target].role, "击杀");
                                         if (_facilityBases[hitEvent.Target].role.Type == TypeT.Base)
                                             Emit(new TimeEvent(JudgeSystem.Event.TypeT.GameOver));
                                         if (_facilityBases[hitEvent.Target].role.Type == TypeT.Outpost)
@@ -857,7 +869,8 @@ namespace Script.Networking
                             switch (aR.Camp)
                             {
                                 case CampT.Red:
-                                    if (CampStatusMap[CampT.Red].money >= 400 && CampStatusMap[CampT.Red].airRaidAmount < 3)
+                                    if (CampStatusMap[CampT.Red].money >= 400 &&
+                                        CampStatusMap[CampT.Red].airRaidAmount < 3)
                                     {
                                         CampStatusMap[CampT.Red].money -= 400;
                                         var d = (DroneController) _robotBases.First(r =>
@@ -905,6 +918,14 @@ namespace Script.Networking
                             throw new ArgumentOutOfRangeException();
                     }
                 }
+
+                if (_started && globalStatus.countDown > 420 && globalStatus.countDown < 428)
+                    foreach (var rb in FindObjectsOfType<GroundControllerBase>())
+                        if (rb.Buffs.All(b => b.type != BuffT.Base) && rb.health > 0)
+                        {
+                            rb.health = 0;
+                            KillRpc(rb.role, rb.role, "抢跑死亡");
+                        }
 
                 // 神符
                 if (globalStatus.smallBuffStart)
@@ -970,9 +991,16 @@ namespace Script.Networking
                 Emit(new TimeEvent(JudgeSystem.Event.TypeT.Reset));
             }
 
+            [Command(requiresAuthority = false)]
+            public void CmdKill(RoleT killer, RoleT victim, string method) => KillRpc(killer, victim, method);
+
             #endregion
 
             #region Client
+
+            [ClientRpc]
+            private void KillRpc(RoleT killer, RoleT victim, string method) =>
+                FindObjectOfType<DeadHintUI>().Hint(killer, victim, method);
 
             [Client]
             public void LocalRobotRegister(RobotBase robot)
@@ -1060,6 +1088,14 @@ namespace Script.Networking
                 new Thread(StartDecisionSystem).Start();
             }
 
+            private IEnumerator PlayStartGameMusic()
+            {
+                yield return new WaitForSeconds(5);
+                GameObject.Find("cdSound").GetComponent<AudioSource>().Play();
+                yield return new WaitForSeconds(7.5f);
+                GameObject.Find("inGameMusic").GetComponent<AudioSource>().Play();
+            }
+
             [ClientRpc]
             private void GameStartRpc()
             {
@@ -1074,6 +1110,8 @@ namespace Script.Networking
                 typeConfirm.interactable = false;
                 chassisTypeSelect.interactable = false;
                 gunTypeSelect.interactable = false;
+
+                StartCoroutine(PlayStartGameMusic());
 
                 if (_judge)
                 {
@@ -1159,7 +1197,11 @@ namespace Script.Networking
 
                     countDownDisplay.text = minute + ":" + (second < 10 ? "0" : "") + second;
                     if (_judge)
+                    {
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
+                        setupHint.SetActive(false);
+                    }
+
                     // 信息显示更新
                     if (_localRobot)
                     {
@@ -1256,6 +1298,7 @@ namespace Script.Networking
                         }
 
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
+                        setupHint.SetActive(_localRobot.chassisType == ChassisT.Default);
                         deadHint.SetActive(_localRobot.health == 0);
                         if (_localRobot.role.Type != TypeT.Engineer)
                         {
@@ -1334,6 +1377,10 @@ namespace Script.Networking
 
                         redMoneyDisplay.text = CampStatusMap[CampT.Red].money.ToString();
                         blueMoneyDisplay.text = CampStatusMap[CampT.Blue].money.ToString();
+
+                        healthTextDisplay.text = _localRobot.health + "/" +
+                                                 RobotPerformanceTable.Table[_localRobot.level][_localRobot.role.Type][
+                                                     _localRobot.chassisType][_localRobot.gunType].HealthLimit;
 
                         extraDisplay.text = "";
                         latencyDisplay.text = $"{Math.Round(NetworkTime.rtt * 1000)}ms";
