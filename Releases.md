@@ -5,7 +5,8 @@
 - [ ] 地面、围栏更换
 - [ ] 裁判视角AR
 - [ ] 场景中的标志和大屏幕
-- [ ] 神符音效
+
+![](Images/Version060421B.png)
 
 ![](Images/Version060421A.png)
 
