@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using Script.Controller.Armor;
@@ -190,13 +189,19 @@ namespace Script.Controller
                 if (!raiding) smallAmmo = 0;
             }
 
+
             cam.SetActive(isLocalRobot);
             if (isLocalRobot)
             {
+                foreach (var c in FindObjectsOfType<Camera>())
+                    c.enabled = false;
+                cam.GetComponent<Camera>().enabled = true;
                 cam.SetActive(isPtz);
-                (role.Camp == CampT.Red
+                var dCam = (role.Camp == CampT.Red
                     ? FindObjectOfType<GameManager>().redDCam
-                    : FindObjectOfType<GameManager>().blueDCam).SetActive(!isPtz);
+                    : FindObjectOfType<GameManager>().blueDCam);
+                dCam.SetActive(!isPtz);
+                dCam.GetComponent<Camera>().enabled = !isPtz;
                 if (!isPtz)
                 {
                     if (raiding)
@@ -446,7 +451,7 @@ namespace Script.Controller
 
                                 var delta = fpCamera.WorldToScreenPoint(vTargetPos);
                                 delta -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
-                                var screenErr = delta;
+                                // var screenErr = delta;
                                 delta *= 10;
                                 delta.y /= Screen.height;
                                 delta.x /= Screen.width;

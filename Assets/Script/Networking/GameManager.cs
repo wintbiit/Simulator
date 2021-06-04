@@ -473,6 +473,9 @@ namespace Script.Networking
                 }
             }
 
+            [Command(requiresAuthority = false)]
+            public void CmdPunish(CampT camp, int time) => PunishRpc(camp, time);
+
             // [Server]
             // private void ResumeRecord(int frame)
             // {
@@ -1004,6 +1007,15 @@ namespace Script.Networking
             #region Client
 
             [ClientRpc]
+            private void PunishRpc(CampT camp, int time)
+            {
+                if (_localRobot && _localRobot.role.Camp == camp)
+                {
+                    FindObjectOfType<PunishUI>().Punish(time);
+                }
+            }
+
+            [ClientRpc]
             private void EmActivateRpc(CampT camp)
             {
                 if (_localRobot && _localRobot.role.Camp == camp)
@@ -1011,8 +1023,12 @@ namespace Script.Networking
             }
 
             [ClientRpc]
-            private void KillRpc(RoleT killer, RoleT victim, string method) =>
-                FindObjectOfType<DeadHintUI>().Hint(killer, victim, method);
+            private void KillRpc(RoleT killer, RoleT victim, string method)
+            {
+                var dh = FindObjectOfType<DeadHintUI>();
+                if (dh)
+                    dh.Hint(killer, victim, method);
+            }
 
             [Client]
             public void LocalRobotRegister(RobotBase robot)

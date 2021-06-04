@@ -695,6 +695,11 @@ namespace Script.Controller
 
                     GetComponent<Rigidbody>().velocity /= 1.15f;
                 }
+                
+                foreach (var c in FindObjectsOfType<Camera>())
+                    c.enabled = false;
+                fpCam.SetActive(true);
+                fpCam.GetComponent<Camera>().enabled = true;
             }
 
             if (isLocalRobot && health > 0)
@@ -1171,8 +1176,8 @@ namespace Script.Controller
                 //     _fpActive = !_fpActive;
                 // }
 
-                tpCam.SetActive(!_fpActive);
-                fpCam.SetActive(_fpActive);
+                // tpCam.SetActive(!_fpActive);
+                // fpCam.SetActive(_fpActive);
                 // hud.SetActive(_fpActive);
             }
 

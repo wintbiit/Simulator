@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 3274032826758959532}
   - component: {fileID: 3360871626448239252}
   - component: {fileID: 8576341686018111704}
+  - component: {fileID: 5195826874118391711}
   m_Layer: 0
   m_Name: Judge
   m_TagString: Untagged
@@ -140,3 +141,11 @@ MonoBehaviour:
   interpolateRotation: 1
   interpolatePosition: 1
   syncScale: 1
+--- !u!81 &5195826874118391711
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3274032826758959520}
+  m_Enabled: 1
