@@ -866,6 +866,8 @@ namespace Script.Networking
                                 globalStatus.smallBuffColdDown = Time.time + 75;
                             }
 
+                            EmActivateRpc(buffEvent.Camp);
+
                             break;
                         case JudgeSystem.Event.TypeT.AirRaid:
                             var aR = (AirRaidEvent) e;
@@ -1000,6 +1002,13 @@ namespace Script.Networking
             #endregion
 
             #region Client
+
+            [ClientRpc]
+            private void EmActivateRpc(CampT camp)
+            {
+                if (_localRobot && _localRobot.role.Camp == camp)
+                    FindObjectOfType<EmUI>().Activate();
+            }
 
             [ClientRpc]
             private void KillRpc(RoleT killer, RoleT victim, string method) =>
@@ -1176,6 +1185,8 @@ namespace Script.Networking
                         resultTitle.text = redWin == 0 ? "平局" : "失败";
                 }
 
+                GameObject.Find("inGameMusic").GetComponent<AudioSource>().Stop();
+                GameObject.Find("endMusic").GetComponent<AudioSource>().Play();
                 resultPanel.SetActive(true);
             }
 
@@ -1192,7 +1203,7 @@ namespace Script.Networking
                     {
                         countDownDisplay.color = Color.red;
                         minute = 0;
-                        second = 10 + (globalStatus.countDown -
+                        second = 17 + (globalStatus.countDown -
                                        (gameTime - (globalStatus.finishTime - globalStatus.startTime)));
                         if (second == 0)
                             CmdReset();

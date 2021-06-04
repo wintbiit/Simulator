@@ -999,7 +999,8 @@ namespace Script.Controller
                 {
                     _maxMotorTorque =
                         RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 4;
-                    capability -= 0.0015f;
+                    var use = Mathf.Abs(Input.GetAxis("Horizontal")) + Mathf.Abs(Input.GetAxis("Vertical")) + 0.1f;
+                    capability -= 0.0015f * use;
                     if (capability < 1e-2)
                         con = false;
                 }
