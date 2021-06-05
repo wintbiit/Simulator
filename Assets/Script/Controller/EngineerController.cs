@@ -77,7 +77,8 @@ namespace Script.Controller
                         if (Physics.Raycast(ray, out var hit, Mathf.Infinity))
                         {
                             mc = hit.collider.GetComponent<MineController>();
-                            gc = hit.collider.GetComponent<GroundControllerBase>();
+                            gc = hit.collider.GetComponentInParent<GroundControllerBase>();
+                            if (!gc) gc = hit.collider.GetComponent<GroundControllerBase>();
                             bc = hit.collider.GetComponent<BlockController>();
                         }
 

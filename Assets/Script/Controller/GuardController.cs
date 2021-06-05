@@ -188,7 +188,7 @@ namespace Script.Controller
                         {
                             smallAmmo--;
                             Fire(0);
-                            _fireCd = Random.Range(6, 12);
+                            _fireCd = Random.Range(4, 8);
                         }
                         else
                         {
@@ -199,8 +199,8 @@ namespace Script.Controller
                     {
                         var pitchAngle = head.pitch.transform.localRotation.z;
                         var yawAngle = head.yaw.transform.localRotation.y;
-                        _pitchingSpeed = pitchAngle > 0 ? 5 : -5;
-                        _steeringSpeed = yawAngle > -180 ? -5 : 5;
+                        _pitchingSpeed = pitchAngle > 0 ? 2 : -2;
+                        _steeringSpeed = yawAngle > -180 ? -2 : 2;
                     }
 
                     // 旋转阻尼效果

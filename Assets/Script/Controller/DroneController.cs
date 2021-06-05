@@ -239,7 +239,7 @@ namespace Script.Controller
 
                         if (Input.GetKey(KeyCode.W))
                         {
-                            if (_zOffset < 12)
+                            if (_zOffset < 9)
                             {
                                 transform.Translate(Vector3.forward * moveSpeed);
                                 _zOffset += moveSpeed;
@@ -266,7 +266,7 @@ namespace Script.Controller
 
                         if (Input.GetKey(KeyCode.D))
                         {
-                            if (_xOffset < 4)
+                            if (_xOffset < 3)
                             {
                                 transform.Translate(Vector3.right * moveSpeed);
                                 _xOffset += moveSpeed;

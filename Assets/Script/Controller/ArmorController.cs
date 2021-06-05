@@ -68,11 +68,32 @@ namespace Script.Controller
                             throw new ArgumentOutOfRangeException(nameof(color), color, null);
                     }
                 }
+
+                foreach (var flare in GetComponentsInChildren<LensFlare>())
+                {
+                    switch (color)
+                    {
+                        case ColorT.Down:
+                            flare.enabled = false;
+                            break;
+                        case ColorT.Red:
+                            flare.enabled = true;
+                            flare.color = Color.red;
+                            break;
+                        case ColorT.Blue:
+                            flare.enabled = true;
+                            flare.color = Color.blue;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(color), color, null);
+                    }
+                }
             }
 
             public ColorT GetColor() => _color;
 
-            public void ChangeLabel(int labelNumber) => label.text = labelNumber != 0 ? (labelNumber % 10).ToString() : "";
+            public void ChangeLabel(int labelNumber) =>
+                label.text = labelNumber != 0 ? (labelNumber % 10).ToString() : "";
         }
     }
 }

@@ -609,7 +609,7 @@ namespace Script.Controller
         {
             var b = Instantiate(bullet, gun.position, gun.rotation);
             var realSpeed = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
-                .VelocityLimit * Random.Range(0.95f, 1.05f);
+                .VelocityLimit * Random.Range(0.9f, 1.1f);
             b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
             var bulletController = b.GetComponent<BulletController>();
             bulletController.owner = id;
@@ -695,7 +695,7 @@ namespace Script.Controller
 
                     GetComponent<Rigidbody>().velocity /= 1.15f;
                 }
-                
+
                 foreach (var c in FindObjectsOfType<Camera>())
                     c.enabled = false;
                 fpCam.SetActive(true);
@@ -780,6 +780,9 @@ namespace Script.Controller
                         _pitchingSpeed = -((Input.GetAxis("Mouse Y") * 1.2f * sensitivity * 2) + _pitchingSpeed) / 2;
                     }
                 }
+
+                // 陀螺仪零偏
+                _steeringSpeed += 0.004f;
 
                 var pitchA = pitch.transform.localEulerAngles.x;
                 if (pitchA > 180) pitchA -= 360;
@@ -873,6 +876,10 @@ namespace Script.Controller
                             _lastPosition = target.transform.position;
                         }
 
+                        // 扰动
+                        vTargetPos += Vector3.one * (Random.Range(-0.3f, 0.3f) * Random.Range(-0.3f, 0.3f)) +
+                                      transform.position / 15 * (Mathf.Sin(Time.time) * Mathf.Cos(Time.time * 3) *
+                                                                 Random.Range(0.8f, 1.2f));
                         var delta = fpCamera.WorldToScreenPoint(vTargetPos);
                         delta -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
                         // var screenErr = delta;

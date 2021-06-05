@@ -21,7 +21,6 @@ using Script.UI.HUD;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 using Random = System.Random;
@@ -63,6 +62,7 @@ namespace Script.Networking
             public bool virtualShield = true;
             public int infantrySupplyAmount;
             public int heroSupplyAmount;
+            public int moneyObtainAmount;
             public int airRaidAmount;
             public int damage;
 
@@ -74,6 +74,7 @@ namespace Script.Networking
                     virtualShield = virtualShield,
                     infantrySupplyAmount = infantrySupplyAmount,
                     heroSupplyAmount = heroSupplyAmount,
+                    moneyObtainAmount = moneyObtainAmount,
                     airRaidAmount = airRaidAmount,
                     damage = damage
                 };
@@ -337,20 +338,10 @@ namespace Script.Networking
             [Command(requiresAuthority = false)]
             private void CmdExchange(CampT camp, int value)
             {
-                switch (camp)
+                if (CampStatusMap.ContainsKey(camp))
                 {
-                    case CampT.Unknown:
-                        break;
-                    case CampT.Red:
-                        CampStatusMap[CampT.Red].money += value;
-                        break;
-                    case CampT.Blue:
-                        CampStatusMap[CampT.Blue].money += value;
-                        break;
-                    case CampT.Judge:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(camp), camp, null);
+                    CampStatusMap[camp].money += value;
+                    CampStatusMap[camp].moneyObtainAmount += value;
                 }
             }
 
@@ -711,11 +702,15 @@ namespace Script.Networking
                             globalStatus.playing = true;
                             CampStatusMap[CampT.Red].money = 200;
                             CampStatusMap[CampT.Blue].money = 200;
+                            CampStatusMap[CampT.Red].moneyObtainAmount = 200;
+                            CampStatusMap[CampT.Blue].moneyObtainAmount = 200;
                             // 单机无限金钱
                             if (_roomManager.IsHost && _roomManager.roomSlots.Count == 1)
                             {
-                                CampStatusMap[CampT.Red].money = 10000;
-                                CampStatusMap[CampT.Blue].money = 10000;
+                                CampStatusMap[CampT.Red].money = 3000;
+                                CampStatusMap[CampT.Blue].money = 3000;
+                                CampStatusMap[CampT.Red].moneyObtainAmount = 0;
+                                CampStatusMap[CampT.Blue].moneyObtainAmount = 0;
                             }
 
                             foreach (var player in _players)
@@ -726,15 +721,21 @@ namespace Script.Networking
                         case JudgeSystem.Event.TypeT.SixMinute:
                             CampStatusMap[CampT.Red].money += 100;
                             CampStatusMap[CampT.Blue].money += 100;
+                            CampStatusMap[CampT.Red].moneyObtainAmount += 100;
+                            CampStatusMap[CampT.Blue].moneyObtainAmount += 100;
                             globalStatus.smallBuffStart = true;
                             break;
                         case JudgeSystem.Event.TypeT.FiveMinute:
                             CampStatusMap[CampT.Red].money += 100;
                             CampStatusMap[CampT.Blue].money += 100;
+                            CampStatusMap[CampT.Red].moneyObtainAmount += 100;
+                            CampStatusMap[CampT.Blue].moneyObtainAmount += 100;
                             break;
                         case JudgeSystem.Event.TypeT.FourMinute:
                             CampStatusMap[CampT.Red].money += 100;
                             CampStatusMap[CampT.Blue].money += 100;
+                            CampStatusMap[CampT.Red].moneyObtainAmount += 100;
+                            CampStatusMap[CampT.Blue].moneyObtainAmount += 100;
                             foreach (var r in _robotBases)
                                 r.Value.Buffs.RemoveAll(b => b.type == BuffT.SmallEnergy);
                             globalStatus.smallBuffStart = false;
@@ -742,6 +743,8 @@ namespace Script.Networking
                         case JudgeSystem.Event.TypeT.ThreeMinute:
                             CampStatusMap[CampT.Red].money += 100;
                             CampStatusMap[CampT.Blue].money += 100;
+                            CampStatusMap[CampT.Red].moneyObtainAmount += 100;
+                            CampStatusMap[CampT.Blue].moneyObtainAmount += 100;
                             globalStatus.largeBuffStart = true;
                             break;
                         case JudgeSystem.Event.TypeT.TwoMinute:
@@ -749,6 +752,8 @@ namespace Script.Networking
                         case JudgeSystem.Event.TypeT.OneMinute:
                             CampStatusMap[CampT.Red].money += 200;
                             CampStatusMap[CampT.Blue].money += 200;
+                            CampStatusMap[CampT.Red].moneyObtainAmount += 200;
+                            CampStatusMap[CampT.Blue].moneyObtainAmount += 200;
                             break;
                         case JudgeSystem.Event.TypeT.GameOver:
                             if (globalStatus.finished) break;
@@ -1095,21 +1100,13 @@ namespace Script.Networking
                 // 场景已成功加载
                 if (clientFacilityBases.Count > 0)
                 {
-                    if (judge)
-                    {
-                        // TODO: 面板启停
-                        optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
-                        hudManager.Refresh(null);
-                        FindObjectOfType<MapUI>().Refresh(null);
-                    }
+                    optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
+                    hudManager.Refresh(_localRobot && !judge ? _localRobot : null);
+                    FindObjectOfType<MapUI>().Refresh(_localRobot && !judge ? _localRobot : null);
 
-                    // 信息显示更新
+                    // 转动飞手摄像机
                     if (_localRobot)
                     {
-                        // TODO: 面板启停
-                        optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
-                        hudManager.Refresh(_localRobot);
-                        FindObjectOfType<MapUI>().Refresh(_localRobot);
                         if (_localRobot.role.Type == TypeT.Drone)
                         {
                             if (!((DroneController) _localRobot).isPtz)

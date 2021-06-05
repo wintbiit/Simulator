@@ -91,9 +91,11 @@ namespace Script.UI
                 }
 
                 if (_gm.CampStatusMap.ContainsKey(CampT.Red))
-                    redMoneyDisplay.text = _gm.CampStatusMap[CampT.Red].money.ToString();
+                    redMoneyDisplay.text = _gm.CampStatusMap[CampT.Red].money + "/" +
+                                           _gm.CampStatusMap[CampT.Red].moneyObtainAmount;
                 if (_gm.CampStatusMap.ContainsKey(CampT.Blue))
-                    blueMoneyDisplay.text = _gm.CampStatusMap[CampT.Blue].money.ToString();
+                    blueMoneyDisplay.text = _gm.CampStatusMap[CampT.Blue].money + "/" +
+                                            _gm.CampStatusMap[CampT.Blue].moneyObtainAmount;
             }
         }
     }
