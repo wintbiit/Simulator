@@ -21,6 +21,7 @@ using Script.UI.HUD;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 using Random = System.Random;
@@ -142,7 +143,8 @@ namespace Script.Networking
             private readonly List<GamePlayer> _players = new List<GamePlayer>();
             private readonly Queue<GameEventBase> _eventQueue = new Queue<GameEventBase>();
             private RobotBase _localRobot;
-            private JudgeController _judge;
+
+            public JudgeController judge;
 
             [HideInInspector] public int ptzCount;
             [HideInInspector] public int confirmedCount;
@@ -952,7 +954,7 @@ namespace Script.Networking
             [Client]
             public void LocalJudgeRegister()
             {
-                _judge = FindObjectOfType<JudgeController>();
+                judge = FindObjectOfType<JudgeController>();
             }
 
             private IEnumerator HideLoading()
@@ -1023,7 +1025,7 @@ namespace Script.Networking
 
                 StartCoroutine(PlayStartGameMusic());
 
-                if (_judge)
+                if (judge)
                 {
                     blurLayer.SetActive(false);
                 }
@@ -1054,7 +1056,7 @@ namespace Script.Networking
                 }
 
                 mesh.uv = uvs;
-                if (_localRobot || _judge)
+                if (_localRobot || judge)
                 {
                     if (_localRobot && (_localRobot.role.Type == TypeT.Hero || _localRobot.role.IsInfantry()))
                     {
@@ -1093,11 +1095,12 @@ namespace Script.Networking
                 // 场景已成功加载
                 if (clientFacilityBases.Count > 0)
                 {
-                    if (_judge)
+                    if (judge)
                     {
                         // TODO: 面板启停
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
                         hudManager.Refresh(null);
+                        FindObjectOfType<MapUI>().Refresh(null);
                     }
 
                     // 信息显示更新
@@ -1106,6 +1109,7 @@ namespace Script.Networking
                         // TODO: 面板启停
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
                         hudManager.Refresh(_localRobot);
+                        FindObjectOfType<MapUI>().Refresh(_localRobot);
                         if (_localRobot.role.Type == TypeT.Drone)
                         {
                             if (!((DroneController) _localRobot).isPtz)

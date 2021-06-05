@@ -50,7 +50,7 @@ namespace Script.UI.HUD
         }
 
 
-        protected override void Refresh(RobotBase localRobot)
+        public override void Refresh(RobotBase localRobot)
         {
             label.enabled = true;
             strategyDisplay.enabled = true;

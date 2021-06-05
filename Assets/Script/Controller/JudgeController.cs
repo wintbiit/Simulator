@@ -38,7 +38,7 @@ namespace Script.Controller
                     var t = transform;
                     transform.Translate(move);
                     var rot = new Vector3(Input.GetAxis("Mouse Y") * -1, Input.GetAxis("Mouse X"), 0);
-                    rot *= FindObjectOfType<GameManager>().GetSensitivity() * 5;
+                    rot *= FindObjectOfType<GameManager>().GetSensitivity() * 4;
                     transform.Rotate(rot);
                     transform.Rotate(Vector3.back * t.rotation.eulerAngles.z);
                     var up = Vector3.zero;

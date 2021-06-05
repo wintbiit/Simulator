@@ -30,7 +30,7 @@ namespace Script.UI.HUD
             }
         }
 
-        protected override void Refresh(RobotBase localRobot)
+        public override void Refresh(RobotBase localRobot)
         {
             foreach (var sd in redStatusDisplay.Concat(blueStatusDisplay))
             {

@@ -22,7 +22,7 @@ namespace Script.UI.HUD
             staticUI.SetActive(false);
         }
 
-        protected override void Refresh(RobotBase localRobot)
+        public override void Refresh(RobotBase localRobot)
         {
             speedDisplay.enabled = true;
             ammoDisplay.enabled = true;

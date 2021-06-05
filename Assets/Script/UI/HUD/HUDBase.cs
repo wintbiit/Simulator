@@ -15,7 +15,7 @@ namespace Script.UI.HUD
             else Clear();
         }
 
-        protected virtual void Refresh(RobotBase localRobot)
+        public virtual void Refresh(RobotBase localRobot)
         {
         }
 

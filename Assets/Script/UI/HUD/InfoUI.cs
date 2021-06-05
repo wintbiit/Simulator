@@ -9,7 +9,6 @@ using Script.Controller.Infantry;
 using Script.JudgeSystem;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
-using Script.Networking.Game;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -38,7 +37,7 @@ namespace Script.UI.HUD
             heroSupplyHint.SetActive(false);
         }
 
-        protected override void Refresh(RobotBase localRobot)
+        public override void Refresh(RobotBase localRobot)
         {
             elements.SetActive(true);
             setupHint.SetActive(localRobot.chassisType == ChassisT.Default && localRobot is GroundControllerBase &&

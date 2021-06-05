@@ -17,7 +17,7 @@ namespace Script.UI.HUD
         public RawImage emIndicator;
         public RawImage flyIndicator;
 
-        protected override void Refresh(RobotBase localRobot)
+        public override void Refresh(RobotBase localRobot)
         {
             // Indicator
             label.enabled = true;

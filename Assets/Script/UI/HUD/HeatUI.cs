@@ -18,7 +18,7 @@ namespace Script.UI.HUD
             heatProcessBack.enabled = false;
         }
 
-        protected override void Refresh(RobotBase localRobot)
+        public override void Refresh(RobotBase localRobot)
         {
             overHeat.enabled = true;
             heatProcess.enabled = true;
