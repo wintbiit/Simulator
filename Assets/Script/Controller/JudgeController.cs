@@ -30,7 +30,7 @@ namespace Script.Controller
                 foreach (var c in FindObjectsOfType<Camera>())
                     c.enabled = false;
                 GetComponent<Camera>().enabled = true;
-                // Debug.Log("Cam!");
+                GetComponent<AudioListener>().enabled = true;
                 if (Cursor.lockState == CursorLockMode.Locked)
                 {
                     var move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));

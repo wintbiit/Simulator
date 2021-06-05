@@ -2,12 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using System.Threading;
 using Mirror;
 using Script.Controller;
-using Script.Controller.Armor;
 using Script.Controller.Bullet;
 using Script.Controller.Engineer;
 using Script.Controller.Hero;
@@ -20,6 +17,7 @@ using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Lobby;
 using Script.UI;
+using Script.UI.HUD;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -56,33 +54,6 @@ namespace Script.Networking
             public bool triggered;
         }
 
-        [Serializable]
-        public class HealthDisplay
-        {
-            public TypeT type;
-            public Image bar;
-            public float width;
-        }
-
-        [Serializable]
-        public class StatusDisplay
-        {
-            public TypeT type;
-            public RawImage status;
-        }
-
-        [Serializable]
-        public class MapRobot
-        {
-            public TypeT type;
-            public RawImage image;
-
-            public void InitWithColor(Color col)
-            {
-                image.color = col;
-                image.gameObject.SetActive(true);
-            }
-        }
 
         [Serializable]
         public class CampStatus
@@ -173,8 +144,8 @@ namespace Script.Networking
             private RobotBase _localRobot;
             private JudgeController _judge;
 
-            public int ptzCount;
-            public int confirmedCount;
+            [HideInInspector] public int ptzCount;
+            [HideInInspector] public int confirmedCount;
 
             public int gameTime;
 
@@ -184,78 +155,20 @@ namespace Script.Networking
 
             public List<Transform> silverStart = new List<Transform>();
             public List<Transform> goldStart = new List<Transform>();
-
             public List<Transform> blockStart = new List<Transform>();
 
-            private Decision _decider;
-
-            public List<HealthDisplay> redHealthDisplays = new List<HealthDisplay>();
-            public List<HealthDisplay> blueHealthDisplays = new List<HealthDisplay>();
-            public List<StatusDisplay> redStatusDisplay = new List<StatusDisplay>();
-            public List<StatusDisplay> blueStatusDisplay = new List<StatusDisplay>();
-            public Texture protectStatus;
-            public Texture attackStatus;
-            public Image redBaseHealthBar;
-            public Image blueBaseHealthBar;
-            public TMP_Text redBaseHealthDisplay;
-            public TMP_Text blueBaseHealthDisplay;
-            public TMP_Text redGuardHealthDisplay;
-            public TMP_Text blueGuardHealthDisplay;
-            public TMP_Text redOutpostHealthDisplay;
-            public TMP_Text blueOutpostHealthDisplay;
-            public TMP_Text redMoneyDisplay;
-            public TMP_Text blueMoneyDisplay;
-            public TMP_Text strategyDisplay;
-
-            public Image superCDisplay;
-            public Image healthDisplay;
-
-            public TMP_Text countDownDisplay;
-            public TMP_Text smallAmmoDisplay;
-            public TMP_Text largeAmmoDisplay;
-            public TMP_Text expDisplay;
-            public TMP_Text mineDisplay;
-            public TMP_Text moneyDisplay;
-            public TMP_Text extraDisplay;
-            public GameObject infantrySupplyHint;
-            public GameObject heroSupplyHint;
-            public TMP_Text pitchDisplay;
-            public TMP_Text levelDisplay;
-            public TMP_Text capacityDisplay;
-            public TMP_Text latencyDisplay;
-            public TMP_Text speedDisplay;
-            public TMP_Text ammoDisplay;
-            public TMP_Text experienceDisplay;
-            public TMP_Text healthTextDisplay;
-
-            public RawImage outpostIndicator;
-            public RawImage guardIndicator;
-            public RawImage emIndicator;
-            public RawImage flyIndicator;
-
-            public List<MapRobot> mapRobots = new List<MapRobot>();
+            public HUDManager hudManager;
 
             public GameObject resultPanel;
             public TMP_Text resultTitle;
-
-            public RawImage overHeat;
-            public Image heatProcess;
 
             public GameObject optionsPanel;
             public Slider sensitivitySlide;
             public TMP_Dropdown chassisTypeSelect;
             public TMP_Dropdown gunTypeSelect;
             public Button typeConfirm;
-            public GameObject setupHint;
-
-            public GameObject deadHint;
-
-            public RawImage hurtHint;
-
+            
             public GameObject loadingHint;
-
-            public Image operationProcess;
-
             public GameObject blurLayer;
 
             [Header("Drone Camera")] public GameObject redDCam;
@@ -273,8 +186,8 @@ namespace Script.Networking
             };
 
             private bool _started;
-            private List<RobotBase> _clientRobotBases = new List<RobotBase>();
-            private List<FacilityBase> _clientFacilityBases = new List<FacilityBase>();
+            public List<RobotBase> clientRobotBases = new List<RobotBase>();
+            public List<FacilityBase> clientFacilityBases = new List<FacilityBase>();
             private int _slowDecisionUpdate;
 
             public List<int> mineDropTimes = new List<int>();
@@ -611,7 +524,7 @@ namespace Script.Networking
                     }
                 }
 
-                if (!isServerOnly) _clientRobotBases = new List<RobotBase>(FindObjectsOfType<RobotBase>());
+                if (!isServerOnly) clientRobotBases = new List<RobotBase>(FindObjectsOfType<RobotBase>());
 
                 // 处理事件队列
                 for (var i = 0; i < 5; i++)
@@ -994,7 +907,7 @@ namespace Script.Networking
             }
 
             [Command(requiresAuthority = false)]
-            private void CmdReset()
+            public void CmdReset()
             {
                 Emit(new TimeEvent(JudgeSystem.Event.TypeT.Reset));
             }
@@ -1025,7 +938,7 @@ namespace Script.Networking
             [ClientRpc]
             private void KillRpc(RoleT killer, RoleT victim, string method)
             {
-                var dh = FindObjectOfType<DeadHintUI>();
+                var dh = FindObjectOfType<KillHintUI>();
                 if (dh)
                     dh.Hint(killer, victim, method);
             }
@@ -1055,7 +968,7 @@ namespace Script.Networking
             }
 
             [Client]
-            public void Hurt() => hurtHint.color = new Color(1, 0, 0, 1);
+            public void Hurt() => FindObjectOfType<HurtUI>().Hurt();
 
             [Client]
             public void Exchange(CampT camp, int value)
@@ -1081,39 +994,11 @@ namespace Script.Networking
                 CmdConfirmType(_localRobot.id, (ChassisT) chassisTypeSelect.value, (GunT) gunTypeSelect.value);
             }
 
-            [Client]
-            private void StartDecisionSystem()
-            {
-#if UNITY_EDITOR
-                var curDir = Environment.CurrentDirectory + "\\Client\\Decision";
-                var exeFile = curDir + "\\SD.exe";
-#else
-                var curDir = Environment.CurrentDirectory + "\\..\\Decision";
-                var exeFile = curDir + "\\SD.exe";
-#endif
-                var process = new Process
-                {
-                    StartInfo =
-                    {
-                        FileName = exeFile,
-                        WorkingDirectory = curDir,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-                if (process.Start())
-                {
-                    _decider = new Decision();
-                    process.WaitForExit();
-                }
-            }
 
             [Client]
             private void ClientStart()
             {
-                new Thread(StartDecisionSystem).Start();
+                // new Thread(StartDecisionSystem).Start();
             }
 
             private IEnumerator PlayStartGameMusic()
@@ -1127,14 +1012,11 @@ namespace Script.Networking
             [ClientRpc]
             private void GameStartRpc()
             {
-                _clientRobotBases = new List<RobotBase>(FindObjectsOfType<RobotBase>());
-                _clientFacilityBases = new List<FacilityBase>(FindObjectsOfType<FacilityBase>());
+                clientRobotBases = new List<RobotBase>(FindObjectsOfType<RobotBase>());
+                clientFacilityBases = new List<FacilityBase>(FindObjectsOfType<FacilityBase>());
 
-                mineDisplay.text = "";
                 resultTitle.text = "";
                 resultPanel.SetActive(false);
-                infantrySupplyHint.SetActive(false);
-                heroSupplyHint.SetActive(false);
                 typeConfirm.interactable = false;
                 chassisTypeSelect.interactable = false;
                 gunTypeSelect.interactable = false;
@@ -1189,7 +1071,7 @@ namespace Script.Networking
             [ClientRpc]
             private void RpcOnClientGameOver(int redWin)
             {
-                foreach (var robot in _clientRobotBases)
+                foreach (var robot in clientRobotBases)
                     robot.isLocalRobot = false;
 
                 if (_localRobot != null)
@@ -1209,310 +1091,25 @@ namespace Script.Networking
             [Client]
             private void ClientFixedUpdate()
             {
-                if (_clientFacilityBases.Count > 0)
+                // 场景已成功加载
+                if (clientFacilityBases.Count > 0)
                 {
-                    var minute = (int) Math.Floor(globalStatus.countDown / 60.0f);
-                    var second = globalStatus.countDown % 60;
-                    if (minute == 0 && second <= 10)
-                        countDownDisplay.color = Color.red;
-                    if (globalStatus.finished)
-                    {
-                        countDownDisplay.color = Color.red;
-                        minute = 0;
-                        second = 17 + (globalStatus.countDown -
-                                       (gameTime - (globalStatus.finishTime - globalStatus.startTime)));
-                        if (second == 0)
-                            CmdReset();
-                    }
-
-                    countDownDisplay.text = minute + ":" + (second < 10 ? "0" : "") + second;
                     if (_judge)
                     {
+                        // TODO: 面板启停
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
-                        setupHint.SetActive(false);
                     }
 
                     // 信息显示更新
                     if (_localRobot)
                     {
-                        // Decision
-                        _slowDecisionUpdate++;
-                        if (_slowDecisionUpdate > 20)
-                        {
-                            _slowDecisionUpdate = 0;
-                            if (_decider != null)
-                            {
-                                var em = (EnergyMechanismController) _clientFacilityBases
-                                    .FindAll(f => f.role.Type == TypeT.EnergyMechanism).First();
-                                _decider.Decide(new Situation
-                                {
-                                    AHP = 100,
-                                    BuffAvailable = em.branches[0].armor.GetColor() == ColorT.Down ? 0 : 1,
-                                    FHP = _clientFacilityBases.First(f =>
-                                        f.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Outpost))).health,
-                                    inInvasion = 0,
-                                    RemainTime = globalStatus.countDown,
-                                    SHP = _clientRobotBases.First(r =>
-                                        r.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Guard))).health
-                                });
-                                if (_decider.Code != -1)
-                                {
-                                    var m = StrategyTable.Table[_decider.Code].Messages;
-                                    if (m.ContainsKey(TypeT.InfantryA) && _localRobot.role.IsInfantry())
-                                        strategyDisplay.text = m[TypeT.InfantryA];
-                                    if (m.ContainsKey(_localRobot.role.Type))
-                                        strategyDisplay.text = m[_localRobot.role.Type];
-                                }
-                            }
-                        }
-
-                        // Indicator
-                        var wave = Mathf.Sin(Time.time * 6);
-                        var op = _clientFacilityBases.First(r =>
-                            r.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Outpost)));
-                        outpostIndicator.color = op.health < op.healthLimit * 0.75f
-                            ? new Color32(255, 70, 59, (byte) (200 * wave))
-                            : new Color32(230, 255, 174, 200);
-                        guardIndicator.color =
-                            _clientRobotBases.First(r =>
-                                    r.role.Equals(new RoleT(_localRobot.role.Camp, TypeT.Guard)))
-                                .health <
-                            RobotPerformanceTable.Table[1][TypeT.Guard][ChassisT.Default][GunT.Default]
-                                .HealthLimit * 0.75f
-                                ? new Color32(255, 70, 59, (byte) (200 * wave))
-                                : new Color32(230, 255, 174, 200);
-                        emIndicator.color =
-                            _clientRobotBases.Any(rb =>
-                                rb.Buffs.Any(b => b.type == BuffT.LargeEnergy || b.type == BuffT.SmallEnergy) &&
-                                rb.role.Camp != _localRobot.role.Camp)
-                                ? new Color32(255, 70, 59, (byte) (200 * wave))
-                                : new Color32(230, 255, 174, 200);
-                        flyIndicator.color =
-                            _clientRobotBases.Any(rb =>
-                                rb.Buffs.Any(b => b.type == BuffT.Jump) &&
-                                rb.role.Camp != _localRobot.role.Camp)
-                                ? new Color32(255, 70, 59, (byte) (200 * wave))
-                                : new Color32(230, 255, 174, 200);
-
-                        // Bot Status
-                        foreach (var sd in redStatusDisplay) sd.status.color = new Color(0, 0, 0, 0);
-                        foreach (var sd in blueStatusDisplay) sd.status.color = new Color(0, 0, 0, 0);
-                        foreach (var sd in from sd in redStatusDisplay
-                            where _clientRobotBases.Any(r => r.role.Equals(new RoleT(CampT.Red, sd.type)))
-                            let robot = _clientRobotBases.First(r =>
-                                r.role.Equals(new RoleT(CampT.Red, sd.type)))
-                            where robot.health <
-                                  RobotPerformanceTable.Table[robot.level][robot.role.Type][robot.chassisType][
-                                      robot.gunType].HealthLimit * 0.75f
-                            select sd)
-                        {
-                            sd.status.texture = _localRobot.role.Camp == CampT.Red
-                                ? protectStatus
-                                : attackStatus;
-                            sd.status.color = new Color32(230, 255, 177, 200);
-                        }
-
-                        foreach (var sd in from sd in blueStatusDisplay
-                            where _clientRobotBases.Any(r => r.role.Equals(new RoleT(CampT.Blue, sd.type)))
-                            let robot = _clientRobotBases.First(r =>
-                                r.role.Equals(new RoleT(CampT.Blue, sd.type)))
-                            where robot.health <
-                                  RobotPerformanceTable.Table[robot.level][robot.role.Type][robot.chassisType][
-                                      robot.gunType].HealthLimit * 0.75f
-                            select sd)
-                        {
-                            sd.status.texture = _localRobot.role.Camp == CampT.Blue
-                                ? protectStatus
-                                : attackStatus;
-                            sd.status.color = new Color32(230, 255, 177, 200);
-                        }
-
+                        // TODO: 面板启停
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
-                        if (_localRobot is GroundControllerBase && _localRobot.role.Type != TypeT.Engineer)
-                            setupHint.SetActive(_localRobot.chassisType == ChassisT.Default);
-                        else
-                            setupHint.SetActive(false);
-                        deadHint.SetActive(_localRobot.health == 0);
-                        if (_localRobot.role.Type != TypeT.Engineer)
-                        {
-                            var heatLimit =
-                                RobotPerformanceTable.Table[_localRobot.level][_localRobot.role.Type][
-                                        _localRobot.chassisType][_localRobot.gunType]
-                                    .HeatLimit;
-                            var processColor = _localRobot.heat < heatLimit
-                                ? (heatLimit - _localRobot.heat) / heatLimit
-                                : 0;
-                            heatProcess.color = new Color(1, processColor, processColor);
-                            heatProcess.fillAmount = _localRobot.heat < heatLimit ? _localRobot.heat / heatLimit : 1;
-                            overHeat.color = new Color(1, 1, 1,
-                                _localRobot.heat > heatLimit ? (_localRobot.heat - heatLimit) / (heatLimit / 4.0f) : 0);
-                        }
-                        else
-                        {
-                            heatProcess.fillAmount = 0;
-                            overHeat.color = new Color(1, 1, 1, 0);
-                        }
-
-                        hurtHint.color = hurtHint.color.a >= 0.04f
-                            ? new Color(1, 0, 0, hurtHint.color.a - 0.04f)
-                            : new Color(1, 0, 0, 0);
-
-                        foreach (var r in _clientRobotBases)
-                        {
-                            if (r.role.Type == TypeT.Drone) continue;
-                            if (r.role.Type == TypeT.Guard)
-                            {
-                                var display = r.role.Camp == CampT.Red
-                                    ? redGuardHealthDisplay
-                                    : blueGuardHealthDisplay;
-                                display.text = r.health.ToString();
-                            }
-                            else
-                            {
-                                var display = r.role.Camp == CampT.Red
-                                    ? redHealthDisplays.First(hd => hd.type == r.role.Type)
-                                    : blueHealthDisplays.First(hd => hd.type == r.role.Type);
-                                var healthRate = (float) r.health /
-                                                 RobotPerformanceTable.Table[r.level][r.role.Type][r.chassisType][
-                                                         r.gunType]
-                                                     .HealthLimit;
-                                display.bar.fillAmount = healthRate;
-                                if (_localRobot && r.role.Camp == _localRobot.role.Camp)
-                                {
-                                    var mr = mapRobots.First(m => m.type == r.role.Type);
-                                    mr.InitWithColor(_localRobot.role.Camp == CampT.Red ? Color.red : Color.blue);
-                                    if (r.health == 0) mr.InitWithColor(Color.gray);
-                                    var p = r.transform.position;
-                                    mr.image.rectTransform.anchoredPosition = new Vector2(
-                                        p.z * -1 * (83 / 13.6f), p.x * (43 / 7.1f));
-                                }
-                            }
-                        }
-
-                        foreach (var f in _clientFacilityBases)
-                        {
-                            if (f.role.Type == TypeT.EnergyMechanism) continue;
-                            if (f.role.Type == TypeT.Outpost)
-                            {
-                                var hd = f.role.Camp == CampT.Red ? redOutpostHealthDisplay : blueOutpostHealthDisplay;
-                                hd.text = f.health.ToString();
-                            }
-
-                            if (f.role.Type == TypeT.Base)
-                            {
-                                var hd = f.role.Camp == CampT.Red ? redBaseHealthDisplay : blueBaseHealthDisplay;
-                                hd.text = f.health.ToString();
-                                var display = f.role.Camp == CampT.Red ? redBaseHealthBar : blueBaseHealthBar;
-                                var healthRate = (float) f.health / f.healthLimit;
-                                display.fillAmount = healthRate;
-                            }
-                        }
-
-                        redMoneyDisplay.text = CampStatusMap[CampT.Red].money.ToString();
-                        blueMoneyDisplay.text = CampStatusMap[CampT.Blue].money.ToString();
-
-                        healthTextDisplay.text = _localRobot.health + "/" +
-                                                 RobotPerformanceTable.Table[_localRobot.level][_localRobot.role.Type][
-                                                     _localRobot.chassisType][_localRobot.gunType].HealthLimit;
-                        if (_localRobot.role.Type == TypeT.Drone || _localRobot.role.Type == TypeT.Ptz)
-                            healthTextDisplay.text = "";
-
-                        extraDisplay.text = "";
-                        latencyDisplay.text = $"{Math.Round(NetworkTime.rtt * 1000)}ms";
-                        // extraDisplay.text += "latency: " + $"{Math.Round(NetworkTime.rtt * 1000)}ms\n";
-                        // extraDisplay.text += "blue base: " +
-                        //                      (_clientFacilityBases.First(fb =>
-                        //                          fb.role.Equals(new RoleT(CampT.Blue, TypeT.Outpost))).health > 0
-                        //                          ? "available"
-                        //                          : "unavailable") + '\n';
-                        // extraDisplay.text += "red base: " +
-                        //                      (_clientFacilityBases.First(fb =>
-                        //                          fb.role.Equals(new RoleT(CampT.Red, TypeT.Outpost))).health > 0
-                        //                          ? "available"
-                        //                          : "unavailable") + '\n';
-                        // extraDisplay.text += "蓝方虚拟护盾：" + (_campStatus[CampT.Blue].virtualShield ? "是" : "否") + '\n';
-                        // extraDisplay.text += "红方虚拟护盾：" + (_campStatus[CampT.Red].virtualShield ? "是" : "否") + '\n';
-                        // smallAmmoDisplay.text = "17mm: " + _localRobot.smallAmmo;
-                        // largeAmmoDisplay.text = "42mm: " + _localRobot.largeAmmo;
-                        ammoDisplay.text = "0";
-                        if (_localRobot.smallAmmo != 0) ammoDisplay.text = _localRobot.smallAmmo.ToString();
-                        if (_localRobot.largeAmmo != 0) ammoDisplay.text = _localRobot.largeAmmo.ToString();
-                        speedDisplay.text =
-                            RobotPerformanceTable.Table[_localRobot.level][_localRobot.role.Type][
-                                _localRobot.chassisType][_localRobot.gunType].VelocityLimit + "m/s";
-                        experienceDisplay.text = Math.Round(_localRobot.experience, 1)
-                            .ToString(CultureInfo.InvariantCulture);
-                        // expDisplay.text = "经验值：" + Math.Round(_localRobot.experience, 1);
-                        // moneyDisplay.text =
-                        //     "团队金钱：" + (_localRobot.role.Camp == CampT.Red
-                        //         ? _campStatus[CampT.Red].money
-                        //         : _campStatus[CampT.Blue].money);
-                        operationProcess.fillAmount = 0;
-                        if (_localRobot is GroundControllerBase)
-                        {
-                            var ground = _localRobot.GetComponent<GroundControllerBase>();
-                            // superCDisplay.color = ground.con ? Color.red : Color.green;
-                            // superCDisplay.fillAmount = ground.capability;
-                            healthDisplay.fillAmount = (float) ground.health /
-                                                       RobotPerformanceTable.Table[ground.level][ground.role.Type][
-                                                           ground.chassisType][
-                                                           ground.gunType].HealthLimit;
-                            capacityDisplay.text = ground.role.Type != TypeT.Engineer
-                                ? Math.Round(ground.capability, 4) * 100 + "%"
-                                : "";
-                            capacityDisplay.color =
-                                ground.con ? new Color32(255, 116, 84, 220) : new Color32(83, 200, 255, 220);
-                            // extraDisplay.text += "capacity: " + Math.Round(ground.capability, 4) * 100 + "%\n";
-                        }
-
-                        if (_localRobot.role.Type == TypeT.Engineer)
-                        {
-                            var engineer = _localRobot.GetComponent<EngineerController>();
-                            // mineDisplay.text = "矿物价值：" + engineer.MineValue();
-                            if (engineer.Buffs.Any(b => b.type == BuffT.EngineerRevive))
-                            {
-                                extraDisplay.text +=
-                                    "revive in " + ((EngineerController) _localRobot).reviveTime + "\n";
-                            }
-
-                            operationProcess.fillAmount = engineer.opProcess;
-                        }
-
-                        if (_localRobot.role.IsInfantry())
-                        {
-                            var infantry = _localRobot.GetComponent<InfantryController>();
-                            infantrySupplyHint.SetActive(infantry.atSupply);
-                        }
-
-                        if (_localRobot.role.Type == TypeT.Hero)
-                        {
-                            var hero = _localRobot.GetComponent<HeroController>();
-                            heroSupplyHint.SetActive(hero.atSupply);
-                        }
-
+                        hudManager.SetShow(true);
+                        hudManager.Refresh(_localRobot);
                         if (_localRobot.role.Type == TypeT.Drone)
                         {
-                            if (((DroneController) _localRobot).isPtz)
-                            {
-                                var drone = _localRobot.GetComponent<DroneController>();
-                                if (drone.raidStart > 0)
-                                    extraDisplay.text +=
-                                        "air raid: " + Mathf.RoundToInt(30 - (Time.time - drone.raidStart)) +
-                                        " remain\n";
-                                else if (drone.role.Camp == CampT.Red && CampStatusMap[CampT.Red].money >= 400 ||
-                                         drone.role.Camp == CampT.Blue && CampStatusMap[CampT.Blue].money >= 400)
-                                    extraDisplay.text += "press H for an air raid\n";
-                                extraDisplay.text += "missile " + (4 - drone.dartCount) + "times remain\n";
-                                if (drone.dartCount < 4)
-                                {
-                                    if (drone.dartTill > Time.time)
-                                        extraDisplay.text += "missile ready in: " +
-                                                             Mathf.RoundToInt(drone.dartTill - Time.time) + "\n";
-                                    else
-                                        extraDisplay.text += "push Y to launch missile\n";
-                                }
-                            }
-                            else
+                            if (!((DroneController) _localRobot).isPtz)
                             {
                                 if (_localRobot.role.Camp == CampT.Red)
                                 {
@@ -1522,49 +1119,6 @@ namespace Script.Networking
                                 {
                                     blueDCam.transform.LookAt(_localRobot.transform);
                                 }
-                            }
-                        }
-
-                        var a = _localRobot.GetAttr();
-                        if (Math.Abs(a.DamageRate - 1) > 1e-2)
-                            extraDisplay.text += "attack buff: " + a.DamageRate * 100 + "%\n";
-                        if (Math.Abs(a.ArmorRate - 0) > 1e-2)
-                            extraDisplay.text += "protect buff: " + a.ArmorRate * 100 + "%\n";
-                        if (Math.Abs(a.ColdDownRate - 1) > 1e-2)
-                            extraDisplay.text += "cooldown buff: " + a.ColdDownRate * 100 + "%\n";
-                        if (Math.Abs(a.ReviveRate - 0) > 1e-2)
-                            extraDisplay.text += "revive buff: " + a.ReviveRate * 100 + "%\n";
-
-                        if (_localRobot.Buffs.Any(b => b.type == BuffT.SmallEnergy))
-                            extraDisplay.text += "small em" + '\n';
-                        if (_localRobot.Buffs.Any(b => b.type == BuffT.LargeEnergy))
-                            extraDisplay.text += "large em" + '\n';
-                        if (_localRobot.Buffs.Any(b => b.type == BuffT.Jump))
-                            extraDisplay.text += "fly buff" + "\n";
-
-                        levelDisplay.text = _localRobot.level.ToString();
-                        // extraDisplay.text += "level " + _localRobot.level + "\n";
-
-                        if (_localRobot.role.IsInfantry() || _localRobot.role.Type == TypeT.Hero)
-                        {
-                            var pitch = _localRobot.GetComponent<GroundControllerBase>().pitch
-                                .transform.localEulerAngles.x * -1;
-                            if (pitch < -180) pitch += 360;
-                            pitchDisplay.text = Math.Round(pitch, 2) + " deg";
-                            // extraDisplay.text += "Pitch: " + Math.Round(pitch, 2) + "\n";
-                        }
-
-                        if (_localRobot.role.Type == TypeT.Ptz)
-                        {
-                            extraDisplay.text += "\n";
-                            foreach (var r in _clientRobotBases.Where(r => r.role.Camp == _localRobot.role.Camp))
-                            {
-                                extraDisplay.text += r.role.Type + " ";
-                                if (r.largeAmmo != 0)
-                                    extraDisplay.text += r.largeAmmo;
-                                if (r.smallAmmo != 0)
-                                    extraDisplay.text += r.smallAmmo;
-                                extraDisplay.text += "\n";
                             }
                         }
                     }

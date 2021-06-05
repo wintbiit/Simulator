@@ -2,15 +2,16 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Script.UI
+namespace Script.UI.HUD
 {
-    public class EmUI : MonoBehaviour
+    public class EmUI : HUDBase
     {
         public RawImage emHint;
         private bool _show;
 
         public void Activate()
         {
+            if (!show) return;
             _show = true;
             GameObject.Find("emSound").GetComponent<AudioSource>().Play();
             StartCoroutine(Hide());

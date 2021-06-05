@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Script.UI
 {
-    public class DeadHintUI : MonoBehaviour
+    public class KillHintUI : MonoBehaviour
     {
         public GameObject deadHint;
         public TMP_Text killer;

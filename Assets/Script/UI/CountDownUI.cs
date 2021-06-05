@@ -1,4 +1,5 @@
-﻿using Script.Networking.Game;
+﻿using System;
+using Script.Networking.Game;
 using TMPro;
 using UnityEngine;
 
@@ -9,18 +10,28 @@ namespace Script.UI
         public TMP_Text countDown;
         private GameManager _gm;
 
-        void Update()
+        private void Update()
         {
             if (!_gm) _gm = FindObjectOfType<GameManager>();
             else
             {
-                if (_gm.gameTime - 5 - _gm.globalStatus.countDown > 6) countDown.text = "";
-                else
+                // 更新倒计时
+                var minute = (int) Math.Floor(_gm.globalStatus.countDown / 60.0f);
+                var second = _gm.globalStatus.countDown % 60;
+                if (minute == 0 && second <= 10)
+                    countDown.color = Color.red;
+                // 结算页面倒计时
+                if (_gm.globalStatus.finished)
                 {
-                    var timeLeft = (_gm.globalStatus.countDown - _gm.gameTime + 5) + 6;
-                    if (timeLeft < 6) countDown.text = timeLeft == 0 ? "Start" : timeLeft.ToString();
-                    else countDown.text = "";
+                    countDown.color = Color.red;
+                    minute = 0;
+                    second = 17 + (_gm.globalStatus.countDown -
+                                   (_gm.gameTime - (_gm.globalStatus.finishTime - _gm.globalStatus.startTime)));
+                    if (second == 0)
+                        _gm.CmdReset();
                 }
+
+                countDown.text = minute + ":" + (second < 10 ? "0" : "") + second;
             }
         }
     }

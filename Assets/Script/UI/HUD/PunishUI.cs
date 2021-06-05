@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace Script.UI
+namespace Script.UI.HUD
 {
-    public class PunishUI : MonoBehaviour
+    public class PunishUI : HUDBase
     {
         public GameObject panel;
 
@@ -14,6 +14,7 @@ namespace Script.UI
 
         public void Punish(int time)
         {
+            if (!show) return;
             panel.SetActive(true);
             StartCoroutine(PunishFor(time));
         }
