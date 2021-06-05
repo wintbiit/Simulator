@@ -6,13 +6,12 @@ namespace Script.UI.HUD
 {
     public class HUDBase : MonoBehaviour
     {
-        [HideInInspector] public bool show;
         protected GameManager Gm;
 
         public void RefreshDisplay(RobotBase localRobot)
         {
             if (!Gm) Gm = FindObjectOfType<GameManager>();
-            else if (show) Refresh(localRobot);
+            else if (localRobot) Refresh(localRobot);
             else Clear();
         }
 

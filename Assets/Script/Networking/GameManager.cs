@@ -167,7 +167,7 @@ namespace Script.Networking
             public TMP_Dropdown chassisTypeSelect;
             public TMP_Dropdown gunTypeSelect;
             public Button typeConfirm;
-            
+
             public GameObject loadingHint;
             public GameObject blurLayer;
 
@@ -1025,7 +1025,6 @@ namespace Script.Networking
 
                 if (_judge)
                 {
-                    GameObject.Find("Player").SetActive(false);
                     blurLayer.SetActive(false);
                 }
 
@@ -1098,6 +1097,7 @@ namespace Script.Networking
                     {
                         // TODO: 面板启停
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
+                        hudManager.Refresh(null);
                     }
 
                     // 信息显示更新
@@ -1105,7 +1105,6 @@ namespace Script.Networking
                     {
                         // TODO: 面板启停
                         optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
-                        hudManager.SetShow(true);
                         hudManager.Refresh(_localRobot);
                         if (_localRobot.role.Type == TypeT.Drone)
                         {

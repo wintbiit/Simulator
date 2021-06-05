@@ -9,9 +9,20 @@ namespace Script.UI.HUD
     {
         public RawImage overHeat;
         public Image heatProcess;
+        public Image heatProcessBack;
+
+        protected override void Clear()
+        {
+            overHeat.enabled = false;
+            heatProcess.enabled = false;
+            heatProcessBack.enabled = false;
+        }
 
         protected override void Refresh(RobotBase localRobot)
         {
+            overHeat.enabled = true;
+            heatProcess.enabled = true;
+            heatProcessBack.enabled = true;
             if (localRobot.role.Type != TypeT.Engineer)
             {
                 var heatLimit =

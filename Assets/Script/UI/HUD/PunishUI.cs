@@ -14,7 +14,6 @@ namespace Script.UI.HUD
 
         public void Punish(int time)
         {
-            if (!show) return;
             panel.SetActive(true);
             StartCoroutine(PunishFor(time));
         }

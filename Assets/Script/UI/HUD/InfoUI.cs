@@ -9,6 +9,7 @@ using Script.Controller.Infantry;
 using Script.JudgeSystem;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
+using Script.Networking.Game;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,14 +25,12 @@ namespace Script.UI.HUD
         public TMP_Text levelDisplay;
         public TMP_Text capacityDisplay;
         public TMP_Text latencyDisplay;
-        public TMP_Text speedDisplay;
-        public TMP_Text ammoDisplay;
         public TMP_Text experienceDisplay;
         public TMP_Text healthTextDisplay;
-        public Image operationProcess;
         public Image healthDisplay;
         public GameObject setupHint;
         public GameObject deadHint;
+        public GameObject elements;
 
         private void Start()
         {
@@ -41,6 +40,7 @@ namespace Script.UI.HUD
 
         protected override void Refresh(RobotBase localRobot)
         {
+            elements.SetActive(true);
             setupHint.SetActive(localRobot.chassisType == ChassisT.Default && localRobot is GroundControllerBase &&
                                 localRobot.role.Type != TypeT.Engineer);
             deadHint.SetActive(localRobot.health == 0);
@@ -52,15 +52,9 @@ namespace Script.UI.HUD
 
             extraDisplay.text = "";
             latencyDisplay.text = $"{Math.Round(NetworkTime.rtt * 1000)}ms";
-            ammoDisplay.text = "0";
-            if (localRobot.smallAmmo != 0) ammoDisplay.text = localRobot.smallAmmo.ToString();
-            if (localRobot.largeAmmo != 0) ammoDisplay.text = localRobot.largeAmmo.ToString();
-            speedDisplay.text =
-                RobotPerformanceTable.Table[localRobot.level][localRobot.role.Type][
-                    localRobot.chassisType][localRobot.gunType].VelocityLimit + "m/s";
+            
             experienceDisplay.text = Math.Round(localRobot.experience, 1)
                 .ToString(CultureInfo.InvariantCulture);
-            operationProcess.fillAmount = 0;
             if (localRobot is GroundControllerBase)
             {
                 var ground = localRobot.GetComponent<GroundControllerBase>();
@@ -83,8 +77,6 @@ namespace Script.UI.HUD
                     extraDisplay.text +=
                         "revive in " + ((EngineerController) localRobot).reviveTime + "\n";
                 }
-
-                operationProcess.fillAmount = engineer.opProcess;
             }
 
             if (localRobot.role.IsInfantry())
@@ -167,6 +159,7 @@ namespace Script.UI.HUD
 
         protected override void Clear()
         {
+            elements.SetActive(false);
             setupHint.SetActive(false);
             deadHint.SetActive(false);
         }

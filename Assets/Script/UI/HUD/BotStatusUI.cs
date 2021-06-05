@@ -22,8 +22,21 @@ namespace Script.UI.HUD
         public Texture protectStatus;
         public Texture attackStatus;
 
+        protected override void Clear()
+        {
+            foreach (var sd in redStatusDisplay.Concat(blueStatusDisplay))
+            {
+                sd.status.enabled = false;
+            }
+        }
+
         protected override void Refresh(RobotBase localRobot)
         {
+            foreach (var sd in redStatusDisplay.Concat(blueStatusDisplay))
+            {
+                sd.status.enabled = true;
+            }
+
             // Bot Status
             foreach (var sd in redStatusDisplay) sd.status.color = new Color(0, 0, 0, 0);
             foreach (var sd in blueStatusDisplay) sd.status.color = new Color(0, 0, 0, 0);

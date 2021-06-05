@@ -10,7 +10,7 @@ namespace Script.UI.HUD
 
         public void Hurt()
         {
-            if (show) hurtHint.color = new Color(1, 0, 0, 1);
+            hurtHint.color = new Color(1, 0, 0, 1);
         }
 
         protected override void Refresh(RobotBase localRobot)
