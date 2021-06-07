@@ -14,12 +14,11 @@ namespace Script.UI
             if (!_gm) _gm = FindObjectOfType<GameManager>();
             else
             {
-                if (_gm.gameTime - 5 - _gm.globalStatus.countDown > 6) countDown.text = "";
+                if (_gm.globalStatus.countDown > 425 || _gm.globalStatus.countDown < 420) countDown.text = "";
                 else
                 {
-                    var timeLeft = (_gm.globalStatus.countDown - _gm.gameTime + 5) + 6;
-                    if (timeLeft < 6) countDown.text = timeLeft == 0 ? "Start" : timeLeft.ToString();
-                    else countDown.text = "";
+                    var timeLeft = _gm.globalStatus.countDown - 420;
+                    countDown.text = timeLeft == 0 ? "Start" : timeLeft.ToString();
                 }
             }
         }

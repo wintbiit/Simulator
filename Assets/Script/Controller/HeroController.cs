@@ -75,7 +75,7 @@ namespace Script.Controller
                         break;
                 }
             }
-            
+
             [ClientRpc]
             public void Supply(int ammo)
             {

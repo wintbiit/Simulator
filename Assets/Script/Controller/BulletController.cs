@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Script.Controller.Armor;
+using Script.Networking.Game;
 using UnityEngine;
 
 namespace Script.Controller
@@ -32,20 +33,51 @@ namespace Script.Controller
             public int owner;
             public CaliberT caliber = CaliberT.Small;
 
+            public AudioClip hit;
+            public AudioClip drop;
+
             private void OnCollisionEnter(Collision other)
             {
-                if (!isActive) return;
                 if (other.gameObject.name == "Arena21")
-                    StartCoroutine(RemoveRigid());
-                if (!other.collider.CompareTag("Armor")) return;
-                other.gameObject.GetComponent<ArmorController>().Hit(owner, caliber);
-                Destroy(this);
+                {
+                    if (FindObjectOfType<GameManager>().judge)
+                    {
+                        var a = GetComponent<AudioSource>();
+                        a.clip = drop;
+                        a.Play();
+                    }
+
+                    StartCoroutine(RemoveComponents());
+                }
+                else
+                {
+                    if (other.collider.CompareTag("Armor"))
+                    {
+                        if (FindObjectOfType<GameManager>().judge)
+                        {
+                            var a = GetComponent<AudioSource>();
+                            a.clip = hit;
+                            a.Play();
+                        }
+
+                        if (isActive) other.gameObject.GetComponent<ArmorController>().Hit(owner, caliber);
+                        StartCoroutine(RemoveComponents());
+                    }
+                }
             }
 
-            private IEnumerator RemoveRigid()
+            private IEnumerator RemoveComponents()
             {
                 yield return new WaitForSeconds(4);
-                Destroy(GetComponent<Rigidbody>());
+                var r = GetComponent<Rigidbody>();
+                var a = GetComponent<AudioSource>();
+                if (r)
+                {
+                    r.velocity = Vector3.zero;
+                    Destroy(r);
+                }
+
+                if (a) Destroy(a);
             }
         }
     }

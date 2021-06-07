@@ -594,6 +594,8 @@ namespace Script.Controller
             if (isLocalRobot) return;
             var b = Instantiate(bullet, gun.position, gun.rotation);
             b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
+            if (FindObjectOfType<GameManager>().judge && role.Type == TypeT.Hero)
+                gun.GetComponent<AudioSource>().Play();
         }
 
         protected virtual bool FireOperation()
@@ -936,19 +938,6 @@ namespace Script.Controller
                     _target = null;
                 }
 
-                SyncPitch(pitch.transform.rotation);
-
-                // UI切换、车辆旋转
-                if (Cursor.lockState == CursorLockMode.Locked)
-                {
-                    transform.Rotate(Vector3.up, _steeringSpeed);
-                    pitch.transform.Rotate(Vector3.right, _pitchingSpeed);
-                }
-
-                // 旋转阻尼效果
-                _steeringSpeed *= 0.9f;
-                _pitchingSpeed *= 0.9f;
-
                 // 车辆左右平移
                 var oriMax = _maxMotorTorque;
                 if (role.Type == TypeT.Engineer)
@@ -1063,6 +1052,7 @@ namespace Script.Controller
                                         heat += 100;
                                         safe = false;
                                         Fire();
+                                        _pitchingSpeed += Random.Range(-0.3f, 0);
                                     }
                                 }
                                 else
@@ -1070,6 +1060,7 @@ namespace Script.Controller
                                     smallAmmo--;
                                     heat += 10;
                                     Fire();
+                                    _pitchingSpeed += Random.Range(-0.05f, 0);
                                     _fireCd = Random.Range(3, 8);
                                     if (highFreq) _fireCd /= 2;
                                 }
@@ -1090,6 +1081,19 @@ namespace Script.Controller
                 {
                     if (role.Type == TypeT.Hero) safe = true;
                 }
+
+                SyncPitch(pitch.transform.rotation);
+
+                // UI切换、车辆旋转
+                if (Cursor.lockState == CursorLockMode.Locked)
+                {
+                    transform.Rotate(Vector3.up, _steeringSpeed);
+                    pitch.transform.Rotate(Vector3.right, _pitchingSpeed);
+                }
+
+                // 旋转阻尼效果
+                _steeringSpeed *= 0.9f;
+                _pitchingSpeed *= 0.9f;
 
 
                 var heatLimit = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].HeatLimit;

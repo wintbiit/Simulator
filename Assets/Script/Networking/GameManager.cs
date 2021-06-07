@@ -144,13 +144,12 @@ namespace Script.Networking
             private readonly List<GamePlayer> _players = new List<GamePlayer>();
             private readonly Queue<GameEventBase> _eventQueue = new Queue<GameEventBase>();
             private RobotBase _localRobot;
+            private int _gameTime;
 
             public JudgeController judge;
 
             [HideInInspector] public int ptzCount;
             [HideInInspector] public int confirmedCount;
-
-            public int gameTime;
 
             public CampStart redStart;
             public CampStart blueStart;
@@ -265,7 +264,9 @@ namespace Script.Networking
             private void ServerStart()
             {
                 var rand = new Random();
-                globalStatus.countDown = gameTime;
+                // TODO
+                _gameTime = 431;
+                globalStatus.countDown = _gameTime;
                 mineDropTimes.Add(405);
                 mineDropTimes.Add(405);
                 var seed = rand.Next(0, 2);
@@ -507,7 +508,7 @@ namespace Script.Networking
                 // 倒计时
                 if (globalStatus.playing || globalStatus.finished)
                 {
-                    globalStatus.countDown = gameTime - ((int) Time.time - globalStatus.startTime);
+                    globalStatus.countDown = _gameTime - ((int) Time.time - globalStatus.startTime);
                     // 时序事件
                     if (_timeEventTriggers.Any(t => t.time == globalStatus.countDown && !t.triggered))
                     {
@@ -1010,7 +1011,7 @@ namespace Script.Networking
 
             private IEnumerator PlayStartGameMusic()
             {
-                yield return new WaitUntil(() => globalStatus.countDown - gameTime + 5 < 0);
+                yield return new WaitUntil(() => globalStatus.countDown == 425);
                 GameObject.Find("cdSound").GetComponent<AudioSource>().Play();
                 yield return new WaitForSeconds(7.5f);
                 GameObject.Find("inGameMusic").GetComponent<AudioSource>().Play();

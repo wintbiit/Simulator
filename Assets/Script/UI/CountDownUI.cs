@@ -25,8 +25,8 @@ namespace Script.UI
                 {
                     countDown.color = Color.red;
                     minute = 0;
-                    second = 17 + (_gm.globalStatus.countDown -
-                                   (_gm.gameTime - (_gm.globalStatus.finishTime - _gm.globalStatus.startTime)));
+                    second = 16 + _gm.globalStatus.countDown;
+                    // TODO: Fix
                     if (second == 0)
                         _gm.CmdReset();
                 }

@@ -3,6 +3,7 @@ using Script.Controller.Bullet;
 using Script.JudgeSystem;
 using TMPro;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Script.Controller
 {
@@ -45,7 +46,11 @@ namespace Script.Controller
 
             public void Hit(int hitter, CaliberT caliber)
             {
-                _unit?.Hit(hitter, caliber, isTriangle);
+                if (caliber == CaliberT.Large)
+                {
+                    if (Random.Range(0, 5) != 0) _unit?.Hit(hitter, caliber, isTriangle);
+                }
+                else _unit?.Hit(hitter, caliber, isTriangle);
             }
 
             public void ChangeColor(ColorT color)
