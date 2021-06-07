@@ -173,6 +173,8 @@ namespace Script.Networking
             public GameObject loadingHint;
             public GameObject blurLayer;
 
+            [HideInInspector] public GroundControllerBase observing;
+
             [Header("Drone Camera")] public GameObject redDCam;
             public GameObject blueDCam;
 
@@ -263,8 +265,7 @@ namespace Script.Networking
             private void ServerStart()
             {
                 var rand = new Random();
-                // TODO
-                _gameTime = 431;
+                _gameTime = _roomManager.roomSlots.Count == 1 ? 430 : 450;
                 globalStatus.countDown = _gameTime;
                 mineDropTimes.Add(405);
                 mineDropTimes.Add(405);
@@ -507,7 +508,10 @@ namespace Script.Networking
                 // 倒计时
                 if (globalStatus.playing || globalStatus.finished)
                 {
-                    globalStatus.countDown = _gameTime - ((int) Time.time - globalStatus.startTime);
+                    if (!globalStatus.finished)
+                        globalStatus.countDown = _gameTime - ((int) Time.time - globalStatus.startTime);
+                    else
+                        globalStatus.countDown = 16 - (int) (Time.time - globalStatus.finishTime);
                     // 时序事件
                     if (_timeEventTriggers.Any(t => t.time == globalStatus.countDown && !t.triggered))
                     {
@@ -761,7 +765,6 @@ namespace Script.Networking
                             globalStatus.finished = true;
                             globalStatus.finishTime = (int) Time.time;
                             globalStatus.countDown = 16;
-                            // TODO
                             RpcOnClientGameOver(IsRedWin());
                             break;
                         case JudgeSystem.Event.TypeT.BuffActivate:
@@ -849,7 +852,7 @@ namespace Script.Networking
                     }
                 }
 
-                if (_started && globalStatus.countDown > 420 && globalStatus.countDown < 428)
+                if (_started && globalStatus.countDown > 420 && globalStatus.countDown <= 425)
                     foreach (var rb in FindObjectsOfType<GroundControllerBase>())
                         if (rb.Buffs.All(b => b.type != BuffT.Base) && rb.health > 0)
                         {
@@ -941,6 +944,10 @@ namespace Script.Networking
             private void EmActivateRpc(CampT camp)
             {
                 if (_localRobot && _localRobot.role.Camp == camp)
+                    FindObjectOfType<EmUI>().Activate();
+                else if (judge)
+                    FindObjectOfType<EmUI>().Activate();
+                else if (observing && observing.role.Camp == camp)
                     FindObjectOfType<EmUI>().Activate();
             }
 
@@ -1103,7 +1110,8 @@ namespace Script.Networking
                 if (clientFacilityBases.Count > 0)
                 {
                     optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
-                    hudManager.Refresh(_localRobot && !judge ? _localRobot : null);
+                    hudManager.Refresh(
+                        _localRobot && !judge ? _localRobot : judge ? observing ? observing : null : null);
                     FindObjectOfType<MapUI>().Refresh(_localRobot && !judge ? _localRobot : null);
 
                     // 转动飞手摄像机

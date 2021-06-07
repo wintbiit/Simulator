@@ -23,7 +23,7 @@ namespace Script.UI.AR
         private void Update()
         {
             if (!_gm) _gm = FindObjectOfType<GameManager>();
-            else if (_gm.judge && _gm.clientRobotBases.Any(r => r.role.Equals(new RoleT(camp, type)) && r.health > 0))
+            else if (_gm.judge && !_gm.observing && _gm.clientRobotBases.Any(r => r.role.Equals(new RoleT(camp, type)) && r.health > 0))
             {
                 foreach (var c in FindObjectsOfType<Camera>())
                 {

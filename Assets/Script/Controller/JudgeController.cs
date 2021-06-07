@@ -8,6 +8,7 @@ namespace Script.Controller
     public class JudgeController : NetworkBehaviour
     {
         private bool _isLocal;
+        private GroundControllerBase _observing;
 
         [Client]
         public void ConfirmLocal()
@@ -27,25 +28,46 @@ namespace Script.Controller
         {
             if (_isLocal)
             {
-                foreach (var c in FindObjectsOfType<Camera>())
-                    c.enabled = false;
-                GetComponent<Camera>().enabled = true;
-                GetComponent<AudioListener>().enabled = true;
-                if (Cursor.lockState == CursorLockMode.Locked)
+                if (!_observing)
                 {
-                    var move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-                    move *= Input.GetKey(KeyCode.LeftShift) ? 0.2f : 0.03f;
-                    var t = transform;
-                    transform.Translate(move);
-                    var rot = new Vector3(Input.GetAxis("Mouse Y") * -1, Input.GetAxis("Mouse X"), 0);
-                    rot *= FindObjectOfType<GameManager>().GetSensitivity() * 4;
-                    transform.Rotate(rot);
-                    transform.Rotate(Vector3.back * t.rotation.eulerAngles.z);
-                    var up = Vector3.zero;
-                    if (Input.GetKey(KeyCode.Space)) up += Vector3.up * 0.05f;
-                    if (Input.GetKey(KeyCode.LeftControl)) up += Vector3.down * 0.05f;
-                    if (Input.GetKey(KeyCode.LeftShift)) up *= 4;
-                    transform.position += up;
+                    foreach (var c in FindObjectsOfType<Camera>())
+                        c.enabled = false;
+                    GetComponent<Camera>().enabled = true;
+                    GetComponent<AudioListener>().enabled = true;
+                    if (Cursor.lockState == CursorLockMode.Locked)
+                    {
+                        var move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+                        move *= Input.GetKey(KeyCode.LeftShift) ? 0.2f : 0.03f;
+                        var t = transform;
+                        transform.Translate(move);
+                        var rot = new Vector3(Input.GetAxis("Mouse Y") * -1, Input.GetAxis("Mouse X"), 0);
+                        rot *= FindObjectOfType<GameManager>().GetSensitivity() * 4;
+                        transform.Rotate(rot);
+                        transform.Rotate(Vector3.back * t.rotation.eulerAngles.z);
+                        var up = Vector3.zero;
+                        if (Input.GetKey(KeyCode.Space)) up += Vector3.up * 0.05f;
+                        if (Input.GetKey(KeyCode.LeftControl)) up += Vector3.down * 0.05f;
+                        if (Input.GetKey(KeyCode.LeftShift)) up *= 4;
+                        transform.position += up;
+                        if (Input.GetKey(KeyCode.B))
+                        {
+                            _observing = FindObjectOfType<GroundControllerBase>();
+                            _observing.isLocalRobot = true;
+                            FindObjectOfType<GameManager>().observing = _observing;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var c in FindObjectsOfType<Camera>())
+                        c.enabled = false;
+                    GetComponent<AudioListener>().enabled = false;
+                    if (Input.GetKey(KeyCode.B))
+                    {
+                        _observing.isLocalRobot = false;
+                        _observing = null;
+                        FindObjectOfType<GameManager>().observing = null;
+                    }
                 }
             }
             else

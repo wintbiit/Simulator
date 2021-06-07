@@ -137,8 +137,9 @@ namespace Script.Controller
 
         // 多摄像机切换
         [Header("Camera")] public GameObject tpCam;
+
         public GameObject fpCam;
-        private bool _fpActive = true;
+        // private bool _fpActive = true;
 
         // 防翻车回溯
         private Vector3 _lastAngle;
@@ -148,8 +149,8 @@ namespace Script.Controller
         private bool _started;
 
         // 超级电容
-        public float capability;
-        public bool con;
+        [HideInInspector] [SyncVar] public float capability;
+        [HideInInspector] [SyncVar] public bool con;
         private bool _cDown;
 
         // 辅助瞄准
@@ -184,7 +185,7 @@ namespace Script.Controller
 
         protected virtual void OnTriggerStay(Collider other)
         {
-            if (!isLocalRobot) return;
+            if (!isLocalRobot || FindObjectOfType<GameManager>().judge) return;
             if (other.name == "Waves")
             {
                 if (_isSpin && health > 0)
@@ -486,7 +487,7 @@ namespace Script.Controller
             // Cursor.visible = false;
             FindObjectOfType<GameManager>().LocalRobotRegister(this);
             _visual = GameObject.Find("Prediction").GetComponent<LineRenderer>();
-            _fpActive = true;
+            // _fpActive = true;
         }
 
         // 显示、隐藏模型
@@ -570,9 +571,44 @@ namespace Script.Controller
         }
 
         [Command(requiresAuthority = false)]
-        public void CmdSetHealth(int h)
+        private void CmdSetHealth(int h)
         {
             health = h;
+        }
+
+        [Command(requiresAuthority = false)]
+        private void CmdSetHeat(float h)
+        {
+            heat = h;
+        }
+
+        [Command(requiresAuthority = false)]
+        private void CmdSyncCap(float c)
+        {
+            capability = c;
+        }
+
+        [Command(requiresAuthority = false)]
+        private void CmdSyncCon(bool on)
+        {
+            con = on;
+        }
+
+        [Command]
+        private void CmdRotateWheels(Quaternion rot)
+        {
+            RotateWheelsRpc(rot);
+        }
+
+        [ClientRpc]
+        private void RotateWheelsRpc(Quaternion rot)
+        {
+            if (isLocalRobot && !FindObjectOfType<GameManager>().judge) return;
+            foreach (var i in axleInfos)
+            {
+                i.leftWheel.transform.GetChild(0).transform.rotation = rot;
+                i.rightWheel.transform.GetChild(0).transform.rotation = rot;
+            }
         }
 
         [ClientRpc]
@@ -591,9 +627,11 @@ namespace Script.Controller
         [ClientRpc]
         private void FireRpc(float realSpeed)
         {
-            if (isLocalRobot) return;
+            if (isLocalRobot && !FindObjectOfType<GameManager>().judge) return;
             var b = Instantiate(bullet, gun.position, gun.rotation);
             b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
+            if (role.Type == TypeT.Hero) largeAmmo--;
+            if (role.IsInfantry()) smallAmmo--;
             if (FindObjectOfType<GameManager>().judge && role.Type == TypeT.Hero)
                 gun.GetComponent<AudioSource>().Play();
         }
@@ -633,7 +671,7 @@ namespace Script.Controller
         [ClientRpc]
         private void SyncPitchRpc(Quaternion rot)
         {
-            if (!isLocalRobot)
+            if (!isLocalRobot || FindObjectOfType<GameManager>().observing == this)
             {
                 pitch.transform.rotation = rot;
             }
@@ -678,7 +716,7 @@ namespace Script.Controller
                 // 重置车辆位置、旋转
                 if (Input.GetKeyDown(KeyCode.R))
                 {
-                    if (FindObjectsOfType<RobotBase>().Length == 3)
+                    if (FindObjectsOfType<RobotBase>().Length == 3 && !FindObjectOfType<GameManager>().judge)
                     {
                         var selfTransform = transform;
                         selfTransform.position += Vector3.up;
@@ -704,10 +742,13 @@ namespace Script.Controller
                 fpCam.GetComponent<Camera>().enabled = true;
             }
 
-            if (isLocalRobot && health > 0)
+            if (isLocalRobot && !FindObjectOfType<GameManager>().judge && health > 0)
             {
+                var canMove =
+                    FindObjectOfType<GameManager>().globalStatus.countDown <= 420 ||
+                    FindObjectOfType<GameManager>().globalStatus.countDown > 425;
                 // 车辆前后驱动
-                if (Cursor.lockState == CursorLockMode.Locked)
+                if (Cursor.lockState == CursorLockMode.Locked && canMove)
                 {
                     var motor = _maxMotorTorque * 0.45f * Input.GetAxis("Vertical");
                     if (Time.time - _startTime < 0.65f)
@@ -760,6 +801,9 @@ namespace Script.Controller
                         ApplyLocalPositionToVisuals(axleInfo.leftWheel);
                         ApplyLocalPositionToVisuals(axleInfo.rightWheel);
                     }
+
+                    axleInfos[0].leftWheel.GetWorldPose(out _, out var wRot);
+                    CmdRotateWheels(wRot);
                 }
 
                 if (Cursor.lockState == CursorLockMode.Locked)
@@ -942,7 +986,7 @@ namespace Script.Controller
                 var oriMax = _maxMotorTorque;
                 if (role.Type == TypeT.Engineer)
                     _maxMotorTorque = oriMax / 2;
-                if (Cursor.lockState == CursorLockMode.Locked)
+                if (Cursor.lockState == CursorLockMode.Locked && canMove)
                 {
                     var angle = Math.Abs(transform.rotation.eulerAngles.z);
                     if (angle > 180) angle = 360 - angle;
@@ -969,7 +1013,7 @@ namespace Script.Controller
 
                 _maxMotorTorque = oriMax;
 
-                if (Cursor.lockState == CursorLockMode.Locked && isLocalRobot)
+                if (Cursor.lockState == CursorLockMode.Locked && isLocalRobot && !FindObjectOfType<GameManager>().judge)
                 {
                     if (Input.GetKey(KeyCode.LeftShift))
                     {
@@ -1013,6 +1057,9 @@ namespace Script.Controller
                     if (capability > 1)
                         capability = 1;
                 }
+
+                CmdSyncCap(capability);
+                CmdSyncCon(con);
 
                 oriMax = _maxMotorTorque;
                 var climb = transform.localRotation.eulerAngles.x;
@@ -1126,6 +1173,7 @@ namespace Script.Controller
 
                 if (currentHealth != health)
                     CmdSetHealth(currentHealth);
+                CmdSetHeat(heat);
 
 
                 // 射速切换

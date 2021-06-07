@@ -27,11 +27,14 @@ namespace Script.UI
                     minute = 0;
                     second = _gm.globalStatus.countDown;
                     // TODO: Fix
-                    if (second == 0)
+                    if (second == 0 && Time.time - _gm.globalStatus.finishTime > 10)
                         _gm.CmdReset();
                 }
 
-                countDown.text = minute + ":" + (second < 10 ? "0" : "") + second;
+                if (_gm.globalStatus.countDown > 430)
+                    countDown.text = "调整站位";
+                else
+                    countDown.text = minute + ":" + (second < 10 ? "0" : "") + second;
             }
         }
     }

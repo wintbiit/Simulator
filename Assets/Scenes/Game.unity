@@ -35354,6 +35354,7 @@ MonoBehaviour:
   typeConfirm: {fileID: 1381542017}
   loadingHint: {fileID: 2101957615}
   blurLayer: {fileID: 839998074}
+  observing: {fileID: 0}
   redDCam: {fileID: 1801270946}
   blueDCam: {fileID: 1401984795}
   clientRobotBases: []
@@ -57000,7 +57001,7 @@ RectTransform:
   m_GameObject: {fileID: 2123554559}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 146179693}
   m_RootOrder: 0
