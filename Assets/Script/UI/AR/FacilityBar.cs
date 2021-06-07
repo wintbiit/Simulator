@@ -30,8 +30,8 @@ namespace Script.UI.AR
                         {
                             var facilityPos = facility.transform.position;
                             var screenPos =
-                                c.WorldToScreenPoint(facilityPos + Vector3.up * (type == TypeT.Outpost ? 2 : 1.5f));
-                            GetComponent<RectTransform>().anchoredPosition = screenPos;
+                                c.WorldToScreenPoint(facilityPos + Vector3.up * (type == TypeT.Outpost ? 1.8f : 1.5f));
+                            GetComponent<RectTransform>().anchoredPosition = screenPos / GetComponentInParent<CanvasScaler>().scaleFactor;
                             GetComponent<RectTransform>().localScale =
                                 10 / (c.transform.position - facilityPos).magnitude * Vector3.one;
                             bg.enabled = facility.health > 0;

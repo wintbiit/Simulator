@@ -25,7 +25,7 @@ namespace Script.UI
                 {
                     countDown.color = Color.red;
                     minute = 0;
-                    second = 16 + _gm.globalStatus.countDown;
+                    second = _gm.globalStatus.countDown;
                     // TODO: Fix
                     if (second == 0)
                         _gm.CmdReset();

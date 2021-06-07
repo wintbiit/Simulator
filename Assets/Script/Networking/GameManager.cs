@@ -190,7 +190,6 @@ namespace Script.Networking
             private bool _started;
             public List<RobotBase> clientRobotBases = new List<RobotBase>();
             public List<FacilityBase> clientFacilityBases = new List<FacilityBase>();
-            private int _slowDecisionUpdate;
 
             public List<int> mineDropTimes = new List<int>();
 
@@ -761,6 +760,8 @@ namespace Script.Networking
                             globalStatus.playing = false;
                             globalStatus.finished = true;
                             globalStatus.finishTime = (int) Time.time;
+                            globalStatus.countDown = 16;
+                            // TODO
                             RpcOnClientGameOver(IsRedWin());
                             break;
                         case JudgeSystem.Event.TypeT.BuffActivate:
