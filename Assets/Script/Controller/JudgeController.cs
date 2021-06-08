@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using System.Linq;
+using Mirror;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
@@ -32,6 +33,8 @@ namespace Script.Controller
                 {
                     foreach (var c in FindObjectsOfType<Camera>())
                         c.enabled = false;
+                    foreach (var a in FindObjectsOfType<AudioListener>())
+                        a.enabled = false;
                     GetComponent<Camera>().enabled = true;
                     GetComponent<AudioListener>().enabled = true;
                     if (Cursor.lockState == CursorLockMode.Locked)
@@ -49,25 +52,12 @@ namespace Script.Controller
                         if (Input.GetKey(KeyCode.LeftControl)) up += Vector3.down * 0.05f;
                         if (Input.GetKey(KeyCode.LeftShift)) up *= 4;
                         transform.position += up;
-                        if (Input.GetKey(KeyCode.B))
-                        {
-                            _observing = FindObjectOfType<GroundControllerBase>();
-                            _observing.isLocalRobot = true;
-                            FindObjectOfType<GameManager>().observing = _observing;
-                        }
                     }
                 }
                 else
                 {
-                    foreach (var c in FindObjectsOfType<Camera>())
-                        c.enabled = false;
+                    GetComponent<Camera>().enabled = false;
                     GetComponent<AudioListener>().enabled = false;
-                    if (Input.GetKey(KeyCode.B))
-                    {
-                        _observing.isLocalRobot = false;
-                        _observing = null;
-                        FindObjectOfType<GameManager>().observing = null;
-                    }
                 }
             }
             else
@@ -91,6 +81,51 @@ namespace Script.Controller
                 {
                     FindObjectOfType<GameManager>().CmdPunish(CampT.Blue, 3);
                     Debug.Log("蓝方判罚，白屏3秒。");
+                }
+
+                if (!_observing)
+                {
+                    if (Input.GetKeyDown(KeyCode.Alpha1)) SwitchObservation(new RoleT(CampT.Red, TypeT.Hero));
+                    if (Input.GetKeyDown(KeyCode.Alpha2)) SwitchObservation(new RoleT(CampT.Red, TypeT.Engineer));
+                    if (Input.GetKeyDown(KeyCode.Alpha3)) SwitchObservation(new RoleT(CampT.Red, TypeT.InfantryA));
+                    if (Input.GetKeyDown(KeyCode.Alpha4)) SwitchObservation(new RoleT(CampT.Red, TypeT.InfantryB));
+                    if (Input.GetKeyDown(KeyCode.Alpha5)) SwitchObservation(new RoleT(CampT.Red, TypeT.InfantryC));
+                    if (Input.GetKeyDown(KeyCode.Alpha6)) SwitchObservation(new RoleT(CampT.Blue, TypeT.Hero));
+                    if (Input.GetKeyDown(KeyCode.Alpha7)) SwitchObservation(new RoleT(CampT.Blue, TypeT.Engineer));
+                    if (Input.GetKeyDown(KeyCode.Alpha8)) SwitchObservation(new RoleT(CampT.Blue, TypeT.InfantryA));
+                    if (Input.GetKeyDown(KeyCode.Alpha9)) SwitchObservation(new RoleT(CampT.Blue, TypeT.InfantryB));
+                    if (Input.GetKeyDown(KeyCode.Alpha0)) SwitchObservation(new RoleT(CampT.Blue, TypeT.InfantryC));
+                }
+                else
+                {
+                    if (Input.GetKeyDown(KeyCode.Backspace)) SwitchObservation(new RoleT());
+                }
+            }
+        }
+
+        private void SwitchObservation(RoleT role)
+        {
+            var gm = FindObjectOfType<GameManager>();
+            if (gm)
+            {
+                if (!_observing)
+                {
+                    if (gm.clientRobotBases.Any(r => r.role.Equals(role)))
+                    {
+                        var robot = gm.clientRobotBases.First(r => r.role.Equals(role));
+                        if (robot is GroundControllerBase)
+                        {
+                            _observing = (GroundControllerBase) robot;
+                            _observing.isLocalRobot = true;
+                            FindObjectOfType<GameManager>().observing = _observing;
+                        }
+                    }
+                }
+                else
+                {
+                    _observing.isLocalRobot = false;
+                    _observing = null;
+                    FindObjectOfType<GameManager>().observing = null;
                 }
             }
         }

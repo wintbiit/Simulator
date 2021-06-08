@@ -195,13 +195,17 @@ namespace Script.Controller
             {
                 foreach (var c in FindObjectsOfType<Camera>())
                     c.enabled = false;
+                foreach (var a in FindObjectsOfType<AudioListener>())
+                    a.enabled = false;
                 cam.GetComponent<Camera>().enabled = true;
+                cam.GetComponent<AudioListener>().enabled = true;
                 cam.SetActive(isPtz);
                 var dCam = (role.Camp == CampT.Red
                     ? FindObjectOfType<GameManager>().redDCam
                     : FindObjectOfType<GameManager>().blueDCam);
                 dCam.SetActive(!isPtz);
                 dCam.GetComponent<Camera>().enabled = !isPtz;
+                dCam.GetComponent<AudioListener>().enabled = !isPtz;
                 if (!isPtz)
                 {
                     if (raiding)
@@ -219,57 +223,65 @@ namespace Script.Controller
                 {
                     if (!isPtz)
                     {
-                        if (Input.GetKey(KeyCode.Space))
+                        var gm = FindObjectOfType<GameManager>();
+                        if (gm)
                         {
-                            if (_yOffset < 2)
+                            var canMove = gm.globalStatus.countDown <= 420;
+                            if (canMove)
                             {
-                                transform.Translate(Vector3.up * moveSpeed);
-                                _yOffset += moveSpeed;
-                            }
-                        }
+                                if (Input.GetKey(KeyCode.Space))
+                                {
+                                    if (_yOffset < 2)
+                                    {
+                                        transform.Translate(Vector3.up * moveSpeed);
+                                        _yOffset += moveSpeed;
+                                    }
+                                }
 
-                        if (Input.GetKey(KeyCode.LeftShift))
-                        {
-                            if (_yOffset > 0)
-                            {
-                                transform.Translate(Vector3.down * moveSpeed);
-                                _yOffset -= moveSpeed;
-                            }
-                        }
+                                if (Input.GetKey(KeyCode.LeftShift))
+                                {
+                                    if (_yOffset > 0)
+                                    {
+                                        transform.Translate(Vector3.down * moveSpeed);
+                                        _yOffset -= moveSpeed;
+                                    }
+                                }
 
-                        if (Input.GetKey(KeyCode.W))
-                        {
-                            if (_zOffset < 9)
-                            {
-                                transform.Translate(Vector3.forward * moveSpeed);
-                                _zOffset += moveSpeed;
-                            }
-                        }
+                                if (Input.GetKey(KeyCode.W))
+                                {
+                                    if (_zOffset < 9)
+                                    {
+                                        transform.Translate(Vector3.forward * moveSpeed);
+                                        _zOffset += moveSpeed;
+                                    }
+                                }
 
-                        if (Input.GetKey(KeyCode.A))
-                        {
-                            if (_xOffset > -0.5)
-                            {
-                                transform.Translate(Vector3.left * moveSpeed);
-                                _xOffset -= moveSpeed;
-                            }
-                        }
+                                if (Input.GetKey(KeyCode.A))
+                                {
+                                    if (_xOffset > -0.5)
+                                    {
+                                        transform.Translate(Vector3.left * moveSpeed);
+                                        _xOffset -= moveSpeed;
+                                    }
+                                }
 
-                        if (Input.GetKey(KeyCode.S))
-                        {
-                            if (_zOffset > -0.5)
-                            {
-                                transform.Translate(Vector3.back * moveSpeed);
-                                _zOffset -= moveSpeed;
-                            }
-                        }
+                                if (Input.GetKey(KeyCode.S))
+                                {
+                                    if (_zOffset > -0.5)
+                                    {
+                                        transform.Translate(Vector3.back * moveSpeed);
+                                        _zOffset -= moveSpeed;
+                                    }
+                                }
 
-                        if (Input.GetKey(KeyCode.D))
-                        {
-                            if (_xOffset < 3)
-                            {
-                                transform.Translate(Vector3.right * moveSpeed);
-                                _xOffset += moveSpeed;
+                                if (Input.GetKey(KeyCode.D))
+                                {
+                                    if (_xOffset < 3)
+                                    {
+                                        transform.Translate(Vector3.right * moveSpeed);
+                                        _xOffset += moveSpeed;
+                                    }
+                                }
                             }
                         }
                     }

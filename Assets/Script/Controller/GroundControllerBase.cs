@@ -738,8 +738,11 @@ namespace Script.Controller
 
                 foreach (var c in FindObjectsOfType<Camera>())
                     c.enabled = false;
+                foreach (var a in FindObjectsOfType<AudioListener>())
+                    a.enabled = false;
                 fpCam.SetActive(true);
                 fpCam.GetComponent<Camera>().enabled = true;
+                fpCam.GetComponent<AudioListener>().enabled = true;
             }
 
             if (isLocalRobot && !FindObjectOfType<GameManager>().judge && health > 0)
