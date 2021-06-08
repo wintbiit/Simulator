@@ -47,6 +47,7 @@ namespace Script.Controller
     public class DroneController : RobotBase
     {
         public GameObject cam;
+        public Camera d2C;
         public GameObject yaw;
         public GameObject pitch;
 
@@ -85,6 +86,8 @@ namespace Script.Controller
         private float _xOffset;
         private float _yOffset;
         private float _zOffset;
+
+        private bool _infoScreenInitiated;
 
         [Server]
         public DroneControllerRecord RecordFrame()
@@ -180,6 +183,16 @@ namespace Script.Controller
             gameManager.Emit(new DartEvent(role.Camp));
         }
 
+        private void InitInfoScreen()
+        {
+            if (Display.displays.Length > 1)
+            {
+                Display.displays[1].Activate();
+                Display.displays[1]
+                    .SetRenderingResolution(Display.displays[1].systemWidth, Display.displays[1].systemHeight);
+            }
+        }
+
         protected override void FixedUpdate()
         {
             base.FixedUpdate();
@@ -226,6 +239,24 @@ namespace Script.Controller
                         var gm = FindObjectOfType<GameManager>();
                         if (gm)
                         {
+                            if (!_infoScreenInitiated && !gm.judge)
+                            {
+                                InitInfoScreen();
+                                _infoScreenInitiated = true;
+                            }
+
+                            var rCam = (role.Camp == CampT.Red
+                                ? FindObjectOfType<GameManager>().redRCam
+                                : FindObjectOfType<GameManager>().blueRCam);
+                            rCam.SetActive(!isPtz);
+                            rCam.GetComponent<Camera>().enabled = !isPtz;
+                            var rcCam = (role.Camp == CampT.Red
+                                ? FindObjectOfType<GameManager>().redRCCam
+                                : FindObjectOfType<GameManager>().blueRCCam);
+                            rcCam.SetActive(!isPtz);
+                            rcCam.GetComponent<Camera>().enabled = !isPtz;
+                            d2C.enabled = true;
+
                             var canMove = gm.globalStatus.countDown <= 420;
                             if (canMove)
                             {

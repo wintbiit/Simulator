@@ -178,6 +178,11 @@ namespace Script.Networking
             [Header("Drone Camera")] public GameObject redDCam;
             public GameObject blueDCam;
 
+            [Header("Radar Camera")] public GameObject redRCam;
+            public GameObject blueRCam;
+            public GameObject redRCCam;
+            public GameObject blueRCCam;
+
             private readonly List<TimeEventTrigger> _timeEventTriggers = new List<TimeEventTrigger>
             {
                 new TimeEventTrigger {time = 6 * 60, e = JudgeSystem.Event.TypeT.SixMinute},
