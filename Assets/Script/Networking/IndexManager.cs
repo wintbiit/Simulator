@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using Mirror;
 using UnityEngine;
 using Script.Networking.Lobby;
@@ -33,6 +34,11 @@ namespace Script.Networking
 
             // Return动作提示文字
             public TMP_Text enterHintText;
+
+            private void Awake()
+            {
+                Screen.SetResolution(Screen.width, Screen.height, true);
+            }
 
             private void Start()
             {

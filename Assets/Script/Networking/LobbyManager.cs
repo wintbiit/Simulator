@@ -48,7 +48,7 @@ namespace Script.Networking
             /*
              * 游戏类型标识
              * 此设计的作用是方便单人跑图
-             * 如果玩家运行本地服务器，而且只有自己一个人，不需要裁判就可以开始游戏
+             * 如果玩家运行本地服务器，(而且只有自己一个人x)方便调试，不需要裁判就可以开始游戏
              */
             [SyncVar] private bool _isHost;
 
@@ -285,7 +285,7 @@ namespace Script.Networking
                 {
                     _allReady = _roomManager.allPlayersReady;
                     // 判断是否为单机跑图
-                    _isHost = _roomManager.IsHost && FindObjectsOfType<RoomPlayer>().Length == 1;
+                    _isHost = _roomManager.IsHost;// && FindObjectsOfType<RoomPlayer>().Length == 1;
                     // 如果是纯服务器模式后面的UI处理就不需要了
                     if (_roomManager.IsServer && !_roomManager.IsHost) return;
                 }

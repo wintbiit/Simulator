@@ -1117,7 +1117,11 @@ namespace Script.Networking
                     optionsPanel.SetActive(Cursor.lockState != CursorLockMode.Locked);
                     hudManager.Refresh(
                         _localRobot && !judge ? _localRobot : judge ? observing ? observing : null : null);
-                    FindObjectOfType<MapUI>().Refresh(_localRobot && !judge ? _localRobot : null);
+                    foreach (var map in FindObjectsOfType<MapUI>())
+                    {
+                        if (map.CompareTag("InfoDisplay")) map.Refresh(null);
+                        else map.Refresh(_localRobot && !judge ? _localRobot : null);
+                    }
 
                     // 转动飞手摄像机
                     if (_localRobot)
