@@ -8,12 +8,12 @@ public class LaserRotate_C : MonoBehaviour {
     public float speedy = 0.0f;
     public float speedz = 0.0f;
 
-    private bool UseCenter = false;
-
-    // Use this for initialization
-    void Start () {
-        //if (UseCenter) { transform.position = GetComponent("Renderer").bounds.center + transform.position; }
-    }
+    // private bool UseCenter = false;
+    //
+    // // Use this for initialization
+    // void Start () {
+    //     //if (UseCenter) { transform.position = GetComponent("Renderer").bounds.center + transform.position; }
+    // }
 	
 	// Update is called once per frame
 	void Update () {

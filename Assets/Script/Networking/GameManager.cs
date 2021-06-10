@@ -769,6 +769,7 @@ namespace Script.Networking
                             if (globalStatus.finished) break;
                             globalStatus.playing = false;
                             globalStatus.finished = true;
+                            Cursor.lockState = CursorLockMode.None;
                             globalStatus.finishTime = (int) Time.time;
                             globalStatus.countDown = 16;
                             RpcOnClientGameOver(IsRedWin());
@@ -1103,7 +1104,7 @@ namespace Script.Networking
                     else
                         resultTitle.text = redWin == 0 ? "平局" : "失败";
                 }
-                
+
                 if (judge)
                 {
                     resultTitle.text = redWin == 1 ? "红方胜利" : redWin == -1 ? "蓝方胜利" : "平局";
@@ -1161,7 +1162,7 @@ namespace Script.Networking
             private void ClientUpdate()
             {
                 // 解锁鼠标
-                if (Input.GetKeyDown(KeyCode.Escape))
+                if (Input.GetKeyDown(KeyCode.Escape) && !globalStatus.finished)
                 {
                     if (Cursor.lockState == CursorLockMode.Locked)
                     {
@@ -1181,6 +1182,7 @@ namespace Script.Networking
             {
                 if (_roomManager && _roomManager.IsHost)
                     _roomManager.ResetServer();
+                FindObjectOfType<InfoScreenUI>().quit = true;
                 FindObjectOfType<RoomManager>().StopClient();
                 SceneManager.LoadScene("Index");
             }

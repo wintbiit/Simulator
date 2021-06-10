@@ -2,6 +2,7 @@
 using Script.Networking.Game;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Script.UI
 {
@@ -27,14 +28,28 @@ namespace Script.UI
                     minute = 0;
                     second = _gm.globalStatus.countDown;
                     // TODO: Fix
-                    if (second == 0 && Time.time - _gm.globalStatus.finishTime > 10)
-                        _gm.CmdReset();
+                    if (second <= 0 && Time.time - _gm.globalStatus.finishTime > 10)
+                    {
+                        try
+                        {
+                            _gm.CmdReset();
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
+
+                        SceneManager.LoadScene("Index");
+                    }
                 }
 
-                if (_gm.globalStatus.countDown > 430)
-                    countDown.text = "调整站位";
-                else
-                    countDown.text = minute + ":" + (second < 10 ? "0" : "") + second;
+                if (_gm.globalStatus.countDown >= 0)
+                {
+                    if (_gm.globalStatus.countDown > 430)
+                        countDown.text = "调整站位";
+                    else
+                        countDown.text = minute + ":" + (second < 10 ? "0" : "") + second;
+                }
             }
         }
     }

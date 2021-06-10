@@ -1,5 +1,6 @@
 using System.Linq;
 using Script.Controller;
+using Script.JudgeSystem;
 using Script.JudgeSystem.Robot;
 using Script.UI.HUD;
 using TMPro;
@@ -15,6 +16,8 @@ namespace Script.UI
         public TMP_Text money;
         public TMP_Text decision;
 
+        [HideInInspector] public bool quit;
+
         private void TogglePending(bool status)
         {
             pending.SetActive(status);
@@ -22,8 +25,27 @@ namespace Script.UI
 
         public override void Refresh(RobotBase localRobot)
         {
-            TogglePending(Gm.globalStatus.finished);
-            decision.text = FindObjectOfType<StrategyUI>()?.strategyDisplay.text;
+            TogglePending(quit || Gm.globalStatus.finished);
+
+            // decision.text = FindObjectOfType<StrategyUI>()?.strategyDisplay.text;
+            decision.text = "";
+            if (Gm.globalStatus.countDown <= 420)
+            {
+                var strategy = FindObjectOfType<StrategyUI>();
+                if (strategy)
+                {
+                    var decider = strategy.Decider;
+                    if (decider.Code != -1)
+                    {
+                        var table = StrategyTable.Table[decider.Code].Messages;
+                        foreach (var k in table.Keys)
+                        {
+                            decision.text += k + ": " + table[k] + "\n";
+                        }
+                    }
+                }
+            }
+
             var campRobots =
                 Gm.clientRobotBases.Where(r => r.role.Camp == localRobot.role.Camp && r is GroundControllerBase);
             int sA = 0, lA = 0;

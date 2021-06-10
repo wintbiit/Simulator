@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using Mirror;
 using Script.Controller;
@@ -8,6 +9,7 @@ using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace Script.Networking
 {
@@ -24,7 +26,8 @@ namespace Script.Networking
          */
         public class RoomManager : NetworkRoomManager
         {
-            private const string SecretKey = "eAFVrESXHPx9MaFKd5xcGBgsPWFshw9Sxp5nHr4RGpD6qRf9YA9neWqaUNqDAyR4uW2VGYZXXbmbZKzcYxTs3m3xrAFRX9AyZqkFHkdbGqxXeuuqkhVtc8Rxk4qxqtQWQ5NAasucF4wAzR8CcY8KdPzbmfFVkUEymTDv8mD6bawMRcveyB5xXRWhXgdPUD2TYHZNTggfN5pfgQuF2adrFE9r6xNd6BYAUNrewhFNvRn6BHKWXwvQ5xY9CduRzTYa7CCmtRHZqbF3bmSwSAY2cKNZyfRsydxYwmvXXDEMKQf9PQSKbZa98hDAnEMYSP7Ncegh9kaZcqdPnTw5UCqfqrY659pbmZ55bbvtgw35M8rkaVEdsTRAhbVdhWwuacgGveQQhPquY3EzWq7nQQWb2XB4YZUp4ermdTX7YptUAAYbUkEuuER2pTb6FMShbGzbuAD6UxngAPtvaNKNbMXRa6wFnT63gytaxfcmFXbDcuSPrVZyCXNaBxe5s8X8pcvBCHQ6HKq45xDeppp9pZF3fvXFVD9yXkw8yy7NsFp4W4updRdp8b7P6Azq8Nms3Q44ANg4gZ3Fd5BdMrBTrgzv4tCMuC34SVsMdx93BzwMdxvbWk7mQbkgVvvaSRAaCwaX7WZtFR94hnUmXkxCbS9G26KYHPHbXhveKWn9QWqc8vCnKn4S6dwVyNnpfsHQUd9Nwe6vtm4WXz55Xzz43RZzGPvsQdRxXwBuUg7wxpqA3T227TyfCNRhPdxZZpKSUw3b5PUcdUn8DNqZPYVrfmcS6aTvCyTbSUCHza3PCSY7snxXPuFPZ6GnB2eES2xvzEcRaTMfEUM2Wxb2uddanpNVt6rGwm2gsfKAtqvacvdCS5P5FNU4zct4ZVfxMRsGQt4SU5fqtTgdEAXpUbUX8s7XhS8ZdqEX4e79bK26garsH3DXuKw7cR2MAGEsQVvRNM8sAwGW6can3w6A5ShdbpXsf3fvRnkntDBGn4Ggw89um7PMaFQS2tq5ky89kSsXtmCE";
+            private const string SecretKey =
+                "eAFVrESXHPx9MaFKd5xcGBgsPWFshw9Sxp5nHr4RGpD6qRf9YA9neWqaUNqDAyR4uW2VGYZXXbmbZKzcYxTs3m3xrAFRX9AyZqkFHkdbGqxXeuuqkhVtc8Rxk4qxqtQWQ5NAasucF4wAzR8CcY8KdPzbmfFVkUEymTDv8mD6bawMRcveyB5xXRWhXgdPUD2TYHZNTggfN5pfgQuF2adrFE9r6xNd6BYAUNrewhFNvRn6BHKWXwvQ5xY9CduRzTYa7CCmtRHZqbF3bmSwSAY2cKNZyfRsydxYwmvXXDEMKQf9PQSKbZa98hDAnEMYSP7Ncegh9kaZcqdPnTw5UCqfqrY659pbmZ55bbvtgw35M8rkaVEdsTRAhbVdhWwuacgGveQQhPquY3EzWq7nQQWb2XB4YZUp4ermdTX7YptUAAYbUkEuuER2pTb6FMShbGzbuAD6UxngAPtvaNKNbMXRa6wFnT63gytaxfcmFXbDcuSPrVZyCXNaBxe5s8X8pcvBCHQ6HKq45xDeppp9pZF3fvXFVD9yXkw8yy7NsFp4W4updRdp8b7P6Azq8Nms3Q44ANg4gZ3Fd5BdMrBTrgzv4tCMuC34SVsMdx93BzwMdxvbWk7mQbkgVvvaSRAaCwaX7WZtFR94hnUmXkxCbS9G26KYHPHbXhveKWn9QWqc8vCnKn4S6dwVyNnpfsHQUd9Nwe6vtm4WXz55Xzz43RZzGPvsQdRxXwBuUg7wxpqA3T227TyfCNRhPdxZZpKSUw3b5PUcdUn8DNqZPYVrfmcS6aTvCyTbSUCHza3PCSY7snxXPuFPZ6GnB2eES2xvzEcRaTMfEUM2Wxb2uddanpNVt6rGwm2gsfKAtqvacvdCS5P5FNU4zct4ZVfxMRsGQt4SU5fqtTgdEAXpUbUX8s7XhS8ZdqEX4e79bK26garsH3DXuKw7cR2MAGEsQVvRNM8sAwGW6can3w6A5ShdbpXsf3fvRnkntDBGn4Ggw89um7PMaFQS2tq5ky89kSsXtmCE";
 
             public bool secretMode;
 
@@ -429,7 +432,7 @@ namespace Script.Networking
             {
                 try
                 {
-                    var sr = new StreamReader(Environment.CurrentDirectory + "\\Key");
+                    var sr = new StreamReader(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Key");
                     secretMode = sr.ReadLine() == SecretKey;
                 }
                 catch (Exception)
@@ -453,6 +456,14 @@ namespace Script.Networking
             {
                 // 重载防止绘制默认GUI
             }
+
+            // public override void OnDestroy()
+            // {
+            //     foreach (var p in Process.GetProcessesByName("Simulator"))
+            //     {
+            //         p.Kill();
+            //     }
+            // }
         }
     }
 }

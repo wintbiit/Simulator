@@ -340,11 +340,11 @@ namespace Script.Controller
                 {
                     if (level == 1)
                     {
-                        if (Random.Range(0, 1) == 0) CmdHit(hitter, caliber);
+                        if (Random.Range(0, 2) == 0) CmdHit(hitter, caliber);
                     }
                     else
                     {
-                        if (Random.Range(0, 2) == 0) CmdHit(hitter, caliber);
+                        if (Random.Range(0, 3) == 0) CmdHit(hitter, caliber);
                     }
                 }
                 else CmdHit(hitter, caliber);
@@ -354,7 +354,7 @@ namespace Script.Controller
                 {
                     if (level == 1)
                     {
-                        if (Random.Range(0, 1) == 0)
+                        if (Random.Range(0, 2) == 0)
                         {
                             gameManager.Emit(new HitEvent(hitter, id, caliber));
                             HitRpc();
@@ -362,7 +362,7 @@ namespace Script.Controller
                     }
                     else
                     {
-                        if (Random.Range(0, 2) == 0)
+                        if (Random.Range(0, 3) == 0)
                         {
                             gameManager.Emit(new HitEvent(hitter, id, caliber));
                             HitRpc();
@@ -649,7 +649,7 @@ namespace Script.Controller
         {
             var b = Instantiate(bullet, gun.position, gun.rotation);
             var realSpeed = RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
-                .VelocityLimit * Random.Range(0.9f, 1.1f);
+                .VelocityLimit * Random.Range(0.8f, 1.2f);
             b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
             var bulletController = b.GetComponent<BulletController>();
             bulletController.owner = id;
@@ -926,19 +926,19 @@ namespace Script.Controller
                         }
 
                         // 扰动
-                        vTargetPos += Vector3.one * (Random.Range(-0.3f, 0.3f) * Random.Range(-0.3f, 0.3f)) +
-                                      transform.position / 15 * (Mathf.Sin(Time.time) * Mathf.Cos(Time.time * 3) *
-                                                                 Random.Range(0.8f, 1.2f));
+                        // vTargetPos += Vector3.one * (Random.Range(-0.3f, 0.3f) * Random.Range(-0.3f, 0.3f)) +
+                        //               transform.position / 15 * (Mathf.Sin(Time.time) * Mathf.Cos(Time.time * 3) *
+                        //                                          Random.Range(0.8f, 1.2f));
                         var delta = fpCamera.WorldToScreenPoint(vTargetPos);
                         delta -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
                         // var screenErr = delta;
-                        delta *= 10;
+                        delta *= 120;
                         delta.y /= Screen.height;
                         delta.x /= Screen.width;
                         // var noise = Random.Range(-0.3f, 0.3f);
                         // delta += new Vector3(noise, noise, 0);
-                        _pitchingSpeed -= (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f) * 2.2f;
-                        _steeringSpeed += (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f) * 2.2f;
+                        _pitchingSpeed -= (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f) / 2;
+                        _steeringSpeed += (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f) / 2;
 
                         // {
                         //     var vY0 = Mathf.Sin(theta) *

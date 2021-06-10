@@ -40,6 +40,7 @@ namespace Script.Controller
             {
                 if (other.gameObject.name == "Arena21")
                 {
+                    isActive = false;
                     if (FindObjectOfType<GameManager>().judge)
                     {
                         var a = GetComponent<AudioSource>();

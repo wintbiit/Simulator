@@ -37,7 +37,26 @@ namespace Script.Networking
 
             private void Awake()
             {
-                Screen.SetResolution(Screen.width, Screen.height, true);
+                var resolutions = Screen.resolutions; //获取设置当前屏幕分辩率
+
+                //找到最大分辨率
+                int width = resolutions[0].width, height = resolutions[0].height;
+                foreach (var t in resolutions)
+                {
+                    if (t.width > width)
+                    {
+                        width = t.width;
+                        height = t.height;
+                    }
+
+                    if (t.width == width && height > t.height)
+                    {
+                        width = t.width;
+                        height = t.height;
+                    }
+                }
+
+                Screen.SetResolution(width, height, true);
             }
 
             private void Start()

@@ -1724,7 +1724,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 1600, y: 900}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -2692,6 +2692,7 @@ MonoBehaviour:
   _allPlayersReady: 0
   roomSlots: []
   clientIndex: 0
+  secretMode: 0
   heroPrefab: {fileID: 3824758814212177295, guid: de2f21e233d50c4429b43e29c7e4e8d7,
     type: 3}
   engineerPrefab: {fileID: 440092709313680968, guid: 32fb68143fe37a0459a74785a7c831e1,

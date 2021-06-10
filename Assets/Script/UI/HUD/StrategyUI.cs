@@ -8,6 +8,7 @@ using Script.JudgeSystem;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using TMPro;
+using UnityEngine;
 
 namespace Script.UI.HUD
 {
@@ -15,8 +16,8 @@ namespace Script.UI.HUD
     {
         public TMP_Text label;
         public TMP_Text strategyDisplay;
+        [HideInInspector]public Decision Decider;
         private int _slowDecisionUpdate;
-        private Decision _decider;
 
         private void Start()
         {
@@ -45,7 +46,7 @@ namespace Script.UI.HUD
                 }
             };
             if (!process.Start()) return;
-            _decider = new Decision();
+            Decider = new Decision();
             process.WaitForExit();
         }
 
@@ -58,10 +59,10 @@ namespace Script.UI.HUD
             _slowDecisionUpdate++;
             if (_slowDecisionUpdate <= 20) return;
             _slowDecisionUpdate = 0;
-            if (_decider == null) return;
+            if (Decider == null) return;
             var em = (EnergyMechanismController) Gm.clientFacilityBases
                 .FindAll(f => f.role.Type == TypeT.EnergyMechanism).First();
-            _decider.Decide(new Situation
+            Decider.Decide(new Situation
             {
                 AHP = 100,
                 BuffAvailable = em.branches[0].armor.GetColor() == ColorT.Down ? 0 : 1,
@@ -72,8 +73,8 @@ namespace Script.UI.HUD
                 SHP = Gm.clientRobotBases.First(r =>
                     r.role.Equals(new RoleT(localRobot.role.Camp, TypeT.Guard))).health
             });
-            if (_decider.Code == -1) return;
-            var m = StrategyTable.Table[_decider.Code].Messages;
+            if (Decider.Code == -1) return;
+            var m = StrategyTable.Table[Decider.Code].Messages;
             if (m.ContainsKey(TypeT.InfantryA) && localRobot.role.IsInfantry())
                 strategyDisplay.text = m[TypeT.InfantryA];
             if (m.ContainsKey(localRobot.role.Type))

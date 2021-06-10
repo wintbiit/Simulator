@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Script.Controller.Bullet;
 using Script.JudgeSystem;
 using TMPro;
@@ -46,11 +47,19 @@ namespace Script.Controller
 
             public void Hit(int hitter, CaliberT caliber)
             {
-                if (caliber == CaliberT.Large)
+                if (caliber == CaliberT.Large && GetComponentInParent<GroundControllerBase>())
                 {
-                    if (Random.Range(0, 5) != 0) _unit?.Hit(hitter, caliber, isTriangle);
+                    if (Random.Range(0, 2) == 0)
+                    {
+                        StartCoroutine(Blink(0.7f));
+                        _unit?.Hit(hitter, caliber, isTriangle);
+                    }
                 }
-                else _unit?.Hit(hitter, caliber, isTriangle);
+                else
+                {
+                    StartCoroutine(Blink(caliber == CaliberT.Large ? 0.7f : 0.4f));
+                    _unit?.Hit(hitter, caliber, isTriangle);
+                }
             }
 
             public void ChangeColor(ColorT color)
@@ -99,6 +108,13 @@ namespace Script.Controller
 
             public void ChangeLabel(int labelNumber) =>
                 label.text = labelNumber != 0 ? (labelNumber % 10).ToString() : "";
+
+            public IEnumerator Blink(float t)
+            {
+                ChangeColor(ColorT.Down);
+                yield return new WaitForSeconds(t);
+                ChangeColor(_color);
+            }
         }
     }
 }

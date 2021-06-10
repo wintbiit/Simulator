@@ -131,12 +131,12 @@ namespace Script.Controller
                         if (!t.transform.GetComponentInParent<GroundControllerBase>()) continue;
                         minDistance = distance;
                         target = t;
-                        _pitchingSpeed = 0;
-                        _steeringSpeed = 0;
                     }
 
                     if (target != null)
                     {
+                        _pitchingSpeed = 0;
+                        _steeringSpeed = 0;
                         var position = fpCam.transform.position;
                         var targetPosition = target.transform.position;
                         // 辅助瞄准算法
@@ -181,17 +181,17 @@ namespace Script.Controller
                         var delta = fpCamera.WorldToScreenPoint(
                             vTargetPos + _prediction * flightTime / _predictInterval);
                         delta -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
-                        delta *= 10;
+                        delta *= 20;
                         delta.y /= Screen.height;
                         delta.x /= Screen.width;
-                        _pitchingSpeed = (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f) * -5;
-                        _steeringSpeed = (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f) * 15;
+                        _pitchingSpeed -= 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f;
+                        _steeringSpeed += (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f) * 5;
 
                         if (_fireCd <= 0 && smallAmmo > 0)
                         {
                             smallAmmo--;
                             Fire(0);
-                            _fireCd = Random.Range(3, 8);
+                            _fireCd = Random.Range(5, 12);
                         }
                         else
                         {
@@ -202,15 +202,15 @@ namespace Script.Controller
                     {
                         var pitchAngle = head.pitch.transform.localRotation.z;
                         var yawAngle = head.yaw.transform.localRotation.y;
-                        _pitchingSpeed = pitchAngle > 0 ? 2 : -2;
-                        _steeringSpeed = yawAngle > -180 ? -2 : 2;
+                        _pitchingSpeed = pitchAngle > 0 ? 1.5f : -1.5f;
+                        _steeringSpeed = yawAngle > -180 ? -1.5f : 1.5f;
                     }
 
                     // 旋转阻尼效果
                     _steeringSpeed *= 0.9f;
                     _pitchingSpeed *= 0.9f;
 
-                    head.yaw.transform.Rotate(Vector3.up, _steeringSpeed * 1.9f);
+                    head.yaw.transform.Rotate(Vector3.up, _steeringSpeed * 2.2f);
                     head.pitch.transform.Rotate(Vector3.forward, _pitchingSpeed * 1.9f);
                     SyncPtz(0, head.yaw.transform.rotation, head.pitch.transform.rotation);
                 }
