@@ -2,9 +2,7 @@
 
 ## 开发中
 
-- [ ] 地面、围栏更换
-- [ ] 裁判视角AR
-- [ ] 场景中的标志和大屏幕
+![](Images/Version061021.png)
 
 ![](Images/Version060421B.png)
 

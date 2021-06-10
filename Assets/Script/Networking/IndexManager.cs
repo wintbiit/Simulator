@@ -61,6 +61,7 @@ namespace Script.Networking
 
             private void Start()
             {
+                Cursor.lockState = CursorLockMode.None;
                 _roomManager = GameObject.Find("RoomManager").GetComponent<RoomManager>();
                 displayNameInputField.onValueChanged.AddListener(OnDisplayNameChanged);
                 serverAddressInputField.onValueChanged.AddListener(OnServerAddressChanged);

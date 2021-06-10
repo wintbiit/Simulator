@@ -769,7 +769,6 @@ namespace Script.Networking
                             if (globalStatus.finished) break;
                             globalStatus.playing = false;
                             globalStatus.finished = true;
-                            Cursor.lockState = CursorLockMode.None;
                             globalStatus.finishTime = (int) Time.time;
                             globalStatus.countDown = 16;
                             RpcOnClientGameOver(IsRedWin());
@@ -1162,7 +1161,7 @@ namespace Script.Networking
             private void ClientUpdate()
             {
                 // 解锁鼠标
-                if (Input.GetKeyDown(KeyCode.Escape) && !globalStatus.finished)
+                if (Input.GetKeyDown(KeyCode.Escape))
                 {
                     if (Cursor.lockState == CursorLockMode.Locked)
                     {
