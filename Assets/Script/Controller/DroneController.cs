@@ -7,6 +7,7 @@ using Script.JudgeSystem.Event;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using Script.Networking.Game;
+using Script.Networking.Lobby;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
@@ -305,23 +306,26 @@ namespace Script.Controller
                         var gm = FindObjectOfType<GameManager>();
                         if (gm)
                         {
-                            if (!_infoScreenInitiated && !gm.judge)
+                            if (FindObjectOfType<RoomManager>().secretMode)
                             {
-                                InitInfoScreen();
-                                _infoScreenInitiated = true;
-                            }
+                                if (!_infoScreenInitiated && !gm.judge)
+                                {
+                                    InitInfoScreen();
+                                    _infoScreenInitiated = true;
+                                }
 
-                            var rCam = (role.Camp == CampT.Red
-                                ? FindObjectOfType<GameManager>().redRCam
-                                : FindObjectOfType<GameManager>().blueRCam);
-                            rCam.SetActive(isPtz);
-                            rCam.GetComponent<Camera>().enabled = isPtz;
-                            var rcCam = (role.Camp == CampT.Red
-                                ? FindObjectOfType<GameManager>().redRCCam
-                                : FindObjectOfType<GameManager>().blueRCCam);
-                            rcCam.SetActive(isPtz);
-                            rcCam.GetComponent<Camera>().enabled = isPtz;
-                            d2C.enabled = true;
+                                var rCam = (role.Camp == CampT.Red
+                                    ? FindObjectOfType<GameManager>().redRCam
+                                    : FindObjectOfType<GameManager>().blueRCam);
+                                rCam.SetActive(isPtz);
+                                rCam.GetComponent<Camera>().enabled = isPtz;
+                                var rcCam = (role.Camp == CampT.Red
+                                    ? FindObjectOfType<GameManager>().redRcCam
+                                    : FindObjectOfType<GameManager>().blueRcCam);
+                                rcCam.SetActive(isPtz);
+                                rcCam.GetComponent<Camera>().enabled = isPtz;
+                                d2C.enabled = true;
+                            }
 
                             if (Input.GetKeyDown(KeyCode.H))
                             {

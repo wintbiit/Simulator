@@ -127,9 +127,12 @@ namespace Script.Controller
                         sp -= new Vector3(Screen.width / 2.0f, Screen.height / 2.0f, 0);
                         var distance = sp.sqrMagnitude;
                         if (!(distance < minDistance)) continue;
-                        if ((t.transform.position - fpCam.transform.position).magnitude > 6.5f) continue;
+                        if ((t.transform.position - fpCam.transform.position).magnitude > 10) continue;
+                        if (!t.transform.GetComponentInParent<GroundControllerBase>()) continue;
                         minDistance = distance;
                         target = t;
+                        _pitchingSpeed = 0;
+                        _steeringSpeed = 0;
                     }
 
                     if (target != null)
@@ -181,14 +184,14 @@ namespace Script.Controller
                         delta *= 10;
                         delta.y /= Screen.height;
                         delta.x /= Screen.width;
-                        _pitchingSpeed -= 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f;
-                        _steeringSpeed += 1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f;
+                        _pitchingSpeed = (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.y)) - 0.5f) * -5;
+                        _steeringSpeed = (1.0f / (1 + Mathf.Pow((float) Math.E, -delta.x)) - 0.5f) * 15;
 
-                        if (_fireCd <= 0 && smallAmmo > 0 && delta.magnitude < 65)
+                        if (_fireCd <= 0 && smallAmmo > 0)
                         {
                             smallAmmo--;
                             Fire(0);
-                            _fireCd = Random.Range(4, 8);
+                            _fireCd = Random.Range(3, 8);
                         }
                         else
                         {
@@ -253,7 +256,7 @@ namespace Script.Controller
         {
             var gun = ptz[index].gun.transform;
             var b = Instantiate(bullet, gun.position, gun.rotation);
-            var realSpeed = speed * Random.Range(0.9f, 1.1f);
+            var realSpeed = speed * Random.Range(0.98f, 1.02f);
             b.GetComponent<Rigidbody>().velocity = gun.forward * realSpeed;
             var bulletController = b.GetComponent<BulletController>();
             bulletController.owner = id;

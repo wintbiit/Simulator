@@ -21,6 +21,7 @@ using Script.UI.HUD;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 using Random = System.Random;
@@ -180,8 +181,8 @@ namespace Script.Networking
 
             [Header("Radar Camera")] public GameObject redRCam;
             public GameObject blueRCam;
-            public GameObject redRCCam;
-            public GameObject blueRCCam;
+            public GameObject redRcCam;
+            public GameObject blueRcCam;
 
             private readonly List<TimeEventTrigger> _timeEventTriggers = new List<TimeEventTrigger>
             {
@@ -1101,6 +1102,11 @@ namespace Script.Networking
                         resultTitle.text = "胜利";
                     else
                         resultTitle.text = redWin == 0 ? "平局" : "失败";
+                }
+                
+                if (judge)
+                {
+                    resultTitle.text = redWin == 1 ? "红方胜利" : redWin == -1 ? "蓝方胜利" : "平局";
                 }
 
                 GameObject.Find("inGameMusic").GetComponent<AudioSource>().Stop();
