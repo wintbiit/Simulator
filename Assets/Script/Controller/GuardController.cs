@@ -135,6 +135,7 @@ namespace Script.Controller
 
                     if (target != null)
                     {
+                        Debug.Log(target.name);
                         _pitchingSpeed = 0;
                         _steeringSpeed = 0;
                         var position = fpCam.transform.position;

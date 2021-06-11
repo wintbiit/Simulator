@@ -67,10 +67,6 @@ namespace Script.Networking
                 serverAddressInputField.onValueChanged.AddListener(OnServerAddressChanged);
                 // 先更新一次提示文字
                 CheckInfoComplete();
-#if UNITY_SERVER
-                if (Application.platform != RuntimePlatform.WebGLPlayer)
-                    _roomManager.StartServer();
-#endif
             }
 
             #region UI
