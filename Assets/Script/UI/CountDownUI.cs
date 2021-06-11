@@ -1,5 +1,7 @@
 ﻿using System;
+using Mirror;
 using Script.Networking.Game;
+using Script.Networking.Lobby;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -27,7 +29,6 @@ namespace Script.UI
                     countDown.color = Color.red;
                     minute = 0;
                     second = _gm.globalStatus.countDown;
-                    // TODO: Fix
                     if (second <= 0 && Time.time - _gm.globalStatus.finishTime > 10)
                     {
                         try
@@ -38,8 +39,6 @@ namespace Script.UI
                         {
                             // ignored
                         }
-
-                        SceneManager.LoadScene("Index");
                     }
                 }
 

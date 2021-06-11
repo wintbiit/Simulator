@@ -177,7 +177,7 @@ namespace Script.Networking
             private void FixedUpdate()
             {
                 // 未进行本地游戏或连接服务器
-                if (!NetworkServer.active && !NetworkClient.isConnected)
+                if (!NetworkServer.active && !NetworkClient.active)
                     KeyEvents();
             }
         }

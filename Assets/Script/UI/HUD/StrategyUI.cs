@@ -2,13 +2,13 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Mirror;
 using Script.Controller;
 using Script.Controller.Armor;
 using Script.JudgeSystem;
 using Script.JudgeSystem.Robot;
 using Script.JudgeSystem.Role;
 using TMPro;
-using UnityEngine;
 
 namespace Script.UI.HUD
 {
@@ -16,23 +16,23 @@ namespace Script.UI.HUD
     {
         public TMP_Text label;
         public TMP_Text strategyDisplay;
-        [HideInInspector]public Decision Decider;
+        public Decision Decider;
         private int _slowDecisionUpdate;
 
         private void Start()
         {
-            new Thread(StartDecisionSystem).Start();
+            if (NetworkClient.active)
+                new Thread(StartDecisionSystem).Start();
         }
 
         private void StartDecisionSystem()
         {
 #if UNITY_EDITOR
             var curDir = Environment.CurrentDirectory + "\\Client\\Decision";
-            var exeFile = curDir + "\\SD.exe";
 #else
             var curDir = Environment.CurrentDirectory + "\\..\\Decision";
-            var exeFile = curDir + "\\SD.exe";
 #endif
+            var exeFile = curDir + "\\SD.exe";
             var process = new Process
             {
                 StartInfo =

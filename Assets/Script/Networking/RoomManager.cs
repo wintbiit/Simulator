@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using Mirror;
 using Script.Controller;
@@ -409,10 +408,7 @@ namespace Script.Networking
             [Server]
             public void ResetServer()
             {
-                if (IsHost)
-                    StopHost();
-                else
-                    StopServer();
+                Shutdown();
                 LocalDisplayName = "";
                 _lobbyManager = null;
                 _gameManager = null;
@@ -421,7 +417,6 @@ namespace Script.Networking
                 _roles.Clear();
                 _connections.Clear();
                 _facilitiesInitiated = false;
-                // _wsApi.Stop();
             }
 
             #endregion
@@ -432,7 +427,8 @@ namespace Script.Networking
             {
                 try
                 {
-                    var sr = new StreamReader(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Key");
+                    var sr = new StreamReader(
+                        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Key");
                     secretMode = sr.ReadLine() == SecretKey;
                 }
                 catch (Exception)
@@ -456,14 +452,6 @@ namespace Script.Networking
             {
                 // 重载防止绘制默认GUI
             }
-
-            // public override void OnDestroy()
-            // {
-            //     foreach (var p in Process.GetProcessesByName("Simulator"))
-            //     {
-            //         p.Kill();
-            //     }
-            // }
         }
     }
 }

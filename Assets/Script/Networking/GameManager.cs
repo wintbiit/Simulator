@@ -20,8 +20,6 @@ using Script.UI;
 using Script.UI.HUD;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 using Random = System.Random;
@@ -1179,11 +1177,11 @@ namespace Script.Networking
             [Client]
             public void Disconnect()
             {
+                FindObjectOfType<InfoScreenUI>().quit = true;
                 if (_roomManager && _roomManager.IsHost)
                     _roomManager.ResetServer();
-                FindObjectOfType<InfoScreenUI>().quit = true;
-                FindObjectOfType<RoomManager>().StopClient();
-                SceneManager.LoadScene("Index");
+                else if (isClient)
+                    FindObjectOfType<RoomManager>().StopClient();
             }
 
             #endregion
