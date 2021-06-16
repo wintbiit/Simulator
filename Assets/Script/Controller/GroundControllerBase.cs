@@ -1034,7 +1034,7 @@ namespace Script.Controller
 
 
                 // Boost效果
-                if (!_cDown && Input.GetKey(KeyCode.C) && !_isSpin || role.Type == TypeT.Engineer)
+                if (!_cDown && Input.GetKey(KeyCode.C) && role.Type != TypeT.Engineer)
                 {
                     con = !con;
                     _cDown = true;
@@ -1043,7 +1043,7 @@ namespace Script.Controller
                 if (!Input.GetKey(KeyCode.C))
                     _cDown = false;
 
-                if (con)
+                if (con || role.Type == TypeT.Engineer)
                 {
                     _maxMotorTorque =
                         RobotPerformanceTable.Table[level][role.Type][chassisType][gunType].PowerLimit * 4;
@@ -1107,12 +1107,16 @@ namespace Script.Controller
                                 }
                                 else
                                 {
-                                    smallAmmo--;
-                                    heat += 10;
-                                    Fire();
-                                    _pitchingSpeed += Random.Range(-0.05f, 0);
-                                    _fireCd = Random.Range(3, 8);
-                                    if (highFreq) _fireCd /= 2;
+                                    if (heat + 10 <= RobotPerformanceTable.Table[level][role.Type][chassisType][gunType]
+                                        .HeatLimit)
+                                    {
+                                        smallAmmo--;
+                                        heat += 10;
+                                        Fire();
+                                        _pitchingSpeed += Random.Range(-0.05f, 0);
+                                        _fireCd = Random.Range(3, 8);
+                                        if (highFreq) _fireCd /= 2;
+                                    }
                                 }
                             }
                             else
